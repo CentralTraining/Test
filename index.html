@@ -4550,7 +4550,7 @@ function courseCandidates_(camp, subtype){
     const tr = trainerOf(r.trainerId);
     return {
       code: r.code, name: r.name||(pg?pg.name:''), trainerId: r.trainerId,
-      region: tr?tr.region:(r.area||''), province: pg?pg.province:'', gender: pg?(pg.gender||''):'',
+      region: tr?tr.region:(r.area||''), province: pg?pg.province:'', gender: r.gender||(pg?(pg.gender||''):''),
       shop: pg?pg.shop:'', channel: pg?pg.channel:'', seniority: pg?Number(pg.seniority)||0:0,
       star: pg?Number(pg.star)||0:0, trainerName: tr?tr.name:'—',
     };
@@ -4626,7 +4626,7 @@ function renderCourseStageRegistration_(body, camp, subtype){
       const canEdit = courseCanEditRegistration_(c);
       html += `<tr>
         <td>${i+1}</td><td>${c.code}</td><td>${c.name}</td><td>${c.region||'—'}</td><td>${c.province||'—'}</td>
-        <td>${canEdit?`<select class="course-gender-sel" data-code="${c.code}"><option value="">—</option><option value="Nam" ${c.gender==='Nam'?'selected':''}>Nam</option><option value="Nữ" ${c.gender==='Nữ'?'selected':''}>Nữ</option></select>`:(c.gender||'—')}</td>
+        <td>${c.gender||'—'}</td>
         <td>${c.shop||'—'}</td><td>${c.channel||'—'}</td><td>${c.seniority} tháng</td>
         ${subtype==='pgs3sao'?`<td>${'★'.repeat(c.star)}</td>`:''}
         <td>${c.trainerName}</td>
@@ -4668,13 +4668,6 @@ function renderCourseStageRegistration_(body, camp, subtype){
       const regMap2 = courseRegCache_[camp.id] || (courseRegCache_[camp.id]={});
       regMap2[code] = { ...(regMap2[code]||{}), note: inp.value.trim() };
       await dbSet('courseRegistrations:'+camp.id, regMap2);
-    });
-  });
-  body.querySelectorAll('.course-gender-sel').forEach(sel=>{
-    sel.addEventListener('change', async ()=>{
-      const code = sel.getAttribute('data-code');
-      const pg = pgs.find(p=>p.code===code);
-      if(pg){ pg.gender = sel.value; await dbSet('pgs:'+currentMonth, pgs); }
     });
   });
   const lockBtn = document.getElementById('courseLockBtn');
@@ -6066,6 +6059,7 @@ async function processOnOffWorkbook_(wb){
     const status = forcedStatus || String(row['Status']||'').trim() || 'On';
     const joinedAt = parseVNDate(row['Joined at']);
     const offDate = parseVNDate(row['Off date']);
+    const gender = String(row['Gender']||'').trim();
 
     let matchedPg = findPgByCode_(pgs, code);
     if(!matchedPg){
@@ -6077,7 +6071,7 @@ async function processOnOffWorkbook_(wb){
     const shop = matchedPg ? (matchedPg.shop||'') : '';
     const shopSize = matchedPg ? (matchedPg.shopSize||'') : '';
 
-    const data = { code, name, area, trainerId, channel, shop, shopSize, status, joinedAt: joinedAt?joinedAt.toISOString():null, offDate: offDate?offDate.toISOString():null };
+    const data = { code, name, area, trainerId, channel, shop, shopSize, status, gender, joinedAt: joinedAt?joinedAt.toISOString():null, offDate: offDate?offDate.toISOString():null };
     const existing = findOnOffByCode_(code);
     // Nếu 1 bạn có mặt ở CẢ 2 sheet on & off trong cùng lần import (on rồi off luôn trong tháng),
     // vẫn giữ đủ cả joinedAt lẫn offDate để tính vào data cả On và Off — không ghi đè mất ngày On.
@@ -6088,6 +6082,7 @@ async function processOnOffWorkbook_(wb){
       if(!data.channel) data.channel = existing.channel;
       if(!data.shop) data.shop = existing.shop;
       if(!data.shopSize) data.shopSize = existing.shopSize;
+      if(!data.gender) data.gender = existing.gender;
       Object.assign(existing, data);
       updated++;
     } else {
@@ -7432,6 +7427,8 @@ function renderKpiCategoryLegacyBody_(catKey){
     // (Đã bỏ biểu đồ "Tiến độ theo Khu vực"/"Tiến độ theo Trainer" theo yêu cầu — chỉ còn bảng Nhập số liệu Thực tế)
   } else if(catKey==='noibo'){
     syncAllPgMoiTargets();
+    syncAllPg01Actuals();
+    syncAllPgMoiActuals();
     renderNoiboProgressTable();
   }
 
