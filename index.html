@@ -887,6 +887,12 @@
             <tbody id="trainerAccountListBody"></tbody>
           </table>
         </div>
+        <div class="cfg-card">
+          <h3>⚠️ Sửa liên kết dữ liệu Trainer bị "mồ côi"</h3>
+          <p class="section-desc" style="margin-bottom:10px;"><strong>Dùng khi lỡ Xoá rồi Tạo lại 1 Trainer</strong> — Trainer mới nhận ID nội bộ khác hẳn Trainer cũ, khiến PGs/Khảo sát/On-Off/Target cũ vẫn trỏ về ID cũ đã xoá, không hiện đúng cho Trainer mới nữa. Công cụ này quét ra các ID "mồ côi" (không thuộc Trainer nào hiện có) và chuyển toàn bộ dữ liệu liên quan sang đúng Trainer hiện tại.</p>
+          <button class="secondary" id="scanOrphanTrainerBtn" type="button">🔍 Quét dữ liệu mồ côi</button>
+          <div id="orphanTrainerResultBox" style="margin-top:12px;"></div>
+        </div>
       </div>
 
       <div id="dataSub-ganshop" style="display:none;">
@@ -3027,6 +3033,96 @@ document.getElementById('migrateToSupabaseBtn').addEventListener('click', async 
     msg.textContent='Lỗi: '+err.message;
   }
 });
+/* ============ SỬA LIÊN KẾT DỮ LIỆU TRAINER "MỒ CÔI" ============
+   Khi Admin Xoá 1 Trainer rồi Tạo lại (kể cả cùng tên) — Trainer mới nhận ID nội bộ HOÀN TOÀN KHÁC
+   (uid('tr') sinh ngẫu nhiên) — mọi dữ liệu cũ (PGs, On/Off, Khảo sát Coaching, Records/Target, tài
+   khoản đăng nhập, FTF Shop, Gán Shop-Trainer) VẪN TRỎ VỀ ID CŨ đã không còn tồn tại trong
+   config.trainers → "lạc mất" khỏi Trainer mới, hiện 0/thiếu số liệu dù đã import đủ. Công cụ này
+   quét TOÀN BỘ nguồn dữ liệu (trong phạm vi tháng đang xem + các dữ liệu không tách tháng), tìm các
+   trainerId KHÔNG khớp Trainer nào hiện có, cho Admin chọn Trainer đúng để chuyển liên kết lại. */
+async function scanOrphanTrainerIds_(){
+  const validIds = new Set(config.trainers.map(t=>t.id));
+  const found = {}; // { orphanId: { count, samples:[names] } }
+  const addHit = (id, sampleName)=>{
+    if(!id || validIds.has(id)) return;
+    if(!found[id]) found[id] = { count:0, samples:[] };
+    found[id].count++;
+    if(sampleName && found[id].samples.length<5 && !found[id].samples.includes(sampleName)) found[id].samples.push(sampleName);
+  };
+  (pgs||[]).forEach(p=>addHit(p.trainerId, p.name));
+  (onoffRoster||[]).forEach(r=>addHit(r.trainerId, r.name));
+  const recs = records || {};
+  Object.keys(recs).forEach(id=>addHit(id, '(Target/Record đã set cho ID này)'));
+  (surveyResponsesNew||[]).forEach(s=>addHit(s.trainerId, s.pgName));
+  (surveyResponses||[]).forEach(s=>addHit(s.trainerId, s.pgName));
+  (users||[]).forEach(u=>{ if(u.trainerId) addHit(u.trainerId, '(Tài khoản đăng nhập: '+u.displayName+')'); });
+  (ftfShopList||[]).forEach(s=>addHit(s.trainerId, s.shopName));
+  (shopTrainerMap||[]).forEach(m=>addHit(m.trainerId, '(Gán Shop: '+(m.shopId||'')+')'));
+  return found;
+}
+document.getElementById('scanOrphanTrainerBtn').addEventListener('click', async ()=>{
+  const box = document.getElementById('orphanTrainerResultBox');
+  box.innerHTML = '<div style="color:var(--muted);">⏳ Đang quét...</div>';
+  const found = await scanOrphanTrainerIds_();
+  const ids = Object.keys(found);
+  if(ids.length===0){
+    box.innerHTML = '<div class="empty">✅ Không phát hiện dữ liệu mồ côi nào trong phạm vi Tháng đang xem + dữ liệu chung.</div>';
+    return;
+  }
+  const trainerOptions = config.trainers.map(t=>`<option value="${t.id}">${t.name} (${t.region||'—'})</option>`).join('');
+  box.innerHTML = `<p class="section-desc" style="margin-bottom:10px;color:var(--red);">⚠ Phát hiện <strong>${ids.length}</strong> ID Trainer mồ côi (không thuộc Trainer nào hiện có):</p>` +
+    ids.map(id=>`
+      <div class="form-card" style="max-width:none;margin-bottom:10px;padding:12px;">
+        <div style="font-size:var(--cap);margin-bottom:6px;"><strong>ID mồ côi:</strong> <code>${id}</code> — dính tới ${found[id].count} bản ghi. VD: ${found[id].samples.join(', ')||'(không rõ tên)'}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <select class="orphan-target-sel" data-orphan-id="${id}"><option value="">— Chọn Trainer đúng để chuyển sang —</option>${trainerOptions}</select>
+          <button class="primary orphan-fix-btn" data-orphan-id="${id}" type="button">🔧 Chuyển liên kết</button>
+        </div>
+      </div>
+    `).join('');
+  box.querySelectorAll('.orphan-fix-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const oldId = btn.getAttribute('data-orphan-id');
+      const sel = box.querySelector(`.orphan-target-sel[data-orphan-id="${oldId}"]`);
+      const newId = sel.value;
+      if(!newId){ alert('Vui lòng chọn Trainer đúng để chuyển sang.'); return; }
+      const newTrainer = config.trainers.find(t=>t.id===newId);
+      const ok = await showConfirm(`Chuyển toàn bộ dữ liệu (PGs, On/Off, Khảo sát, Target, tài khoản...) từ ID mồ côi sang Trainer "${newTrainer.name}"? Không thể hoàn tác.`);
+      if(!ok) return;
+      await relinkTrainerId_(oldId, newId);
+      alert('Đã chuyển liên kết xong. Trang sẽ tải lại để cập nhật toàn bộ.');
+      location.reload();
+    });
+  });
+});
+async function relinkTrainerId_(oldId, newId){
+  let changed = false;
+  (pgs||[]).forEach(p=>{ if(p.trainerId===oldId){ p.trainerId=newId; changed=true; } });
+  if(changed) await dbSet('pgs:'+currentMonth, pgs);
+  changed = false;
+  (onoffRoster||[]).forEach(r=>{ if(r.trainerId===oldId){ r.trainerId=newId; changed=true; } });
+  if(changed) await dbSet('onoffRoster', onoffRoster);
+  if(records && records[oldId]){
+    records[newId] = { ...(records[newId]||{}), ...records[oldId] };
+    delete records[oldId];
+    await dbSet('records:'+currentMonth, records);
+  }
+  changed = false;
+  (surveyResponsesNew||[]).forEach(s=>{ if(s.trainerId===oldId){ s.trainerId=newId; changed=true; } });
+  if(changed) await dbSet('surveyResponsesNew:'+currentMonth, surveyResponsesNew);
+  changed = false;
+  (surveyResponses||[]).forEach(s=>{ if(s.trainerId===oldId){ s.trainerId=newId; changed=true; } });
+  if(changed) await dbSet('surveyResponses:'+currentMonth, surveyResponses);
+  changed = false;
+  (users||[]).forEach(u=>{ if(u.trainerId===oldId){ u.trainerId=newId; changed=true; } });
+  if(changed) await dbSet('auth_users', users);
+  changed = false;
+  (ftfShopList||[]).forEach(s=>{ if(s.trainerId===oldId){ s.trainerId=newId; changed=true; } });
+  if(changed) await dbSet('ftfShopList:'+currentMonth, ftfShopList);
+  changed = false;
+  (shopTrainerMap||[]).forEach(m=>{ if(m.trainerId===oldId){ m.trainerId=newId; changed=true; } });
+  if(changed) await dbSet('shopTrainerMap', shopTrainerMap);
+}
 document.getElementById('exportAllDataBtn').addEventListener('click', async ()=>{
   const msg=document.getElementById('backupSaveMsg');
   try{
@@ -8361,6 +8457,10 @@ function renderSettingsConfig(){
   }));
   trainerList.querySelectorAll('[data-remove-trainer]').forEach(btn=>btn.addEventListener('click', async ()=>{
     const id = btn.getAttribute('data-remove-trainer');
+    const t = config.trainers.find(x=>x.id===id);
+    const pgCount = pgs.filter(p=>p.trainerId===id).length;
+    const ok = await showConfirm(`Xoá Trainer "${t?t.name:''}"?\n\n⚠ QUAN TRỌNG: Trainer này đang có ${pgCount} PGs được gán. Toàn bộ dữ liệu liên quan (PGs, On/Off, Khảo sát Coaching, Target...) sẽ KHÔNG bị xoá, nhưng nếu sau này bạn TẠO LẠI 1 Trainer khác (kể cả cùng tên), dữ liệu cũ sẽ KHÔNG tự động gắn lại cho Trainer mới — cần dùng công cụ "Sửa liên kết dữ liệu Trainer bị mồ côi" phía dưới để nối lại.\n\nNếu chỉ muốn ĐỔI TÊN, hãy dùng nút "Sửa" thay vì Xoá.`);
+    if(!ok) return;
     config.trainers=config.trainers.filter(x=>x.id!==id);
     await dbSet('config',config);
     if(editingTrainerId===id) resetTrainerForm();
