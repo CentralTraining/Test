@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <!--
   DASHBOARD TRAINER — OPPO VIỆT NAM (MIỀN TRUNG)
@@ -1870,7 +1871,7 @@ const KPI_CATS=[{key:'noibo',label:'Nội bộ'},{key:'doitac',label:'Đối tá
 /* Danh sách "Loại" (mục nhỏ) trong từng Nhóm chiến dịch. Nếu campaign cũ chưa có subtype (tạo trước khi
    có tính năng này), campaignSubtype() sẽ tự map về loại mặc định tương ứng để không phá dữ liệu cũ. */
 const CAMPAIGN_SUBTYPE_OPTIONS = {
-  noibo: [ {key:'pgsdev',label:'PGs Dev'}, {key:'workshop',label:'Workshop'}, {key:'testonline',label:'Test Online'}, {key:'tuvanai_checkshop',label:'Tư vấn AI & Check shop'} ],
+  noibo: [ {key:'pgsdev',label:'PGs Dev'}, {key:'workshop',label:'Workshop'}, {key:'testonline',label:'Test Online'}, {key:'tuvanai_checkshop',label:'Tư vấn AI & Check shop'}, {key:'cvtv',label:'CVTV'}, {key:'pgs3sao',label:'PGs 3★'} ],
   doitac: [ {key:'ftf',label:'FTF'}, {key:'workshop',label:'Workshop'}, {key:'hub',label:'Hub'} ],
   truyenthong: [ {key:'noibo',label:'Nội bộ'}, {key:'doitac',label:'Đối tác'} ],
 };
@@ -4502,6 +4503,294 @@ function renderNoiboProgressTable(){
     </tr>`).join('')}
   </tbody></table>`;
 }
+/* ============ KHOÁ HỌC CVTV / PGS 3★ — 3 giai đoạn: Đăng ký ▸ Chốt & tạo lớp ▸ Chấm điểm ============
+   Dữ liệu lưu:
+   - Các trường lớp học lưu THẲNG trên object campaign (dateFrom/dateTo/starFilter/classDate/
+     classVenue/classProvince/leadTrainerId/locked/completed) — đơn giản, không cần thêm campaign
+     list riêng để quản lý vòng đời khoá học.
+   - courseRegistrations:{campId} = { [code]: {status:'Tham gia'|'Không tham gia'|'', note} } — CHỈ
+     lưu Trạng thái/Note, các cột hiển thị khác (tên, khu vực, shop...) luôn LẤY SỐNG từ PGs/On-Off
+     tại thời điểm hiển thị, tránh dữ liệu cũ/lệch.
+   - courseScores:{campId} = { [code]: {theory, consult, total, excellent, note} } — điểm cuối khoá,
+     chỉ Lead Trainer (hoặc Admin) được nhập, sau khi camp.completed=true thì khoá lại vĩnh viễn. */
+let courseSelectedCampaignId_ = { cvtv:null, pgs3sao:null };
+let courseCandidateFilter_ = { cvtv:{dateFrom:'',dateTo:''}, pgs3sao:{dateFrom:'',dateTo:'',star:''} };
+let courseRegCache_ = {}; // { [campId]: {code:{status,note}} }
+let courseScoreCache_ = {}; // { [campId]: {code:{theory,consult,total,excellent,note}} }
+function courseCampaignsList_(subtype){
+  return campaigns.filter(c=>c.group==='noibo' && campaignSubtype(c)===subtype).sort((a,b)=>b.month.localeCompare(a.month));
+}
+async function loadCourseData_(campId){
+  if(!courseRegCache_[campId]) courseRegCache_[campId] = (await dbGet('courseRegistrations:'+campId)) || {};
+  if(!courseScoreCache_[campId]) courseScoreCache_[campId] = (await dbGet('courseScores:'+campId)) || {};
+}
+function courseCanEditRegistration_(pg){
+  return isAdmin() || (isTrainer() && pg.trainerId===session.trainerId);
+}
+function courseCanScore_(camp){
+  return isAdmin() || (isTrainer() && session.trainerId===camp.leadTrainerId);
+}
+/* Danh sách ứng viên: lấy từ On/Off (status='On'), lọc theo Ngày vào làm trong khoảng đã chọn — ghép
+   sống với PGs để lấy đủ Khu vực/Tỉnh/Shop/Kênh/Thâm niên/Sao hiện tại (không lưu trùng dữ liệu). */
+function courseCandidates_(camp, subtype){
+  const from = camp.dateFrom ? new Date(camp.dateFrom) : null;
+  const to = camp.dateTo ? new Date(camp.dateTo+'T23:59:59') : null;
+  let list = onoffRoster.filter(r=>{
+    if(r.status!=='On' || !r.joinedAt) return false;
+    const d = new Date(r.joinedAt);
+    if(from && d<from) return false;
+    if(to && d>to) return false;
+    return true;
+  });
+  const tList = isTrainer() ? config.trainers.filter(t=>t.id===session.trainerId) : visibleTrainers();
+  const trainerIds = new Set(tList.map(t=>t.id));
+  list = list.filter(r=>trainerIds.has(r.trainerId));
+  const enriched = list.map(r=>{
+    const pg = pgs.find(p=>p.code===r.code);
+    const tr = trainerOf(r.trainerId);
+    return {
+      code: r.code, name: r.name||(pg?pg.name:''), trainerId: r.trainerId,
+      region: tr?tr.region:(r.area||''), province: pg?pg.province:'', gender: pg?(pg.gender||''):'',
+      shop: pg?pg.shop:'', channel: pg?pg.channel:'', seniority: pg?Number(pg.seniority)||0:0,
+      star: pg?Number(pg.star)||0:0, trainerName: tr?tr.name:'—',
+    };
+  });
+  if(subtype==='pgs3sao' && camp.starFilter){
+    return enriched.filter(e=>e.star===Number(camp.starFilter));
+  }
+  return enriched;
+}
+function renderCourseClassBody_(subtype){
+  const box = document.getElementById('kpiSubBody-noibo');
+  if(!box) return;
+  const label = subtype==='cvtv' ? 'CVTV' : 'PGs 3★';
+  const list = courseCampaignsList_(subtype);
+  let selId = courseSelectedCampaignId_[subtype];
+  if(!selId || !list.some(c=>c.id===selId)) selId = list[0] ? list[0].id : null;
+  courseSelectedCampaignId_[subtype] = selId;
+
+  let html = `<h3 class="kpi-section-title">Khoá học ${label}</h3>`;
+  html += `<div class="scope-filters" style="margin-bottom:14px;">
+    <span class="scope-label">Chọn khoá:</span>
+    <select id="courseCampSelect">${list.length?list.map(c=>`<option value="${c.id}" ${c.id===selId?'selected':''}>${c.name} — ${monthLabel(c.month)}</option>`).join(''):'<option value="">(chưa có khoá nào)</option>'}</select>
+    ${isAdmin()?`<span style="font-size:var(--tag);color:var(--muted);margin-left:10px;">Tạo khoá mới ở Cài đặt ▸ Chiến dịch (Nhóm "Nội bộ" ▸ Loại "${label}")</span>`:''}
+  </div>`;
+  html += `<div id="courseBody"></div>`;
+  box.innerHTML = html;
+
+  const sel = document.getElementById('courseCampSelect');
+  if(sel) sel.addEventListener('change', ()=>{ courseSelectedCampaignId_[subtype]=sel.value; renderCourseClassBody_(subtype); });
+
+  if(!selId){
+    document.getElementById('courseBody').innerHTML = `<div class="empty">Chưa có khoá ${label} nào. ${isAdmin()?'Vào Cài đặt ▸ Chiến dịch để tạo khoá mới.':'Liên hệ Admin để tạo khoá mới.'}</div>`;
+    return;
+  }
+  const camp = campaigns.find(c=>c.id===selId);
+  loadCourseData_(selId).then(()=> renderCourseStage_(camp, subtype));
+}
+function renderCourseStage_(camp, subtype){
+  const body = document.getElementById('courseBody');
+  if(!body) return;
+  if(camp.completed) renderCourseStageComplete_(body, camp, subtype);
+  else if(camp.locked) renderCourseStageScoring_(body, camp, subtype);
+  else renderCourseStageRegistration_(body, camp, subtype);
+}
+
+/* ===== GIAI ĐOẠN 1: ĐĂNG KÝ ===== */
+function renderCourseStageRegistration_(body, camp, subtype){
+  const label = subtype==='cvtv' ? 'CVTV' : 'PGs 3★';
+  const filt = courseCandidateFilter_[subtype];
+  let html = `<div class="form-card" style="max-width:none;margin-bottom:14px;">
+    <h4 style="margin:0 0 10px;color:var(--green-dark);">Bước 1 — Lọc danh sách ứng viên (từ dữ liệu On/Off)</h4>
+    <div class="scope-filters" style="flex-wrap:wrap;">
+      <span class="scope-label">Ngày vào làm từ:</span><input type="date" id="courseDateFrom" value="${camp.dateFrom||''}" ${isAdmin()?'':'disabled'}>
+      <span class="scope-label">đến:</span><input type="date" id="courseDateTo" value="${camp.dateTo||''}" ${isAdmin()?'':'disabled'}>
+      ${subtype==='pgs3sao'?`<span class="scope-label">Sao:</span><select id="courseStarFilter" ${isAdmin()?'':'disabled'}>
+        <option value="">— Chọn Sao —</option>
+        ${[1,2,3,4,5].map(s=>`<option value="${s}" ${Number(camp.starFilter)===s?'selected':''}>${'★'.repeat(s)}</option>`).join('')}
+      </select>`:''}
+      ${isAdmin()?`<button class="secondary" id="courseApplyFilterBtn" type="button">🔍 Lọc danh sách</button>`:''}
+    </div>
+  </div>`;
+
+  const candidates = (camp.dateFrom||camp.dateTo||camp.starFilter) ? courseCandidates_(camp, subtype) : [];
+  const regMap = courseRegCache_[camp.id] || {};
+
+  if(candidates.length===0){
+    html += `<div class="empty">${(camp.dateFrom||camp.dateTo)?'Không có PG nào khớp bộ lọc.':'Chọn khoảng ngày (và Sao nếu là PGs 3★) rồi bấm "Lọc danh sách" để bắt đầu.'}</div>`;
+  } else {
+    html += `<h4 style="margin:14px 0 8px;color:var(--green-dark);">Bước 2 — Từng Trainer đăng ký Tham gia / Không tham gia cho đúng PG của mình</h4>`;
+    html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Tỉnh</th><th>Giới tính</th><th>Shop</th><th>Kênh</th><th>Thâm niên</th>${subtype==='pgs3sao'?'<th>Sao</th>':''}<th>Trainer</th><th>Trạng thái</th><th>Note</th></tr></thead><tbody>`;
+    candidates.forEach((c,i)=>{
+      const reg = regMap[c.code] || {status:'',note:''};
+      const canEdit = courseCanEditRegistration_(c);
+      html += `<tr>
+        <td>${i+1}</td><td>${c.code}</td><td>${c.name}</td><td>${c.region||'—'}</td><td>${c.province||'—'}</td>
+        <td>${canEdit?`<select class="course-gender-sel" data-code="${c.code}"><option value="">—</option><option value="Nam" ${c.gender==='Nam'?'selected':''}>Nam</option><option value="Nữ" ${c.gender==='Nữ'?'selected':''}>Nữ</option></select>`:(c.gender||'—')}</td>
+        <td>${c.shop||'—'}</td><td>${c.channel||'—'}</td><td>${c.seniority} tháng</td>
+        ${subtype==='pgs3sao'?`<td>${'★'.repeat(c.star)}</td>`:''}
+        <td>${c.trainerName}</td>
+        <td>${canEdit?`<select class="course-status-sel" data-code="${c.code}">
+          <option value="" ${reg.status===''?'selected':''}>— Chưa chọn —</option>
+          <option value="Tham gia" ${reg.status==='Tham gia'?'selected':''}>✅ Tham gia</option>
+          <option value="Không tham gia" ${reg.status==='Không tham gia'?'selected':''}>❌ Không tham gia</option>
+        </select>`:(reg.status?`<span class="status-badge ${reg.status==='Tham gia'?'st-dangl':'st-tamoff'}">${reg.status}</span>`:`<span style="color:var(--muted);">Chưa chọn</span>`)}</td>
+        <td>${canEdit?`<input type="text" class="course-note-input" data-code="${c.code}" value="${(reg.note||'').replace(/"/g,'&quot;')}" placeholder="Lý do..." style="width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px;font-family:inherit;">`:(reg.note||'—')}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    if(isAdmin()){
+      const readyCount = candidates.filter(c=>(regMap[c.code]||{}).status==='Tham gia').length;
+      html += `<div style="margin-top:14px;"><button class="primary" id="courseLockBtn" type="button">🔒 Chốt danh sách &amp; Tạo lớp (${readyCount} PG đã chọn Tham gia)</button></div>`;
+    }
+  }
+  body.innerHTML = html;
+
+  const applyBtn = document.getElementById('courseApplyFilterBtn');
+  if(applyBtn) applyBtn.addEventListener('click', async ()=>{
+    camp.dateFrom = document.getElementById('courseDateFrom').value;
+    camp.dateTo = document.getElementById('courseDateTo').value;
+    if(subtype==='pgs3sao') camp.starFilter = document.getElementById('courseStarFilter').value;
+    await dbSet('campaigns', campaigns);
+    renderCourseStage_(camp, subtype);
+  });
+  body.querySelectorAll('.course-status-sel').forEach(sel=>{
+    sel.addEventListener('change', async ()=>{
+      const code = sel.getAttribute('data-code');
+      const regMap2 = courseRegCache_[camp.id] || (courseRegCache_[camp.id]={});
+      regMap2[code] = { ...(regMap2[code]||{}), status: sel.value };
+      await dbSet('courseRegistrations:'+camp.id, regMap2);
+    });
+  });
+  body.querySelectorAll('.course-note-input').forEach(inp=>{
+    inp.addEventListener('change', async ()=>{
+      const code = inp.getAttribute('data-code');
+      const regMap2 = courseRegCache_[camp.id] || (courseRegCache_[camp.id]={});
+      regMap2[code] = { ...(regMap2[code]||{}), note: inp.value.trim() };
+      await dbSet('courseRegistrations:'+camp.id, regMap2);
+    });
+  });
+  body.querySelectorAll('.course-gender-sel').forEach(sel=>{
+    sel.addEventListener('change', async ()=>{
+      const code = sel.getAttribute('data-code');
+      const pg = pgs.find(p=>p.code===code);
+      if(pg){ pg.gender = sel.value; await dbSet('pgs:'+currentMonth, pgs); }
+    });
+  });
+  const lockBtn = document.getElementById('courseLockBtn');
+  if(lockBtn) lockBtn.addEventListener('click', ()=> openCourseLockModal_(camp, subtype));
+}
+function openCourseLockModal_(camp, subtype){
+  const trainerOptions = visibleTrainers().map(t=>`<option value="${t.id}">${t.name} (${t.region||'—'})</option>`).join('');
+  const html = `
+    <div class="form-row"><label>Ngày tổ chức</label><input type="date" id="courseClassDate"></div>
+    <div class="form-row"><label>Địa điểm tổ chức</label><input type="text" id="courseClassVenue" placeholder="VD: Hội trường Trung tâm..."></div>
+    <div class="form-row"><label>Tỉnh tổ chức</label><input type="text" id="courseClassProvince" placeholder="VD: Bình Định"></div>
+    <div class="form-row"><label>Lead khoá (Trainer)</label><select id="courseLeadTrainer"><option value="">— Chọn Trainer —</option>${trainerOptions}</select></div>
+  `;
+  showFormModal_('Chốt danh sách & Tạo lớp '+(subtype==='cvtv'?'CVTV':'PGs 3★'), html, async ()=>{
+    const classDate = document.getElementById('courseClassDate').value;
+    const classVenue = document.getElementById('courseClassVenue').value.trim();
+    const classProvince = document.getElementById('courseClassProvince').value.trim();
+    const leadTrainerId = document.getElementById('courseLeadTrainer').value;
+    if(!classDate || !classVenue || !leadTrainerId){ alert('Vui lòng nhập đủ Ngày tổ chức, Địa điểm và chọn Lead khoá.'); return false; }
+    camp.classDate = classDate; camp.classVenue = classVenue; camp.classProvince = classProvince;
+    camp.leadTrainerId = leadTrainerId; camp.locked = true;
+    await dbSet('campaigns', campaigns);
+    renderCourseStage_(camp, subtype);
+    return true;
+  });
+}
+
+/* ===== GIAI ĐOẠN 2: CHẤM ĐIỂM (sau khi chốt) ===== */
+function renderCourseStageScoring_(body, camp, subtype){
+  const lead = trainerOf(camp.leadTrainerId);
+  const regMap = courseRegCache_[camp.id] || {};
+  const scoreMap = courseScoreCache_[camp.id] || {};
+  const candidates = courseCandidates_(camp, subtype).filter(c=>(regMap[c.code]||{}).status==='Tham gia');
+  const canScore = courseCanScore_(camp);
+
+  let html = `<div class="form-card" style="max-width:none;margin-bottom:14px;">
+    <h4 style="margin:0 0 8px;color:var(--green-dark);">📋 Thông tin lớp</h4>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;font-size:var(--cap);">
+      <div><strong>Ngày tổ chức:</strong> ${new Date(camp.classDate).toLocaleDateString('vi-VN')}</div>
+      <div><strong>Địa điểm:</strong> ${camp.classVenue}</div>
+      <div><strong>Tỉnh:</strong> ${camp.classProvince||'—'}</div>
+      <div><strong>Lead khoá:</strong> ${lead?lead.name:'—'}</div>
+    </div>
+  </div>`;
+
+  if(!canScore) html += `<p class="section-desc" style="margin-bottom:10px;">Chỉ <strong>${lead?lead.name:'Lead khoá'}</strong> hoặc Admin mới được nhập điểm — bạn đang ở chế độ xem.</p>`;
+
+  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Lý thuyết</th><th>Tư vấn</th><th>Tổng</th><th>⭐ Xuất sắc</th><th>Note đánh giá</th></tr></thead><tbody>`;
+  candidates.forEach((c,i)=>{
+    const sc = scoreMap[c.code] || {theory:'',consult:'',total:0,excellent:false,note:''};
+    html += `<tr>
+      <td>${i+1}</td><td>${c.code}</td><td>${c.name}</td><td>${c.region||'—'}</td><td>${c.trainerName}</td>
+      <td>${canScore?`<input type="number" min="0" max="10" step="0.1" class="course-score-theory" data-code="${c.code}" value="${sc.theory}" style="width:70px;padding:5px;border:1px solid var(--line);border-radius:6px;">`:sc.theory}</td>
+      <td>${canScore?`<input type="number" min="0" max="10" step="0.1" class="course-score-consult" data-code="${c.code}" value="${sc.consult}" style="width:70px;padding:5px;border:1px solid var(--line);border-radius:6px;">`:sc.consult}</td>
+      <td><strong class="course-score-total" data-code="${c.code}">${sc.total||0}</strong></td>
+      <td style="text-align:center;">${canScore?`<input type="checkbox" class="course-score-excellent" data-code="${c.code}" ${sc.excellent?'checked':''}>`:(sc.excellent?'⭐':'')}</td>
+      <td>${canScore?`<input type="text" class="course-score-note" data-code="${c.code}" value="${(sc.note||'').replace(/"/g,'&quot;')}" placeholder="Nhận xét..." style="width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px;font-family:inherit;">`:(sc.note||'—')}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  if(canScore) html += `<div style="margin-top:14px;"><button class="primary" id="courseCompleteBtn" type="button">✅ Hoàn thành khoá học</button></div>`;
+  body.innerHTML = html;
+
+  const saveScore = async (code)=>{
+    const theoryEl = body.querySelector(`.course-score-theory[data-code="${code}"]`);
+    const consultEl = body.querySelector(`.course-score-consult[data-code="${code}"]`);
+    const excellentEl = body.querySelector(`.course-score-excellent[data-code="${code}"]`);
+    const noteEl = body.querySelector(`.course-score-note[data-code="${code}"]`);
+    const theory = Number(theoryEl.value)||0, consult = Number(consultEl.value)||0;
+    const total = Math.round((theory+consult)*10)/10;
+    const totalEl = body.querySelector(`.course-score-total[data-code="${code}"]`);
+    if(totalEl) totalEl.textContent = total;
+    const scoreMap2 = courseScoreCache_[camp.id] || (courseScoreCache_[camp.id]={});
+    scoreMap2[code] = { theory, consult, total, excellent: excellentEl.checked, note: noteEl.value.trim() };
+    await dbSet('courseScores:'+camp.id, scoreMap2);
+  };
+  body.querySelectorAll('.course-score-theory, .course-score-consult, .course-score-excellent, .course-score-note').forEach(el=>{
+    el.addEventListener('change', ()=> saveScore(el.getAttribute('data-code')));
+  });
+  const completeBtn = document.getElementById('courseCompleteBtn');
+  if(completeBtn) completeBtn.addEventListener('click', async ()=>{
+    const ok = await showConfirm('Hoàn thành khoá học? Sau khi hoàn thành sẽ KHOÁ LẠI toàn bộ điểm số, không sửa được nữa.');
+    if(!ok) return;
+    camp.completed = true;
+    await dbSet('campaigns', campaigns);
+    renderCourseStage_(camp, subtype);
+  });
+}
+
+/* ===== GIAI ĐOẠN 3: ĐÃ HOÀN THÀNH (chỉ xem) ===== */
+function renderCourseStageComplete_(body, camp, subtype){
+  const lead = trainerOf(camp.leadTrainerId);
+  const regMap = courseRegCache_[camp.id] || {};
+  const scoreMap = courseScoreCache_[camp.id] || {};
+  const candidates = courseCandidates_(camp, subtype).filter(c=>(regMap[c.code]||{}).status==='Tham gia');
+  let html = `<div class="form-card" style="max-width:none;margin-bottom:14px;background:var(--green-bg,#f0fdf4);">
+    <h4 style="margin:0 0 8px;color:var(--green-dark);">✅ Khoá học đã hoàn thành</h4>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;font-size:var(--cap);">
+      <div><strong>Ngày tổ chức:</strong> ${new Date(camp.classDate).toLocaleDateString('vi-VN')}</div>
+      <div><strong>Địa điểm:</strong> ${camp.classVenue}</div>
+      <div><strong>Tỉnh:</strong> ${camp.classProvince||'—'}</div>
+      <div><strong>Lead khoá:</strong> ${lead?lead.name:'—'}</div>
+    </div>
+  </div>`;
+  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Lý thuyết</th><th>Tư vấn</th><th>Tổng</th><th>⭐</th><th>Note</th></tr></thead><tbody>`;
+  candidates.forEach((c,i)=>{
+    const sc = scoreMap[c.code] || {theory:0,consult:0,total:0,excellent:false,note:''};
+    html += `<tr${sc.excellent?' style="background:#fffbeb;"':''}>
+      <td>${i+1}</td><td>${c.code}</td><td>${c.name}</td><td>${c.region||'—'}</td><td>${c.trainerName}</td>
+      <td>${sc.theory}</td><td>${sc.consult}</td><td><strong>${sc.total}</strong></td>
+      <td style="text-align:center;">${sc.excellent?'⭐':''}</td><td>${sc.note||'—'}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  body.innerHTML = html;
+}
 let chartNoiboSummaryInstance=null;
 function renderNoiboSummaryChart(labels, v01, vMoi){
   const ctx = document.getElementById('chartNoiboSummary');
@@ -6174,6 +6463,8 @@ function renderKpiCategory(catKey){
   // Truyền thông: Nội bộ và Đối tác dùng CHUNG 1 giao diện Tiến độ KPI như cũ (chỉ lọc theo đúng Loại).
   if(catKey==='noibo' && (activeSub==='testonline' || activeSub==='tuvanai_checkshop')){
     renderFrequencyNoiboBody_(activeSub);
+  } else if(catKey==='noibo' && (activeSub==='cvtv' || activeSub==='pgs3sao')){
+    renderCourseClassBody_(activeSub);
   } else if(activeSub==='pgsdev' || activeSub==='ftf' || catKey==='truyenthong'){
     renderKpiCategoryLegacyBody_(catKey);
   } else {
@@ -9740,6 +10031,32 @@ function applyMonthLockUI(){
   document.querySelectorAll('[data-edit-pg],[data-remove-pg],[data-edit-campaign],[data-remove-campaign],[data-save-kpi],[data-del-survey],[data-del-survey-new]').forEach(el=>el.disabled=true);
 }
 /* ============ MODAL XÁC NHẬN TUỲ CHỈNH (thay cho confirm() gốc — ổn định hơn khi nhúng iframe/Apps Script) ============ */
+/* Modal form chung, tái sử dụng được cho nhiều tình huống (VD: Chốt danh sách & Tạo lớp CVTV/PGs
+   3★) — truyền vào tiêu đề, HTML nội dung form, và hàm onSubmit (async, trả về false để GIỮ modal
+   mở lại nếu validate lỗi — trả về gì khác false thì modal tự đóng). */
+function showFormModal_(title, bodyHtml, onSubmit){
+  return new Promise(resolve=>{
+    const modal=document.getElementById('genericFormModal');
+    document.getElementById('genericFormModalTitle').textContent=title;
+    document.getElementById('genericFormModalBody').innerHTML=bodyHtml;
+    modal.style.display='flex';
+    const okBtn=document.getElementById('genericFormModalOk');
+    const cancelBtn=document.getElementById('genericFormModalCancel');
+    const cleanup=(result)=>{
+      modal.style.display='none';
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    };
+    const onOk=async ()=>{
+      const result = await onSubmit();
+      if(result!==false) cleanup(result);
+    };
+    const onCancel=()=>cleanup(false);
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
 function showConfirm(message){
   return new Promise(resolve=>{
     const modal=document.getElementById('confirmModal');
@@ -10429,6 +10746,16 @@ new MutationObserver(muts=>{
     <div class="modal-actions">
       <button class="secondary" id="confirmModalNo">Hủy</button>
       <button class="primary" id="confirmModalYes">Xác nhận</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="genericFormModal" style="display:none;">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-text" id="genericFormModalTitle" style="margin-bottom:12px;font-weight:700;"></div>
+    <div id="genericFormModalBody"></div>
+    <div class="modal-actions">
+      <button class="secondary" id="genericFormModalCancel">Hủy</button>
+      <button class="primary" id="genericFormModalOk">Xác nhận</button>
     </div>
   </div>
 </div>
