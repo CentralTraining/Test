@@ -4661,15 +4661,26 @@ function courseCanScore_(camp){
 /* Danh sách ứng viên: lấy từ On/Off (status='On'), lọc theo Ngày vào làm trong khoảng đã chọn — ghép
    sống với PGs để lấy đủ Khu vực/Tỉnh/Shop/Kênh/Thâm niên/Sao hiện tại (không lưu trùng dữ liệu). */
 function courseCandidates_(camp, subtype, scopeToOwnTrainer){
-  const from = camp.dateFrom ? new Date(camp.dateFrom) : null;
-  const to = camp.dateTo ? new Date(camp.dateTo+'T23:59:59') : null;
-  let list = onoffRoster.filter(r=>{
-    if(r.status!=='On' || !r.joinedAt) return false;
-    const d = new Date(r.joinedAt);
-    if(from && d<from) return false;
-    if(to && d>to) return false;
-    return true;
-  });
+  let list;
+  if(subtype==='pgs3sao'){
+    // QUAN TRỌNG: PGs 3★ là PG ĐÃ LÀM LÂU NĂM (không phải PG mới) — KHÔNG có "Ngày vào làm" gần đây
+    // để lọc qua dữ liệu On/Off như CVTV. Lấy TRỰC TIẾP từ Danh sách Nhân sự chính (pgs), lọc đúng
+    // theo cột Sao đã chọn + trạng thái hiện tại "Đang làm" — không dùng khoảng ngày On/Off (khoảng
+    // ngày trên màn hình chỉ áp dụng riêng cho CVTV, không có ý nghĩa với PGs 3★).
+    const starNeed = camp.starFilter ? Number(camp.starFilter) : null;
+    list = pgs.filter(p=> p.status==='Đang làm' && (starNeed===null || Number(p.star)===starNeed))
+      .map(p=>({ code:p.code, name:p.name, trainerId:p.trainerId, area:trainerOf(p.trainerId)?trainerOf(p.trainerId).region:'', gender:p.gender||'' }));
+  } else {
+    const from = camp.dateFrom ? new Date(camp.dateFrom) : null;
+    const to = camp.dateTo ? new Date(camp.dateTo+'T23:59:59') : null;
+    list = onoffRoster.filter(r=>{
+      if(r.status!=='On' || !r.joinedAt) return false;
+      const d = new Date(r.joinedAt);
+      if(from && d<from) return false;
+      if(to && d>to) return false;
+      return true;
+    });
+  }
   // QUAN TRỌNG: chỉ giới hạn theo đúng Trainer sở hữu PG ở GIAI ĐOẠN ĐĂNG KÝ (mỗi Trainer chỉ đăng
   // ký PG của mình). Sau khi đã CHỐT danh sách, Lead Khoá cần thấy ĐỦ mọi PG đã đăng ký "Tham gia"
   // trong lớp — kể cả PG không thuộc Trainer/khu vực của chính Lead Khoá — nên KHÔNG áp giới hạn này
@@ -4679,8 +4690,9 @@ function courseCandidates_(camp, subtype, scopeToOwnTrainer){
     // theo effectivePgMoiStatus_ (ưu tiên trạng thái ở Danh sách Nhân sự chính, không chỉ dựa vào
     // status='On' lúc Import On/Off, vì PG có thể đã OFF/Thai sản... sau đó). Chỉ áp dụng ở GIAI ĐOẠN
     // ĐĂNG KÝ — không áp dụng ở Chấm điểm/Đã hoàn thành (vẫn cần hiện đúng PG đã đăng ký dù sau đó có
-    // đổi trạng thái).
-    list = list.filter(r=>effectivePgMoiStatus_(r)==='Đang làm');
+    // đổi trạng thái). PGs 3★ đã tự lọc "Đang làm" ở bước lấy dữ liệu phía trên rồi, gọi lại
+    // effectivePgMoiStatus_ ở đây không ảnh hưởng gì (PG nào cũng đã qua bước lọc status='Đang làm').
+    if(subtype!=='pgs3sao') list = list.filter(r=>effectivePgMoiStatus_(r)==='Đang làm');
     const tList = isTrainer() ? config.trainers.filter(t=>t.id===session.trainerId) : visibleTrainers();
     const trainerIds = new Set(tList.map(t=>t.id));
     list = list.filter(r=>trainerIds.has(r.trainerId));
@@ -4747,10 +4759,10 @@ function renderCourseStage_(camp, subtype){
 function renderCourseStageRegistration_(body, camp, subtype){
   const label = subtype==='cvtv' ? 'CVTV' : 'PGs 3★';
   let html = `<div class="form-card" style="max-width:none;margin-bottom:14px;">
-    <h4 style="margin:0 0 10px;color:var(--green-dark);">Bước 1 — Lọc danh sách ứng viên (từ dữ liệu On/Off)</h4>
+    <h4 style="margin:0 0 10px;color:var(--green-dark);">Bước 1 — Lọc danh sách ứng viên ${subtype==='pgs3sao'?'(từ Danh sách Nhân sự, theo đúng Hạng Sao)':'(từ dữ liệu On/Off, theo Ngày vào làm)'}</h4>
     <div class="scope-filters" style="flex-wrap:wrap;">
-      <span class="scope-label">Ngày vào làm từ:</span><input type="date" id="courseDateFrom" value="${camp.dateFrom||''}" ${isAdmin()?'':'disabled'}>
-      <span class="scope-label">đến:</span><input type="date" id="courseDateTo" value="${camp.dateTo||''}" ${isAdmin()?'':'disabled'}>
+      ${subtype==='cvtv'?`<span class="scope-label">Ngày vào làm từ:</span><input type="date" id="courseDateFrom" value="${camp.dateFrom||''}" ${isAdmin()?'':'disabled'}>
+      <span class="scope-label">đến:</span><input type="date" id="courseDateTo" value="${camp.dateTo||''}" ${isAdmin()?'':'disabled'}>`:''}
       ${subtype==='pgs3sao'?`<span class="scope-label">Sao:</span><select id="courseStarFilter" ${isAdmin()?'':'disabled'}>
         <option value="">— Chọn Sao —</option>
         ${[1,2,3,4,5].map(s=>`<option value="${s}" ${Number(camp.starFilter)===s?'selected':''}>${'★'.repeat(s)}</option>`).join('')}
@@ -4780,7 +4792,7 @@ function renderCourseStageRegistration_(body, camp, subtype){
   }
 
   if(candidatesAll.length===0){
-    html += `<div class="empty">${(camp.dateFrom||camp.dateTo)?'Không có PG nào khớp bộ lọc.':'Chọn khoảng ngày (và Sao nếu là PGs 3★) rồi bấm "Lọc danh sách" để bắt đầu.'}</div>`;
+    html += `<div class="empty">${(camp.dateFrom||camp.dateTo||camp.starFilter)?'Không có PG nào khớp bộ lọc.':(subtype==='cvtv'?'Chọn khoảng ngày rồi bấm "Lọc danh sách" để bắt đầu.':'Chọn Hạng Sao rồi bấm "Lọc danh sách" để bắt đầu.')}</div>`;
   } else {
     html += `<h4 style="margin:14px 0 8px;color:var(--green-dark);">Bước 2 — Từng Trainer đăng ký Tham gia / Không tham gia cho đúng PG của mình</h4>`;
     if(candidates.length===0){
@@ -4828,9 +4840,12 @@ function renderCourseStageRegistration_(body, camp, subtype){
 
   const applyBtn = document.getElementById('courseApplyFilterBtn');
   if(applyBtn) applyBtn.addEventListener('click', async ()=>{
-    camp.dateFrom = document.getElementById('courseDateFrom').value;
-    camp.dateTo = document.getElementById('courseDateTo').value;
-    if(subtype==='pgs3sao') camp.starFilter = document.getElementById('courseStarFilter').value;
+    if(subtype==='cvtv'){
+      camp.dateFrom = document.getElementById('courseDateFrom').value;
+      camp.dateTo = document.getElementById('courseDateTo').value;
+    } else {
+      camp.starFilter = document.getElementById('courseStarFilter').value;
+    }
     courseRegPage_ = 1;
     await dbSet('campaigns', campaigns);
     renderCourseStage_(camp, subtype);
