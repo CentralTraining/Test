@@ -4515,7 +4515,7 @@ function renderFtfShopListBox(){
       </tr>`;
     });
     html += `</tbody></table>`;
-    html += `<div class="pagination" id="ftfShopPagination" style="margin-top:12px;"></div>`;
+    html += `<div class="pagination-bar" id="ftfShopPagination" style="margin-top:12px;"></div>`;
     box.innerHTML = html;
     box.querySelectorAll('.ftf-shop-note-input').forEach(inp=>{
       inp.addEventListener('change', async ()=>{
@@ -4805,7 +4805,7 @@ function renderCourseStageRegistration_(body, camp, subtype){
       </tr>`;
     });
     html += `</tbody></table>`;
-    html += `<div class="pagination" id="courseRegPagination" style="margin-top:12px;"></div>`;
+    html += `<div class="pagination-bar" id="courseRegPagination" style="margin-top:12px;"></div>`;
     }
     if(isAdmin()){
       const readyCount = candidatesAll.filter(c=>(regMap[c.code]||{}).status==='Tham gia').length;
@@ -4957,7 +4957,7 @@ function renderCourseStageScoring_(body, camp, subtype){
     </tr>`;
   });
   html += `</tbody></table>`;
-  html += `<div class="pagination" id="courseScorePagination" style="margin-top:12px;"></div>`;
+  html += `<div class="pagination-bar" id="courseScorePagination" style="margin-top:12px;"></div>`;
   if(canScore) html += `<div style="margin-top:14px;"><button class="primary" id="courseCompleteBtn" type="button">✅ Hoàn thành khoá học</button></div>`;
   body.innerHTML = html;
   if(totalItems>0) renderCourseScorePagination_(totalItems, camp, subtype);
@@ -5052,7 +5052,7 @@ function renderCourseStageComplete_(body, camp, subtype){
     </tr>`;
   });
   html += `</tbody></table>`;
-  html += `<div class="pagination" id="courseCompletePagination" style="margin-top:12px;"></div>`;
+  html += `<div class="pagination-bar" id="courseCompletePagination" style="margin-top:12px;"></div>`;
   body.innerHTML = html;
   if(totalItems>0) renderCourseCompletePagination_(totalItems, camp, subtype);
   const reopenBtn = document.getElementById('courseReopenBtn');
