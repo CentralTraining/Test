@@ -5048,6 +5048,82 @@ function openCourseLockModal_(camp, subtype){
   });
   document.getElementById('courseLeadTrainer').value = camp.leadTrainerId||'';
 }
+/* ============ KHẢO SÁT KHOÁ HỌC (CVTV/PGs 3★) — Import file mẫu Google Form, hiện Kết quả khoá học ============
+   File mẫu là export từ Google Form (dòng 1 = tiêu đề, dòng 2 = câu hỏi đầy đủ, dòng 3+ = dữ liệu).
+   Đọc theo ĐÚNG VỊ TRÍ CỘT (không theo tên cột — câu hỏi quá dài, dễ lệch khi Form có chỉnh sửa nhỏ):
+   cột 2 = Họ và Tên PGs, cột 4 = Tên Trainer, cột 12-19 = 8 câu điểm thang 1-5, cột 25 = câu Tổng quan
+   thang 1-10. Tên hạng mục trong file gốc khá dài — rút ngắn lại để vừa biểu đồ, vẫn giữ đúng nghĩa. */
+const COURSE_SURVEY_CATEGORIES = [
+  { col: 12, label: 'Năng lực trước khoá' },
+  { col: 13, label: 'Năng lực sau khoá' },
+  { col: 14, label: 'Tự tin thương hiệu OPPO' },
+  { col: 15, label: 'Tự tin kỹ năng bán hàng' },
+  { col: 16, label: 'Tự tin kiến thức sản phẩm' },
+  { col: 17, label: 'Trainer truyền đạt rõ ràng' },
+  { col: 18, label: 'Trainer nghiêm khắc & công bằng' },
+  { col: 19, label: 'Cảm hứng học tập' },
+];
+const COURSE_SURVEY_OVERALL_COL = 25; // Câu tổng quan, thang điểm 1-10 (khác thang các câu trên) — tách riêng
+async function loadCourseSurveyData_(campId){
+  return (await dbGet('courseSurveyResponses:'+campId)) || null;
+}
+function parseCourseSurveyWorkbook_(wb){
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' }); // đọc dạng mảng-của-mảng theo VỊ TRÍ cột
+  const dataRows = rows.slice(2); // bỏ dòng 1 (tiêu đề) + dòng 2 (câu hỏi)
+  return dataRows.filter(r=>r && r.length>2 && String(r[2]||'').trim()).map(r=>({
+    pgName: String(r[2]||'').trim(),
+    trainerName: String(r[4]||'').trim(),
+    scores: COURSE_SURVEY_CATEGORIES.map(cat=> Number(r[cat.col])||0),
+    overall: Number(r[COURSE_SURVEY_OVERALL_COL])||0,
+  }));
+}
+async function renderCourseSurveyResults_(camp, subtype){
+  const box = document.getElementById('courseSurveyResultsBox');
+  if(!box) return;
+  const data = await loadCourseSurveyData_(camp.id);
+  if(!data || data.length===0){
+    box.innerHTML = '';
+    return;
+  }
+  const n = data.length;
+  const avgByCategory = COURSE_SURVEY_CATEGORIES.map((cat,idx)=>{
+    const sum = data.reduce((s,r)=> s + (r.scores[idx]||0), 0);
+    return Math.round((sum/n)*100)/100;
+  });
+  const avgOverall = Math.round((data.reduce((s,r)=>s+(r.overall||0),0)/n)*100)/100;
+  const chartId = 'courseSurveyChart_'+camp.id;
+  let html = `<h4 style="margin:0 0 10px;color:var(--green-dark);">📊 Kết quả khoá học — ${n} phiếu khảo sát</h4>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
+      <div style="flex:1 1 420px;min-width:320px;background:var(--white);border:1px solid var(--line);border-radius:10px;padding:14px;">
+        <canvas id="${chartId}" height="260"></canvas>
+      </div>
+      <div style="flex:0 0 180px;background:var(--green-pale);border-radius:10px;padding:18px;text-align:center;">
+        <div style="font-size:11px;color:var(--green-dark);font-weight:700;margin-bottom:6px;">ĐÁNH GIÁ TỔNG QUAN</div>
+        <div style="font-size:34px;font-weight:800;color:var(--green-dark);">${avgOverall}<span style="font-size:16px;">/10</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Trung bình ${n} phiếu</div>
+      </div>
+    </div>`;
+  box.innerHTML = html;
+  const ctx = document.getElementById(chartId);
+  if(ctx && courseChartLibLoaded_()){
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: COURSE_SURVEY_CATEGORIES.map(c=>c.label),
+        datasets: [{ label: 'Điểm trung bình (/5)', data: avgByCategory, backgroundColor: '#0B5E36', borderRadius:6 }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display:false }, tooltip:{ callbacks:{ label: c=> c.parsed.x + '/5' } } },
+        scales: { x: { min:0, max:5, ticks:{ stepSize:1 } } }
+      }
+    });
+  }
+}
+function courseChartLibLoaded_(){ return typeof Chart !== 'undefined'; }
 function courseDateRangeLabel_(camp){
   if(!camp.classDateFrom) return '—';
   const f = new Date(camp.classDateFrom).toLocaleDateString('vi-VN');
@@ -5105,9 +5181,18 @@ function renderCourseStageScoring_(body, camp, subtype){
   });
   html += `</tbody></table>`;
   html += `<div class="pagination-bar" id="courseScorePagination" style="margin-top:12px;"></div>`;
-  if(canScore) html += `<div style="margin-top:14px;"><button class="primary" id="courseCompleteBtn" type="button">✅ Hoàn thành khoá học</button></div>`;
+  if(canScore) html += `<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+    <button class="primary" id="courseCompleteBtn" type="button">✅ Hoàn thành khoá học</button>
+    <label class="secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:8px 16px;border:1px solid var(--line);border-radius:8px;">
+      📊 Import Khảo sát khoá học
+      <input type="file" id="courseSurveyImportInput" accept=".xlsx,.xls" style="display:none;">
+    </label>
+    <span class="save-msg" id="courseSurveyImportMsg" style="display:none;"></span>
+  </div>`;
+  html += `<div id="courseSurveyResultsBox" style="margin-top:18px;"></div>`;
   body.innerHTML = html;
   if(totalItems>0) renderCourseScorePagination_(totalItems, camp, subtype);
+  renderCourseSurveyResults_(camp, subtype);
 
   const saveScore = async (code)=>{
     const totalEl = body.querySelector(`.course-score-total[data-code="${code}"]`);
@@ -5123,6 +5208,25 @@ function renderCourseStageScoring_(body, camp, subtype){
   });
   const unlockBtn = document.getElementById('courseUnlockBtn');
   if(unlockBtn) unlockBtn.addEventListener('click', ()=> unlockCourseRegistration_(camp, subtype));
+  const surveyInput = document.getElementById('courseSurveyImportInput');
+  if(surveyInput) surveyInput.addEventListener('change', async ()=>{
+    const file = surveyInput.files[0];
+    if(!file) return;
+    const msg = document.getElementById('courseSurveyImportMsg');
+    msg.style.display='block'; msg.style.color='var(--muted)'; msg.textContent='⏳ Đang đọc file...';
+    try{
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, {type:'array'});
+      const parsed = parseCourseSurveyWorkbook_(wb);
+      if(parsed.length===0){ msg.style.color='var(--red)'; msg.textContent='Không đọc được dòng dữ liệu nào — kiểm tra lại đúng file mẫu.'; return; }
+      await dbSet('courseSurveyResponses:'+camp.id, parsed);
+      msg.style.color='var(--green-ok)'; msg.textContent=`Đã import ${parsed.length} phiếu khảo sát.`;
+      renderCourseSurveyResults_(camp, subtype);
+    }catch(e){
+      msg.style.color='var(--red)'; msg.textContent='Lỗi đọc file: '+e.message;
+    }
+    surveyInput.value = '';
+  });
   const completeBtn = document.getElementById('courseCompleteBtn');
   if(completeBtn) completeBtn.addEventListener('click', async ()=>{
     const ok = await showConfirm('Hoàn thành khoá học? Sau khi hoàn thành sẽ KHOÁ LẠI toàn bộ điểm số, không sửa được nữa.');
@@ -5197,8 +5301,10 @@ function renderCourseStageComplete_(body, camp, subtype){
   });
   html += `</tbody></table>`;
   html += `<div class="pagination-bar" id="courseCompletePagination" style="margin-top:12px;"></div>`;
+  html += `<div id="courseSurveyResultsBox" style="margin-top:18px;"></div>`;
   body.innerHTML = html;
   if(totalItems>0) renderCourseCompletePagination_(totalItems, camp, subtype);
+  renderCourseSurveyResults_(camp, subtype);
   const reopenBtn = document.getElementById('courseReopenBtn');
   if(reopenBtn) reopenBtn.addEventListener('click', async ()=>{
     const ok = await showConfirm('Mở lại để chỉnh sửa điểm số? Khoá học sẽ quay về trạng thái "Chấm điểm" — bấm "Hoàn thành" lại sau khi sửa xong.');
