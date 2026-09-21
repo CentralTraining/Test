@@ -5093,14 +5093,12 @@ function renderCourseStageScoring_(body, camp, subtype){
   const startIdx = (courseScorePage_-1)*COURSE_REG_PAGE_SIZE;
   const pageCandidates = candidates.slice(startIdx, startIdx+COURSE_REG_PAGE_SIZE);
 
-  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Cá nhân</th><th>Tập thể</th><th>Tổng điểm</th><th>⭐ Xuất sắc</th><th>Note đánh giá</th></tr></thead><tbody>`;
+  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Điểm cuối khoá</th><th>⭐ Xuất sắc</th><th>Note đánh giá</th></tr></thead><tbody>`;
   pageCandidates.forEach((c,i)=>{
-    const sc = scoreMap[c.code] || {theory:'',consult:'',total:0,excellent:false,note:''};
+    const sc = scoreMap[c.code] || {total:'',excellent:false,note:''};
     html += `<tr>
       <td>${startIdx+i+1}</td><td>${c.code}</td><td>${c.name}</td><td>${c.region||'—'}</td><td>${c.trainerName}</td>
-      <td>${canScore?`<input type="number" min="0" max="10" step="0.1" class="course-score-theory" data-code="${c.code}" value="${sc.theory}" style="width:70px;padding:5px;border:1px solid var(--line);border-radius:6px;">`:sc.theory}</td>
-      <td>${canScore?`<input type="number" min="0" max="10" step="0.1" class="course-score-consult" data-code="${c.code}" value="${sc.consult}" style="width:70px;padding:5px;border:1px solid var(--line);border-radius:6px;">`:sc.consult}</td>
-      <td><strong class="course-score-total" data-code="${c.code}">${sc.total||0}</strong></td>
+      <td>${canScore?`<input type="number" min="0" max="10" step="0.1" class="course-score-total" data-code="${c.code}" value="${sc.total}" style="width:80px;padding:5px;border:1px solid var(--line);border-radius:6px;">`:`<strong>${sc.total||0}</strong>`}</td>
       <td style="text-align:center;">${canScore?`<input type="checkbox" class="course-score-excellent" data-code="${c.code}" ${sc.excellent?'checked':''}>`:(sc.excellent?'⭐':'')}</td>
       <td>${canScore?`<input type="text" class="course-score-note" data-code="${c.code}" value="${(sc.note||'').replace(/"/g,'&quot;')}" placeholder="Nhận xét..." style="width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px;font-family:inherit;">`:(sc.note||'—')}</td>
     </tr>`;
@@ -5112,19 +5110,15 @@ function renderCourseStageScoring_(body, camp, subtype){
   if(totalItems>0) renderCourseScorePagination_(totalItems, camp, subtype);
 
   const saveScore = async (code)=>{
-    const theoryEl = body.querySelector(`.course-score-theory[data-code="${code}"]`);
-    const consultEl = body.querySelector(`.course-score-consult[data-code="${code}"]`);
+    const totalEl = body.querySelector(`.course-score-total[data-code="${code}"]`);
     const excellentEl = body.querySelector(`.course-score-excellent[data-code="${code}"]`);
     const noteEl = body.querySelector(`.course-score-note[data-code="${code}"]`);
-    const theory = Number(theoryEl.value)||0, consult = Number(consultEl.value)||0;
-    const total = Math.round((theory+consult)*10)/10;
-    const totalEl = body.querySelector(`.course-score-total[data-code="${code}"]`);
-    if(totalEl) totalEl.textContent = total;
+    const total = Math.round((Number(totalEl.value)||0)*10)/10;
     const scoreMap2 = courseScoreCache_[camp.id] || (courseScoreCache_[camp.id]={});
-    scoreMap2[code] = { theory, consult, total, excellent: excellentEl.checked, note: noteEl.value.trim() };
+    scoreMap2[code] = { total, excellent: excellentEl.checked, note: noteEl.value.trim() };
     await dbSet('courseScores:'+camp.id, scoreMap2);
   };
-  body.querySelectorAll('.course-score-theory, .course-score-consult, .course-score-excellent, .course-score-note').forEach(el=>{
+  body.querySelectorAll('.course-score-total, .course-score-excellent, .course-score-note').forEach(el=>{
     el.addEventListener('change', ()=> saveScore(el.getAttribute('data-code')));
   });
   const unlockBtn = document.getElementById('courseUnlockBtn');
@@ -5186,7 +5180,7 @@ function renderCourseStageComplete_(body, camp, subtype){
     </div>
     ${canEditAgain?`<div style="margin-top:10px;"><button class="secondary" id="courseReopenBtn" type="button">↩ Quay Lại</button></div>`:''}
   </div>`;
-  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Cá nhân</th><th>Tập thể</th><th>Tổng điểm</th><th>⭐</th><th>Note</th></tr></thead><tbody>`;
+  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Điểm cuối khoá</th><th>⭐</th><th>Note</th></tr></thead><tbody>`;
   const totalItems = candidates.length;
   const totalPages = Math.max(1, Math.ceil(totalItems/COURSE_REG_PAGE_SIZE));
   if(courseCompletePage_>totalPages) courseCompletePage_ = totalPages;
@@ -5194,10 +5188,10 @@ function renderCourseStageComplete_(body, camp, subtype){
   const startIdx = (courseCompletePage_-1)*COURSE_REG_PAGE_SIZE;
   const pageCandidates = candidates.slice(startIdx, startIdx+COURSE_REG_PAGE_SIZE);
   pageCandidates.forEach((c,i)=>{
-    const sc = scoreMap[c.code] || {theory:0,consult:0,total:0,excellent:false,note:''};
+    const sc = scoreMap[c.code] || {total:0,excellent:false,note:''};
     html += `<tr${sc.excellent?' style="background:#fffbeb;"':''}>
       <td>${startIdx+i+1}</td><td>${c.code}</td><td>${c.name}</td><td>${c.region||'—'}</td><td>${c.trainerName}</td>
-      <td>${sc.theory}</td><td>${sc.consult}</td><td><strong>${sc.total}</strong></td>
+      <td><strong>${sc.total}</strong></td>
       <td style="text-align:center;">${sc.excellent?'⭐':''}</td><td>${sc.note||'—'}</td>
     </tr>`;
   });
