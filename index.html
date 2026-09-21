@@ -677,27 +677,27 @@
         </div>
       </div>
       <div class="scope-filters" style="justify-content:space-between;">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span class="scope-label">Tìm nhanh:</span>
           <div class="subnav" style="margin:0;">
-            <button data-pgsearchmode="name" class="active">Theo Tên hoặc Code</button>
+            <button data-pgsearchmode="name" class="active">Theo Tên/Code</button>
             <button data-pgsearchmode="trainer">Theo Trainer</button>
             <button data-pgsearchmode="sale">Theo Sale</button>
           </div>
-          <input type="text" id="pgSearchInput" placeholder="Nhập Code hoặc Họ và Tên..." style="min-width:220px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
-          <select id="pgSearchTrainerSelect" style="display:none;min-width:220px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);"><option value="">Tất cả Trainer</option></select>
-          <select id="pgSearchSaleSelect" style="display:none;min-width:220px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);"><option value="">Tất cả Sale</option></select>
+          <input type="text" id="pgSearchInput" placeholder="Nhập Code hoặc Họ và Tên..." style="width:150px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
+          <select id="pgSearchTrainerSelect" style="display:none;max-width:150px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);"><option value="">Tất cả Trainer</option></select>
+          <select id="pgSearchSaleSelect" style="display:none;max-width:150px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);"><option value="">Tất cả Sale</option></select>
           <span class="scope-label">Trạng thái:</span>
-          <select id="pgStatusFilterSelect" style="min-width:170px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
-            <option value="">Tất cả trạng thái</option>
+          <select id="pgStatusFilterSelect" style="max-width:140px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
+            <option value="">Tất cả</option>
             <option value="Đang làm">Đang làm</option>
             <option value="THAI SẢN">THAI SẢN</option>
             <option value="CODE ĐẠI LÝ">CODE ĐẠI LÝ</option>
-            <option value="OFF (chưa cắt Center)">OFF (chưa cắt Center)</option>
+            <option value="OFF (chưa cắt Center)">OFF (chưa cắt)</option>
           </select>
           <span class="scope-label">Sao:</span>
-          <select id="pgStarFilterSelect" style="min-width:130px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
-            <option value="">Tất cả Sao</option>
+          <select id="pgStarFilterSelect" style="max-width:100px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
+            <option value="">Tất cả</option>
             <option value="0">★ 0</option>
             <option value="1">★ 1</option>
             <option value="2">★★ 2</option>
@@ -706,9 +706,9 @@
             <option value="5">★★★★★ 5</option>
           </select>
           <span class="scope-label">Size shop:</span>
-          <select id="pgShopSizeFilterSelect" style="min-width:150px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);"><option value="">Tất cả Size shop</option></select>
+          <select id="pgShopSizeFilterSelect" style="max-width:120px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);"><option value="">Tất cả</option></select>
+          <button class="secondary" id="exportPgBtn" style="white-space:nowrap;">Export Excel</button>
         </div>
-        <button class="secondary" id="exportPgBtn">Export danh sách ra Excel</button>
       </div>
       <div id="pgSearchResultCount" style="font-size:var(--cap);color:var(--green-dark);font-weight:700;margin-bottom:8px;"></div>
       <table class="pg-table">
@@ -4846,16 +4846,16 @@ function renderCourseStageRegistration_(body, camp, subtype){
     const regionOptions = Array.from(new Set(candidatesAll.map(c=>c.region).filter(Boolean))).sort().map(r=>`<option value="${r}" ${courseViewFilter_.region===r?'selected':''}>${r}</option>`).join('');
     const trainerOptionsFilter = Array.from(new Map(candidatesAll.map(c=>[c.trainerId,c.trainerName])).entries()).sort((a,b)=>a[1].localeCompare(b[1],'vi')).map(([id,name])=>`<option value="${id}" ${courseViewFilter_.trainerId===id?'selected':''}>${name}</option>`).join('');
     html += `<div class="scope-filters" style="margin:10px 0;flex-wrap:wrap;">
-      <span class="scope-label">Tìm theo Tên/Code:</span>
-      <input type="text" id="courseViewSearchInput" value="${(courseViewFilter_.search||'').replace(/"/g,'&quot;')}" placeholder="Nhập Tên hoặc Code..." style="padding:8px 14px;border:1.5px solid #9FD8CB;border-radius:10px;font-family:inherit;font-size:var(--cap);min-width:200px;">
-      <span class="scope-label">Lọc theo Khu vực:</span>
-      <select id="courseViewRegionSel"><option value="">Tất cả Khu vực</option>${regionOptions}</select>
-      <span class="scope-label">Lọc theo Trainer:</span>
-      <select id="courseViewTrainerSel"><option value="">Tất cả Trainer</option>${trainerOptionsFilter}</select>
-      <span class="scope-label">Lọc theo Trạng thái đăng ký:</span>
-      <select id="courseViewRegStatusSel">
+      <span class="scope-label">Tìm Tên/Code:</span>
+      <input type="text" id="courseViewSearchInput" value="${(courseViewFilter_.search||'').replace(/"/g,'&quot;')}" placeholder="Nhập Tên hoặc Code..." style="padding:8px 12px;border:1.5px solid #9FD8CB;border-radius:10px;font-family:inherit;font-size:var(--cap);width:150px;">
+      <span class="scope-label">Khu vực:</span>
+      <select id="courseViewRegionSel" style="max-width:130px;"><option value="">Tất cả</option>${regionOptions}</select>
+      <span class="scope-label">Trainer:</span>
+      <select id="courseViewTrainerSel" style="max-width:150px;"><option value="">Tất cả</option>${trainerOptionsFilter}</select>
+      <span class="scope-label">Trạng thái:</span>
+      <select id="courseViewRegStatusSel" style="max-width:150px;">
         <option value="" ${courseViewFilter_.regStatus===''?'selected':''}>Tất cả</option>
-        <option value="chuachonn" ${courseViewFilter_.regStatus==='chuachonn'?'selected':''}>— Chưa chọn —</option>
+        <option value="chuachonn" ${courseViewFilter_.regStatus==='chuachonn'?'selected':''}>Chưa chọn</option>
         <option value="Tham gia" ${courseViewFilter_.regStatus==='Tham gia'?'selected':''}>✅ Tham gia</option>
         <option value="Không tham gia" ${courseViewFilter_.regStatus==='Không tham gia'?'selected':''}>❌ Không tham gia</option>
       </select>
@@ -5604,7 +5604,7 @@ function populatePgSearchSelects(){
     // Ưu tiên Size shop từ bảng Gán Shop chuẩn (giống hệt cách hiển thị/Export) — chỉ dùng shopSize
     // riêng của PG khi Shop đó chưa có trong bảng Gán Shop.
     const sizeNames = Array.from(new Set(scopedPgs('OPPO').map(p=> shopSizeFromMap_(p.shop)||p.shopSize||'').filter(Boolean))).sort();
-    sizeSel.innerHTML = '<option value="">Tất cả Size shop</option>' + sizeNames.map(s=>`<option value="${s}">${s}</option>`).join('');
+    sizeSel.innerHTML = '<option value="">Tất cả</option>' + sizeNames.map(s=>`<option value="${s}">${s}</option>`).join('');
     if(sizeNames.includes(cur)) sizeSel.value=cur;
   }
 }
