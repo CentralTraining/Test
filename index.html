@@ -4669,7 +4669,12 @@ function courseCandidates_(camp, subtype, scopeToOwnTrainer){
     // ngày trên màn hình chỉ áp dụng riêng cho CVTV, không có ý nghĩa với PGs 3★).
     const starNeed = camp.starFilter ? Number(camp.starFilter) : null;
     list = pgs.filter(p=> p.status==='Đang làm' && (starNeed===null || Number(p.star)===starNeed))
-      .map(p=>({ code:p.code, name:p.name, trainerId:p.trainerId, area:trainerOf(p.trainerId)?trainerOf(p.trainerId).region:'', gender:p.gender||'' }));
+      .map(p=>{
+        // Giới tính có thể chỉ mới được lưu ở dữ liệu On/Off (Import gần đây), Danh sách Nhân sự
+        // chính có thể CHƯA đồng bộ — tra thêm qua onoffRoster (khớp Code) làm dự phòng.
+        const oo = onoffRoster.find(r=>r.code===p.code);
+        return { code:p.code, name:p.name, trainerId:p.trainerId, area:trainerOf(p.trainerId)?trainerOf(p.trainerId).region:'', gender:p.gender||(oo?oo.gender:'')||'' };
+      });
   } else {
     const from = camp.dateFrom ? new Date(camp.dateFrom) : null;
     const to = camp.dateTo ? new Date(camp.dateTo+'T23:59:59') : null;
@@ -6378,6 +6383,7 @@ async function processOnOffWorkbook_(wb){
   const rowsOff = wsOff ? XLSX.utils.sheet_to_json(wsOff, { defval:'' }) : [];
 
   let added=0, updated=0, skippedOtherRegion=0, tracedBack=0;
+  let pgsGenderSynced = false;
 
   async function processRow(row, forcedStatus){
     const code = String(row['Code']||'').trim();
@@ -6395,6 +6401,10 @@ async function processOnOffWorkbook_(wb){
       matchedPg = await findPgAcrossMonths_(code);
       if(matchedPg) tracedBack++;
     }
+    // Đồng bộ luôn Giới tính thẳng vào Danh sách Nhân sự chính (không chỉ lưu riêng ở On/Off) — để
+    // các nơi khác (VD danh sách đăng ký PGs 3★, lấy PG trực tiếp từ Nhân sự) cũng thấy đúng Giới
+    // tính mà không cần tra vòng qua On/Off.
+    if(matchedPg && gender && !matchedPg.gender){ matchedPg.gender = gender; pgsGenderSynced = true; }
     const trainerId = matchedPg ? matchedPg.trainerId : '';
     const channel = matchedPg ? (matchedPg.channel||'') : '';
     const shop = matchedPg ? (matchedPg.shop||'') : '';
@@ -6440,6 +6450,7 @@ async function processOnOffWorkbook_(wb){
   const removedStale = beforeCount - onoffRoster.length;
 
   await dbSet('onoffRoster', onoffRoster);
+  if(pgsGenderSynced) await dbSet('pgs:'+currentMonth, pgs);
   renderAll();
 
   msg.style.display='block'; msg.style.color='var(--green-ok)';
