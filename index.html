@@ -528,7 +528,14 @@
       <h2>Đăng nhập</h2>
       <p class="sub">Nhập tài khoản được Admin cấp cho bạn.</p>
       <div class="form-row"><label>Tên đăng nhập</label><input type="text" id="loginUser"></div>
-      <div class="form-row"><label>Mật khẩu</label><input type="password" id="loginPass"></div>
+      <div class="form-row"><label>Mật khẩu</label>
+        <div style="position:relative;">
+          <input type="password" id="loginPass" style="padding-right:40px;width:100%;">
+          <button type="button" id="loginPassToggle" aria-label="Hiện/ẩn mật khẩu" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--muted);display:flex;align-items:center;">
+            <svg id="loginPassEyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
       <button class="primary" id="loginBtn">Đăng nhập</button>
       <div class="login-error" id="loginError"></div>
     </div>
@@ -2212,6 +2219,16 @@ document.getElementById('setupBtn').addEventListener('click', async ()=>{
   session={ userId:admin.id, username:admin.username, role:'admin', displayName:admin.displayName };
   saveSessionLocal_(session);
   err.style.display='none'; await renderAuthScreen();
+});
+// Bấm icon mắt để hiện/ẩn mật khẩu đang gõ — đổi icon mắt mở/gạch chéo theo đúng trạng thái.
+document.getElementById('loginPassToggle').addEventListener('click', ()=>{
+  const inp = document.getElementById('loginPass');
+  const icon = document.getElementById('loginPassEyeIcon');
+  const showing = inp.type==='text';
+  inp.type = showing ? 'password' : 'text';
+  icon.innerHTML = showing
+    ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/>'
+    : '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
 });
 // Cho phép bấm Enter ở ô Tên đăng nhập hoặc Mật khẩu để đăng nhập ngay, khỏi phải bấm chuột vào nút.
 ['loginUser','loginPass'].forEach(id=>{
