@@ -4675,6 +4675,12 @@ function courseCandidates_(camp, subtype, scopeToOwnTrainer){
   // trong lớp — kể cả PG không thuộc Trainer/khu vực của chính Lead Khoá — nên KHÔNG áp giới hạn này
   // ở giai đoạn Chấm điểm/Đã hoàn thành (gọi hàm với scopeToOwnTrainer=false).
   if(scopeToOwnTrainer!==false){
+    // Chỉ đổ vào danh sách ứng viên những PG có trạng thái THỰC TẾ HIỆN TẠI vẫn là "Đang làm" — tra
+    // theo effectivePgMoiStatus_ (ưu tiên trạng thái ở Danh sách Nhân sự chính, không chỉ dựa vào
+    // status='On' lúc Import On/Off, vì PG có thể đã OFF/Thai sản... sau đó). Chỉ áp dụng ở GIAI ĐOẠN
+    // ĐĂNG KÝ — không áp dụng ở Chấm điểm/Đã hoàn thành (vẫn cần hiện đúng PG đã đăng ký dù sau đó có
+    // đổi trạng thái).
+    list = list.filter(r=>effectivePgMoiStatus_(r)==='Đang làm');
     const tList = isTrainer() ? config.trainers.filter(t=>t.id===session.trainerId) : visibleTrainers();
     const trainerIds = new Set(tList.map(t=>t.id));
     list = list.filter(r=>trainerIds.has(r.trainerId));
