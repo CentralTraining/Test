@@ -4836,8 +4836,13 @@ function renderCourseStageRegistration_(body, camp, subtype){
     </div>
   </div>`;
 
-  const candidatesAll = (camp.dateFrom||camp.dateTo||camp.starFilter) ? courseCandidates_(camp, subtype) : [];
   const regMap = courseRegCache_[camp.id] || {};
+  // Nếu đã từng lọc + đăng ký trước đó (Trạng thái đã lưu cho ít nhất 1 PG), vẫn hiện danh sách dù
+  // vì lý do gì đó camp.dateFrom/dateTo/starFilter bị trống — tránh tình huống bấm "Quay Lại" xong bị
+  // "kẹt" ở màn hình trống, không thấy nút Chốt lại để tiếp tục, dữ liệu Điểm/Đăng ký đã nhập vẫn giữ
+  // nguyên trong lưu trữ, chỉ cần hiện lại đúng danh sách là thao tác tiếp được ngay.
+  const hasExistingRegs = Object.keys(regMap).length>0;
+  const candidatesAll = (camp.dateFrom||camp.dateTo||camp.starFilter||hasExistingRegs) ? courseCandidates_(camp, subtype) : [];
 
   // Bộ lọc THÊM để RÀ SOÁT danh sách sau khi đã lọc (không lưu vào campaign, chỉ lọc hiển thị tạm
   // thời) — theo Trainer, theo Khu vực, và theo Trạng thái đăng ký (Tham gia/Không tham gia/Chưa
