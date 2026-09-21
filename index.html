@@ -4820,7 +4820,10 @@ function renderCourseStageRegistration_(body, camp, subtype){
   if(candidatesAll.length===0){
     html += `<div class="empty">${(camp.dateFrom||camp.dateTo||camp.starFilter)?'Không có PG nào khớp bộ lọc.':(subtype==='cvtv'?'Chọn khoảng ngày rồi bấm "Lọc danh sách" để bắt đầu.':'Chọn Hạng Sao rồi bấm "Lọc danh sách" để bắt đầu.')}</div>`;
   } else {
-    html += `<h4 style="margin:14px 0 8px;color:var(--green-dark);">Bước 2 — Từng Trainer đăng ký Tham gia / Không tham gia cho đúng PG của mình</h4>`;
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:14px 0 8px;">
+      <h4 style="margin:0;color:var(--green-dark);">Bước 2 — Từng Trainer đăng ký Tham gia / Không tham gia cho đúng PG của mình</h4>
+      <button class="secondary" id="courseExportRegBtn" type="button">⬇ Export Excel</button>
+    </div>`;
     if(candidates.length===0){
       html += `<div class="empty">Không có PG nào khớp bộ lọc Khu vực/Trainer đang chọn.</div>`;
     } else {
@@ -4896,6 +4899,29 @@ function renderCourseStageRegistration_(body, camp, subtype){
   });
   const lockBtn = document.getElementById('courseLockBtn');
   if(lockBtn) lockBtn.addEventListener('click', ()=> openCourseLockModal_(camp, subtype));
+  const exportBtn = document.getElementById('courseExportRegBtn');
+  if(exportBtn) exportBtn.addEventListener('click', ()=>{
+    // Export đúng danh sách đang hiển thị (đã áp bộ lọc Khu vực/Trainer/Trạng thái rà soát nếu có),
+    // đầy đủ các cột giống hệt bảng trên màn hình.
+    const rows = candidates.map((c,i)=>{
+      const reg = regMap[c.code] || {status:'',note:''};
+      const row = {
+        'STT': i+1, 'Code': c.code, 'Họ tên': c.name, 'Khu vực': c.region||'', 'Tỉnh': c.province||'',
+        'Giới tính': c.gender||'', 'Shop': c.shop||'', 'Kênh': c.channel||'', 'Thâm niên (tháng)': c.seniority,
+      };
+      if(subtype==='pgs3sao') row['Sao'] = c.star;
+      row['Trainer'] = c.trainerName;
+      row['Trạng thái'] = reg.status||'Chưa chọn';
+      row['Note'] = reg.note||'';
+      return row;
+    });
+    if(rows.length===0){ alert('Không có dữ liệu để export.'); return; }
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Đăng ký');
+    const today = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `DangKy_${subtype==='cvtv'?'CVTV':'PGs3Sao'}_${today}.xlsx`);
+  });
 }
 function renderCourseRegPagination_(totalItems, camp, subtype){
   const box = document.getElementById('courseRegPagination');
