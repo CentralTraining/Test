@@ -8386,6 +8386,9 @@ async function processSurvey01Workbook_(wb){
     msg.textContent = `Đã import ${added} lượt khảo sát PGs 0★/1★ hợp lệ. Bỏ qua: ${skippedOtherMonth} khác tháng, ${skippedOtherLoai} thuộc nhóm PGs mới (dùng đúng nút import PGs mới), ${invalidStatus} Trạng thái không hợp lệ (Trùng/khác), ${skippedDup} trùng lặp, ${skippedNoCode} thiếu Mã NV${skippedOtherRegion?`, ${skippedOtherRegion} ngoài khu vực bạn phụ trách`:''}.`;
   }
 }
+let surveyFormPage_ = 1;
+let surveyFormLuotFilter_ = '';
+const SURVEY_FORM_PAGE_SIZE = 10;
 function renderSurveyForm(){
   const box=document.getElementById('surveyFormBox');
   if(!box) return;
@@ -8397,17 +8400,34 @@ function renderSurveyForm(){
   let html = '';
   const monthEntries = scopedResponses.length;
   const completedCount = coachingReg.filter(r=> surveyCountForCode(r.code) >= COACHING_SESSIONS_TO_COMPLETE).length;
-  html += `<div class="scope-filters" style="justify-content:space-between;margin-bottom:8px;">
-    <span class="scope-label">Đã nhập <strong>${monthEntries}</strong> lượt khảo sát trong ${monthLabel(currentMonth)} (khớp bộ lọc)</span>
+  html += `<div class="scope-filters" style="justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span class="scope-label">Đã nhập <strong>${monthEntries}</strong> lượt khảo sát trong ${monthLabel(currentMonth)} (khớp bộ lọc)</span>
+      <span class="scope-label">Lượt:</span>
+      <select id="surveyFormLuotSel" style="max-width:100px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
+        <option value="" ${surveyFormLuotFilter_===''?'selected':''}>Tất cả</option>
+        <option value="1" ${surveyFormLuotFilter_==='1'?'selected':''}>1/${COACHING_SESSIONS_TO_COMPLETE}</option>
+        <option value="2" ${surveyFormLuotFilter_==='2'?'selected':''}>${COACHING_SESSIONS_TO_COMPLETE}/${COACHING_SESSIONS_TO_COMPLETE}</option>
+      </select>
+    </div>
     <span class="scope-label">PG đã đủ ${COACHING_SESSIONS_TO_COMPLETE} lượt (hoàn thành Target): <strong>${completedCount}</strong></span>
   </div>`;
 
-  if(scopedResponses.length===0){
+  let filteredResponses = scopedResponses;
+  if(surveyFormLuotFilter_) filteredResponses = filteredResponses.filter(s=> String(surveyCountForCode(s.code))===surveyFormLuotFilter_);
+
+  if(filteredResponses.length===0){
     html += `<div class="empty">Chưa có khảo sát nào khớp bộ lọc trong tháng này.</div>`;
   } else {
-    const sorted = [...scopedResponses].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+    const sorted = [...filteredResponses].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+    const totalItems = sorted.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems/SURVEY_FORM_PAGE_SIZE));
+    if(surveyFormPage_>totalPages) surveyFormPage_ = totalPages;
+    if(surveyFormPage_<1) surveyFormPage_ = 1;
+    const startIdx = (surveyFormPage_-1)*SURVEY_FORM_PAGE_SIZE;
+    const pageItems = sorted.slice(startIdx, startIdx+SURVEY_FORM_PAGE_SIZE);
     html += `<table><thead><tr><th>Thời gian</th><th>Mã NV</th><th>Họ & Tên PGs</th><th>Trainer</th><th>Nhóm</th><th>Buổi thứ</th><th>Lượt/2</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>`;
-    sorted.forEach(s=>{
+    pageItems.forEach(s=>{
       const cnt = surveyCountForCode(s.code);
       const done = cnt >= COACHING_SESSIONS_TO_COMPLETE;
       html += `<tr>
@@ -8422,9 +8442,13 @@ function renderSurveyForm(){
       </tr>`;
     });
     html += `</tbody></table>`;
+    html += `<div class="pagination-bar" id="surveyFormPagination"></div>`;
   }
 
   box.innerHTML = html;
+  const luotSel = document.getElementById('surveyFormLuotSel');
+  if(luotSel) luotSel.addEventListener('change', ()=>{ surveyFormLuotFilter_=luotSel.value; surveyFormPage_=1; renderSurveyForm(); });
+  if(filteredResponses.length>0) renderSurveyFormPagination_(filteredResponses.length);
 
   box.querySelectorAll('[data-del-survey]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
@@ -8439,6 +8463,7 @@ function renderSurveyForm(){
 }
 /* ============ COACHING PGs MỚI: PANEL + DANH SÁCH + IMPORT ============ */
 let pgMoiStatusFilter='';
+let pgMoiLuotFilter='';
 function renderPgMoiPanel(){
   const box=document.getElementById('noiboView-pgMoi');
   if(!box) return;
@@ -8452,6 +8477,13 @@ function renderPgMoiPanel(){
       <option value="CODE ĐẠI LÝ" ${pgMoiStatusFilter==='CODE ĐẠI LÝ'?'selected':''}>CODE ĐẠI LÝ</option>
       <option value="OFF (chưa cắt Center)" ${pgMoiStatusFilter==='OFF (chưa cắt Center)'?'selected':''}>OFF (chưa cắt Center)</option>
     </select>
+    <span class="scope-label">Số khảo sát:</span>
+    <select id="pgMoiLuotFilterSelect">
+      <option value="" ${pgMoiLuotFilter===''?'selected':''}>Tất cả</option>
+      <option value="0" ${pgMoiLuotFilter==='0'?'selected':''}>0/${COACHING_SESSIONS_TO_COMPLETE}</option>
+      <option value="1" ${pgMoiLuotFilter==='1'?'selected':''}>1/${COACHING_SESSIONS_TO_COMPLETE}</option>
+      <option value="2" ${pgMoiLuotFilter==='2'?'selected':''}>${COACHING_SESSIONS_TO_COMPLETE}/${COACHING_SESSIONS_TO_COMPLETE}</option>
+    </select>
   </div>`;
   html += `<h3 class="kpi-section-title">Danh sách PGs mới (nhóm "On" trong ${monthLabel(currentMonth)})</h3>`;
   html += `<div id="newPgListBox"></div>`;
@@ -8461,7 +8493,9 @@ function renderPgMoiPanel(){
   renderNewPgList();
   renderNewPgList25_();
   const statusSel = document.getElementById('pgMoiStatusFilterSelect');
-  if(statusSel) statusSel.addEventListener('change', (e)=>{ pgMoiStatusFilter=e.target.value; renderNewPgList(); renderNewPgList25_(); });
+  if(statusSel) statusSel.addEventListener('change', (e)=>{ pgMoiStatusFilter=e.target.value; newPgListPage_=1; renderNewPgList(); renderNewPgList25_(); });
+  const luotSel = document.getElementById('pgMoiLuotFilterSelect');
+  if(luotSel) luotSel.addEventListener('change', (e)=>{ pgMoiLuotFilter=e.target.value; newPgListPage_=1; renderNewPgList(); });
 }
 /* Bộ lọc chung "Xem theo Khu vực/Trainer" cho toàn bộ danh sách trong tag Nội bộ */
 let noiboFilterRegion = '';
@@ -8537,6 +8571,35 @@ function effectivePgMoiStatus_(r){
   const matchedPg = pgs.find(p=>p.code && r.code && p.code===r.code);
   return matchedPg ? matchedPg.status : (r.devStatusNote || 'Đang làm');
 }
+function renderSurveyFormPagination_(totalItems){
+  const box = document.getElementById('surveyFormPagination');
+  if(!box) return;
+  const totalPages = Math.max(1, Math.ceil(totalItems/SURVEY_FORM_PAGE_SIZE));
+  let pageButtons='';
+  const maxShown = 7;
+  let start = Math.max(1, surveyFormPage_ - 3);
+  let end = Math.min(totalPages, start + maxShown - 1);
+  start = Math.max(1, end - maxShown + 1);
+  for(let i=start;i<=end;i++){
+    pageButtons += `<button data-survey-form-page="${i}" class="${i===surveyFormPage_?'active':''}">${i}</button>`;
+  }
+  const from = (surveyFormPage_-1)*SURVEY_FORM_PAGE_SIZE + 1;
+  const to = Math.min(surveyFormPage_*SURVEY_FORM_PAGE_SIZE, totalItems);
+  box.innerHTML = `
+    <span class="pagination-info">Hiển thị ${from}-${to} / ${totalItems} lượt</span>
+    <button data-survey-form-page="${surveyFormPage_-1}" ${surveyFormPage_<=1?'disabled':''}>‹</button>
+    ${pageButtons}
+    <button data-survey-form-page="${surveyFormPage_+1}" ${surveyFormPage_>=totalPages?'disabled':''}>›</button>
+  `;
+  box.querySelectorAll('[data-survey-form-page]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      surveyFormPage_ = Number(btn.getAttribute('data-survey-form-page'));
+      renderSurveyForm();
+    });
+  });
+}
+let newPgListPage_ = 1;
+const NEW_PG_LIST_PAGE_SIZE = 10;
 function renderNewPgList(){
   const box=document.getElementById('newPgListBox');
   if(!box) return;
@@ -8544,6 +8607,7 @@ function renderNewPgList(){
   const trainerIds = noiboFilteredTrainerIds_(new Set(tList.map(t=>t.id)));
   let newPgs = onoffRoster.filter(r=> r.status==='On' && r.trainerId && trainerIds.has(r.trainerId) && r.joinedAt && monthKeyOf(new Date(r.joinedAt))===currentMonth);
   if(pgMoiStatusFilter) newPgs = newPgs.filter(r=>effectivePgMoiStatus_(r)===pgMoiStatusFilter);
+  if(pgMoiLuotFilter!=='') newPgs = newPgs.filter(r=> String(surveyCountForCodeNew(r.code))===pgMoiLuotFilter);
   newPgs = newPgs.sort((a,b)=> (b.statusChangedAt?1:0) - (a.statusChangedAt?1:0));
 
   if(newPgs.length===0){
@@ -8554,20 +8618,36 @@ function renderNewPgList(){
   const lateList = [];
   let html = '';
   const canEditNote = isAdmin() || isTrainer();
-  const tableRows = newPgs.map((r,idx)=>{
+  // Tính cảnh báo trễ TRÊN TOÀN BỘ danh sách đã lọc (không phải chỉ trang đang xem) — để cảnh báo đầu
+  // trang luôn đúng, không phụ thuộc đang xem trang mấy.
+  newPgs.forEach(r=>{
+    const tr = config.trainers.find(t=>t.id===r.trainerId);
+    const cnt = surveyCountForCodeNew(r.code);
+    const joinedDate = new Date(r.joinedAt);
+    const daysSinceJoin = Math.floor((now - joinedDate) / (1000*60*60*24));
+    let isLate = false;
+    if(daysSinceJoin>=14 && cnt<2) isLate = true;
+    else if(daysSinceJoin>=7 && cnt<1) isLate = true;
+    if(isLate && effectivePgMoiStatus_(r)==='Đang làm') lateList.push({ ...r, trainerName: tr?tr.name:'—', cnt, daysSinceJoin });
+  });
+
+  const totalItems = newPgs.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems/NEW_PG_LIST_PAGE_SIZE));
+  if(newPgListPage_>totalPages) newPgListPage_ = totalPages;
+  if(newPgListPage_<1) newPgListPage_ = 1;
+  const startIdx = (newPgListPage_-1)*NEW_PG_LIST_PAGE_SIZE;
+  const pageItems = newPgs.slice(startIdx, startIdx+NEW_PG_LIST_PAGE_SIZE);
+  const tableRows = pageItems.map((r,idx)=>{
     const tr = config.trainers.find(t=>t.id===r.trainerId);
     const cnt = surveyCountForCodeNew(r.code);
     const done = cnt >= COACHING_SESSIONS_TO_COMPLETE;
     const joinedDate = new Date(r.joinedAt);
     const daysSinceJoin = Math.floor((now - joinedDate) / (1000*60*60*24));
-    // Quy định: sau 1 tuần (7 ngày) phải có ít nhất 1 lượt coaching + khảo sát;
-    // sau 2 tuần (14 ngày) phải đủ 2 lượt. Trễ 1 trong 2 mốc trên đều tính là vi phạm.
     let isLate = false;
     if(daysSinceJoin>=14 && cnt<2) isLate = true;
     else if(daysSinceJoin>=7 && cnt<1) isLate = true;
-    if(isLate && effectivePgMoiStatus_(r)==='Đang làm') lateList.push({ ...r, trainerName: tr?tr.name:'—', cnt, daysSinceJoin });
     return `<tr${isLate?' style="background:var(--red-bg);"':''}${r.statusChangedAt?' class="pg-status-changed"':''}>
-      <td>${idx+1}</td>
+      <td>${startIdx+idx+1}</td>
       <td>${r.code||'—'}</td>
       <td><strong>${r.name||'—'}</strong></td>
       <td>${r.area||'—'}</td>
@@ -8586,8 +8666,37 @@ function renderNewPgList(){
     </div>`;
   }
   html += `<table class="pgmoi-table"><thead><tr><th>STT</th><th>Code</th><th>Họ và Tên</th><th>Khu vực</th><th>Trainer</th><th>Ngày vào</th><th>Số khảo sát</th><th>Cảnh báo trễ</th><th>Trạng thái</th></tr></thead><tbody>${tableRows.join('')}</tbody></table>`;
+  html += `<div class="pagination-bar" id="newPgListPagination"></div>`;
   box.innerHTML = html;
   wireDevStatusNoteSelects_(box);
+  renderNewPgListPagination_(totalItems);
+}
+function renderNewPgListPagination_(totalItems){
+  const box = document.getElementById('newPgListPagination');
+  if(!box) return;
+  const totalPages = Math.max(1, Math.ceil(totalItems/NEW_PG_LIST_PAGE_SIZE));
+  let pageButtons='';
+  const maxShown = 7;
+  let start = Math.max(1, newPgListPage_ - 3);
+  let end = Math.min(totalPages, start + maxShown - 1);
+  start = Math.max(1, end - maxShown + 1);
+  for(let i=start;i<=end;i++){
+    pageButtons += `<button data-new-pg-page="${i}" class="${i===newPgListPage_?'active':''}">${i}</button>`;
+  }
+  const from = (newPgListPage_-1)*NEW_PG_LIST_PAGE_SIZE + 1;
+  const to = Math.min(newPgListPage_*NEW_PG_LIST_PAGE_SIZE, totalItems);
+  box.innerHTML = `
+    <span class="pagination-info">Hiển thị ${from}-${to} / ${totalItems} PG</span>
+    <button data-new-pg-page="${newPgListPage_-1}" ${newPgListPage_<=1?'disabled':''}>‹</button>
+    ${pageButtons}
+    <button data-new-pg-page="${newPgListPage_+1}" ${newPgListPage_>=totalPages?'disabled':''}>›</button>
+  `;
+  box.querySelectorAll('[data-new-pg-page]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      newPgListPage_ = Number(btn.getAttribute('data-new-pg-page'));
+      renderNewPgList();
+    });
+  });
 }
 /* Tính khoảng ngày "từ 25 tháng trước" — dùng cho chu kỳ coaching PGs mới lệch mốc (26 tháng trước → 25 tháng này) */
 function get25CycleRange_(currentMonthStr){
