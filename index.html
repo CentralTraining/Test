@@ -688,6 +688,16 @@
             <option value="CODE ĐẠI LÝ">CODE ĐẠI LÝ</option>
             <option value="OFF (chưa cắt Center)">OFF (chưa cắt Center)</option>
           </select>
+          <span class="scope-label">Sao:</span>
+          <select id="pgStarFilterSelect" style="min-width:130px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
+            <option value="">Tất cả Sao</option>
+            <option value="0">★ 0</option>
+            <option value="1">★ 1</option>
+            <option value="2">★★ 2</option>
+            <option value="3">★★★ 3</option>
+            <option value="4">★★★★ 4</option>
+            <option value="5">★★★★★ 5</option>
+          </select>
         </div>
         <button class="secondary" id="exportPgBtn">Export danh sách ra Excel</button>
       </div>
@@ -2891,7 +2901,7 @@ document.getElementById('exportPgFullTemplateBtn').addEventListener('click', ()=
       'Channel':p.channel||'', 'Big Channel':channelGroup(p.channel), 'Joined at':joinedStr, 'Released at':'',
       'Loại gán shop':'PG', 'Là Shop chính':1, 'trainer':tr?tr.name:'', 'sao':Number(p.star)||0,
       'THÂM NIÊN THÁNG':Number(p.seniority)||0, 'LOẠI THÂM NIÊN':seniorityBucket_(p.seniority),
-      'TRẠNG THÁI': p.status==='Đang làm' ? '' : p.status, 'Size shop':p.shopSize||'', 'SALE ':p.sale||'',
+      'TRẠNG THÁI': p.status==='Đang làm' ? '' : p.status, 'Size shop':shopSizeFromMap_(p.shop)||p.shopSize||'', 'SALE ':p.sale||'',
     };
   });
   const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
@@ -5494,6 +5504,7 @@ function populatePgSearchSelects(){
   }
 }
 let pgStatusFilter='';
+let pgStarFilter='';
 function visiblePgList(){
   let list = scopedPgs('OPPO');
   if(pgSearchMode==='trainer'){
@@ -5508,6 +5519,7 @@ function visiblePgList(){
     if(term) list = list.filter(p=> (p.code||'').toLowerCase().includes(term) || (p.name||'').toLowerCase().includes(term));
   }
   if(pgStatusFilter) list = list.filter(p=> p.status===pgStatusFilter);
+  if(pgStarFilter!=='') list = list.filter(p=> Number(p.star)===Number(pgStarFilter));
   return list;
 }
 function renderPgPagination(totalItems){
@@ -5593,6 +5605,7 @@ document.getElementById('pgSearchInput').addEventListener('input', ()=>{ pgCurre
 document.getElementById('pgSearchTrainerSelect').addEventListener('change', ()=>{ pgCurrentPage=1; renderPgOppoTable(); });
 document.getElementById('pgSearchSaleSelect').addEventListener('change', ()=>{ pgCurrentPage=1; renderPgOppoTable(); });
 document.getElementById('pgStatusFilterSelect').addEventListener('change', (e)=>{ pgStatusFilter=e.target.value; pgCurrentPage=1; renderPgOppoTable(); });
+document.getElementById('pgStarFilterSelect').addEventListener('change', (e)=>{ pgStarFilter=e.target.value; pgCurrentPage=1; renderPgOppoTable(); });
 document.querySelectorAll('[data-pgsearchmode]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('[data-pgsearchmode]').forEach(b=>b.classList.remove('active'));
@@ -5623,7 +5636,7 @@ document.getElementById('exportPgBtn').addEventListener('click', ()=>{
       'Tỉnh': p.province||'',
       'Phường': p.district||'',
       'Shop': p.shop||'',
-      'Size shop': p.shopSize||'',
+      'Size shop': shopSizeFromMap_(p.shop)||p.shopSize||'',
       'Kênh': p.channel||'',
       'Nhóm kênh': channelGroup(p.channel),
       'Thâm niên (tháng)': p.seniority||0,
