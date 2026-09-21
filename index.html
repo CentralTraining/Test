@@ -233,7 +233,9 @@
 
   .scope-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;background:var(--white);border:1px solid var(--line);border-radius:8px;padding:10px 14px;}
   .scope-filters .scope-label{font-size:var(--cap);font-weight:700;color:var(--green-dark);}
-  .scope-filters select{font-family:inherit;font-size:var(--cap);padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;}
+  .scope-filters select{font-family:inherit;font-size:var(--cap);padding:8px 14px;border:1.5px solid #9FD8CB;border-radius:10px;background:#fff;color:var(--text);cursor:pointer;transition:border-color .15s ease;}
+  .scope-filters select:hover{border-color:var(--green);}
+  .scope-filters select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(11,110,56,.12);}
 
   .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
   .kpi-row.cols-2{grid-template-columns:repeat(2,1fr);}
