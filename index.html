@@ -2213,6 +2213,12 @@ document.getElementById('setupBtn').addEventListener('click', async ()=>{
   saveSessionLocal_(session);
   err.style.display='none'; await renderAuthScreen();
 });
+// Cho phép bấm Enter ở ô Tên đăng nhập hoặc Mật khẩu để đăng nhập ngay, khỏi phải bấm chuột vào nút.
+['loginUser','loginPass'].forEach(id=>{
+  document.getElementById(id).addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'){ e.preventDefault(); document.getElementById('loginBtn').click(); }
+  });
+});
 document.getElementById('loginBtn').addEventListener('click', async ()=>{
   const uname=document.getElementById('loginUser').value.trim();
   const pass=document.getElementById('loginPass').value;
@@ -10322,6 +10328,15 @@ function toUsernameSlug_(name){
 /* Tự động tạo tài khoản đăng nhập cho Trainer mới — Tên đăng nhập theo quy tắc trên, Mật khẩu mặc
    định "123456". Nếu trùng Tên đăng nhập (2 Trainer cùng tên) thì tự thêm số ở cuối (VD: ...cam2).
    Trainer đổi mật khẩu tuỳ ý sau khi đăng nhập tại Tài khoản ▸ Đổi mật khẩu. */
+/* Tìm tài khoản đăng nhập Trainer "mồ côi" (trainerId không còn thuộc Trainer nào hiện có trong
+   config.trainers — do đã bị Xoá trước đó) mà TÊN khớp với tên đang định tạo mới. Đây là nguồn duy
+   nhất còn giữ được TÊN của Trainer cũ (Xoá Trainer không xoá tài khoản đăng nhập liên kết), dùng để
+   tự động nối lại dữ liệu khi tạo lại Trainer trùng tên. So khớp không phân biệt hoa/thường/dấu. */
+function findOrphanAccountByName_(name){
+  const validIds = new Set(config.trainers.map(t=>t.id));
+  const target = normTrName_(name);
+  return users.find(u=> u.role==='trainer' && u.trainerId && !validIds.has(u.trainerId) && normTrName_(u.displayName)===target) || null;
+}
 async function autoCreateTrainerAccount_(trainerRecord){
   const base = toUsernameSlug_(trainerRecord.name) || 'trainer';
   let uname = base, n = 2;
@@ -10337,18 +10352,32 @@ document.getElementById('addTrainerBtn').addEventListener('click', async ()=>{
   const nameInput=document.getElementById('newTrainerName'), regionSel=document.getElementById('newTrainerRegion');
   const name=nameInput.value.trim().toUpperCase(); if(!name) return;
   let createdUsername = null;
+  let relinkedInfo = null;
   if(editingTrainerId){
     const t = config.trainers.find(x=>x.id===editingTrainerId);
     if(t){ t.name=name; t.region=regionSel.value||''; }
   } else {
     const newTrainer = {id:uid('tr'),name,region:regionSel.value||''};
+    // Kiểm tra có tài khoản "mồ côi" nào trùng tên (Trainer đã bị Xoá trước đó, tạo lại đúng tên) —
+    // nếu có, TỰ ĐỘNG nối lại toàn bộ dữ liệu cũ (PGs/On-Off/Khảo sát/Target/FTF...) sang Trainer mới
+    // này, đồng thời tái sử dụng luôn tài khoản đăng nhập cũ (giữ nguyên username/password, khỏi tạo
+    // tài khoản mới) — thay vì phải vào Cài đặt ▸ DATA bấm quét dữ liệu mồ côi thủ công.
+    const orphanAccount = findOrphanAccountByName_(name);
     config.trainers.push(newTrainer);
-    createdUsername = await autoCreateTrainerAccount_(newTrainer);
+    if(orphanAccount){
+      const oldTrainerId = orphanAccount.trainerId;
+      await relinkTrainerId_(oldTrainerId, newTrainer.id);
+      relinkedInfo = { username: orphanAccount.username };
+    } else {
+      createdUsername = await autoCreateTrainerAccount_(newTrainer);
+    }
   }
   resetTrainerForm();
   await dbSet('config',config); renderAll();
   if(createdUsername){
     alert(`Đã tự động tạo tài khoản đăng nhập cho Trainer "${name}":\n\nTên đăng nhập: ${createdUsername}\nMật khẩu mặc định: 123456\n\nTrainer nên đổi mật khẩu ngay sau khi đăng nhập lần đầu (Tài khoản ▸ Đổi mật khẩu).`);
+  } else if(relinkedInfo){
+    alert(`Phát hiện Trainer "${name}" đã từng tồn tại trước đây (đã bị Xoá) — đã TỰ ĐỘNG nối lại toàn bộ dữ liệu cũ (PGs, On/Off, Khảo sát, Target, FTF...) cho Trainer mới này.\n\nTên đăng nhập cũ vẫn dùng được: ${relinkedInfo.username} (mật khẩu giữ nguyên như trước, không đổi).`);
   }
 });
 
