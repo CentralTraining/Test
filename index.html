@@ -1343,6 +1343,28 @@ async function dbGetAll_(){
   }
   return data;
 }
+/* Liệt kê TẤT CẢ key bắt đầu bằng 1 tiền tố (VD: 'records:' để tìm mọi tháng đã có dữ liệu) — dùng
+   bộ lọc "like" của PostgREST (Supabase), CHỈ lấy về cột "key" (không tải nguyên giá trị, nhẹ và
+   nhanh). Khi chưa cấu hình Supabase (chế độ demo dùng localStorage), quét thẳng localStorage như cũ. */
+async function dbListKeysWithPrefix(prefix){
+  if(!SUPABASE_URL){
+    const keys=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k && k.indexOf(prefix)===0) keys.push(k);
+    }
+    return keys;
+  }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?key=like.${encodeURIComponent(prefix)}*&select=key`, { headers: SUPA_HEADERS_ });
+    if(!res.ok) return [];
+    const rows = await res.json();
+    return rows.map(r=>r.key);
+  }catch(e){
+    console.error('dbListKeysWithPrefix lỗi:', e);
+    return [];
+  }
+}
 /* ============ CẬP NHẬT DỮ LIỆU TRỰC TIẾP TỪ GOOGLE SHEET (dán link, không cần tải file) ============ */
 function parseGoogleSheetId_(url){
   const m = String(url||'').match(/\/d\/([a-zA-Z0-9-_]+)/);
@@ -2997,7 +3019,7 @@ async function seedSampleData(){
   });
   await dbSet('pgs:'+currentMonth, pgs);
 
-  populateMonthPicker();
+  await populateMonthPicker();
   updateSidebarBrandTitle();
   populateOvFilters();
   renderAll();
@@ -3312,7 +3334,7 @@ async function bootApp(){
   if(!currentMonth){ currentMonth = defaultMonth(); }
   await loadMonthlyData(currentMonth);
 
-  populateMonthPicker();
+  await populateMonthPicker();
   updateSidebarBrandTitle();
   populateOvFilters();
   applyPermissionLocks();
@@ -3336,15 +3358,13 @@ function applyPermissionLocks(){
 }
 
 /* ============ THÁNG ============ */
-function getSavedKeysWithPrefix(prefix){
+async function getSavedKeysWithPrefix(prefix){
+  const keys = await dbListKeysWithPrefix(prefix);
   const months=new Set();
-  for(let i=0;i<localStorage.length;i++){
-    const key=localStorage.key(i);
-    if(key && key.indexOf(prefix)===0){ months.add(key.slice(prefix.length)); }
-  }
+  keys.forEach(key=>{ if(key && key.indexOf(prefix)===0) months.add(key.slice(prefix.length)); });
   return Array.from(months);
 }
-function getAllSavedMonths(){ return getSavedKeysWithPrefix('records:'); }
+async function getAllSavedMonths(){ return await getSavedKeysWithPrefix('records:'); }
 
 /* Nạp dữ liệu Nhân sự (pgs) + On/Off cho đúng tháng đang xem.
    Nếu tháng đó chưa có dữ liệu Nhân sự, tự "kế thừa" danh sách PG của tháng gần nhất trước đó
@@ -3370,7 +3390,7 @@ async function loadMonthlyData(month){
 
   let monthPgs = mVals['pgs:'+month];
   if(!monthPgs){
-    const priorMonths = getSavedKeysWithPrefix('pgs:').filter(m=>m<month).sort();
+    const priorMonths = (await getSavedKeysWithPrefix('pgs:')).filter(m=>m<month).sort();
     if(priorMonths.length){
       const latestPrior = priorMonths[priorMonths.length-1];
       const priorData = (await dbGet('pgs:'+latestPrior)) || [];
@@ -3389,9 +3409,10 @@ async function setMonthLock(month, locked){
   await dbSet('monthLock:'+month, locked);
   if(month===currentMonth) monthLocked = locked;
 }
-function populateMonthPicker(){
+async function populateMonthPicker(){
   const sel=document.getElementById('monthPicker');
-  const months = Array.from(new Set([...getAllSavedMonths(), currentMonth, defaultMonth()])).filter(Boolean).sort().reverse();
+  const savedMonths = await getAllSavedMonths();
+  const months = Array.from(new Set([...savedMonths, currentMonth, defaultMonth()])).filter(Boolean).sort().reverse();
   sel.innerHTML = months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('');
   sel.value = currentMonth || '';
 }
@@ -6431,7 +6452,7 @@ async function findPgAcrossMonths_(code){
   if(!code) return null;
   const inCurrent = findPgByCode_(pgs, code);
   if(inCurrent) return inCurrent;
-  const priorMonths = getSavedKeysWithPrefix('pgs:').filter(m=>m<currentMonth).sort().reverse();
+  const priorMonths = (await getSavedKeysWithPrefix('pgs:')).filter(m=>m<currentMonth).sort().reverse();
   for(const m of priorMonths){
     const snapshot = await dbGet('pgs:'+m);
     if(!snapshot) continue;
@@ -7466,9 +7487,13 @@ async function renderPartnerTrainingRegionProgress_(subtype){
   const camp=campaignsForGroupMonth('doitac').find(c=>campaignSubtype(c)===subtype);
   if(!camp){ box.innerHTML=`<div class="empty">Chưa có chiến dịch ${subtype==='hub'?'Hub':'Workshop'} Đối tác trong tháng này.</div>`; return; }
   let targetMap={}, actualMap={}, notes={};
-  try{ targetMap=(await dbGet('partnerTrainingTargets:'+camp.id))||{}; }catch(e){ targetMap={}; }
-  try{ actualMap=(await dbGet(partnerTrainingActualKey_(camp)))||{}; }catch(e){ actualMap={}; }
-  try{ notes=(await dbGet(partnerTrainingNoteKey_(camp)))||{}; }catch(e){ notes={}; }
+  try{
+    const keys = ['partnerTrainingTargets:'+camp.id, partnerTrainingActualKey_(camp), partnerTrainingNoteKey_(camp)];
+    const vals = await dbGetMulti(keys);
+    targetMap = vals[keys[0]] || {};
+    actualMap = vals[keys[1]] || {};
+    notes = vals[keys[2]] || {};
+  }catch(e){ targetMap={}; actualMap={}; notes={}; }
   const surveyTarget=Math.max(0,Number(camp.partnerSurveyTargetX||0));
   const allowedRegions=isTrainer()?new Set(visibleRegions().map(normalizeRegionLoose_)):null;
   const regionSet=new Set();
@@ -9214,7 +9239,7 @@ async function onTargetCampaignChange(){
     await dbSet('lastViewedMonth', currentMonth);
     await loadMonthlyData(currentMonth);
     updateSidebarBrandTitle();
-    populateMonthPicker();
+    await populateMonthPicker();
     populateOvFilters(); populatePgTrainerSelect();
   }
   renderTargetTable();
