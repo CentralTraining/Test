@@ -8113,7 +8113,7 @@ function renderCoachingRegistration(){
         <td><strong>${p.name}</strong></td>
         <td>${trainer?trainer.region:'—'}</td>
         <td>${p.province||'—'}</td>
-        <td>${p.shop||'—'}</td>
+        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(p.shop||'').replace(/"/g,'&quot;')}">${p.shop||'—'}</td>
         <td>${p.channel||'—'}</td>
         <td>${p.shopSize||'—'}</td>
         <td>${p.seniority||0} tháng</td>
