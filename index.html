@@ -4613,7 +4613,7 @@ let courseSelectedCampaignId_ = { cvtv:null, pgs3sao:null };
 let courseCandidateFilter_ = { cvtv:{dateFrom:'',dateTo:''}, pgs3sao:{dateFrom:'',dateTo:'',star:''} };
 let courseRegCache_ = {}; // { [campId]: {code:{status,note}} }
 let courseScoreCache_ = {}; // { [campId]: {code:{theory,consult,total,excellent,note}} }
-let courseViewFilter_ = { region:'', trainerId:'' }; // bộ lọc rà soát tạm thời (Khu vực/Trainer) ở màn hình đăng ký
+let courseViewFilter_ = { region:'', trainerId:'', regStatus:'' }; // bộ lọc rà soát tạm thời (Khu vực/Trainer/Trạng thái) ở màn hình đăng ký
 let courseRegPage_ = 1;
 let courseScorePage_ = 1;
 let courseCompletePage_ = 1;
@@ -4780,8 +4780,8 @@ function renderCourseStageRegistration_(body, camp, subtype){
   const regMap = courseRegCache_[camp.id] || {};
 
   // Bộ lọc THÊM để RÀ SOÁT danh sách sau khi đã lọc (không lưu vào campaign, chỉ lọc hiển thị tạm
-  // thời) — theo Trainer và theo Khu vực, giúp Admin/Trainer dễ tìm đúng PG cần đăng ký khi danh
-  // sách dài.
+  // thời) — theo Trainer, theo Khu vực, và theo Trạng thái đăng ký (Tham gia/Không tham gia/Chưa
+  // chọn) — giúp Admin/Trainer dễ tìm đúng PG cần đăng ký hoặc rà soát khi danh sách dài.
   let candidates = candidatesAll;
   if(candidatesAll.length>0){
     const regionOptions = Array.from(new Set(candidatesAll.map(c=>c.region).filter(Boolean))).sort().map(r=>`<option value="${r}" ${courseViewFilter_.region===r?'selected':''}>${r}</option>`).join('');
@@ -4791,9 +4791,18 @@ function renderCourseStageRegistration_(body, camp, subtype){
       <select id="courseViewRegionSel"><option value="">Tất cả Khu vực</option>${regionOptions}</select>
       <span class="scope-label">Lọc theo Trainer:</span>
       <select id="courseViewTrainerSel"><option value="">Tất cả Trainer</option>${trainerOptionsFilter}</select>
+      <span class="scope-label">Lọc theo Trạng thái đăng ký:</span>
+      <select id="courseViewRegStatusSel">
+        <option value="" ${courseViewFilter_.regStatus===''?'selected':''}>Tất cả</option>
+        <option value="chuachonn" ${courseViewFilter_.regStatus==='chuachonn'?'selected':''}>— Chưa chọn —</option>
+        <option value="Tham gia" ${courseViewFilter_.regStatus==='Tham gia'?'selected':''}>✅ Tham gia</option>
+        <option value="Không tham gia" ${courseViewFilter_.regStatus==='Không tham gia'?'selected':''}>❌ Không tham gia</option>
+      </select>
     </div>`;
     if(courseViewFilter_.region) candidates = candidates.filter(c=>c.region===courseViewFilter_.region);
     if(courseViewFilter_.trainerId) candidates = candidates.filter(c=>c.trainerId===courseViewFilter_.trainerId);
+    if(courseViewFilter_.regStatus==='chuachonn') candidates = candidates.filter(c=>!(regMap[c.code]||{}).status);
+    else if(courseViewFilter_.regStatus) candidates = candidates.filter(c=>(regMap[c.code]||{}).status===courseViewFilter_.regStatus);
   }
 
   if(candidatesAll.length===0){
@@ -4842,6 +4851,8 @@ function renderCourseStageRegistration_(body, camp, subtype){
   if(regionSel) regionSel.addEventListener('change', ()=>{ courseViewFilter_.region = regionSel.value; courseRegPage_=1; renderCourseStage_(camp, subtype); });
   const trainerSel = document.getElementById('courseViewTrainerSel');
   if(trainerSel) trainerSel.addEventListener('change', ()=>{ courseViewFilter_.trainerId = trainerSel.value; courseRegPage_=1; renderCourseStage_(camp, subtype); });
+  const regStatusSel = document.getElementById('courseViewRegStatusSel');
+  if(regStatusSel) regStatusSel.addEventListener('change', ()=>{ courseViewFilter_.regStatus = regStatusSel.value; courseRegPage_=1; renderCourseStage_(camp, subtype); });
 
   const applyBtn = document.getElementById('courseApplyFilterBtn');
   if(applyBtn) applyBtn.addEventListener('click', async ()=>{
