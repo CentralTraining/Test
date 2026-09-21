@@ -5093,10 +5093,13 @@ async function renderCourseSurveyResults_(camp, subtype){
   });
   const avgOverall = Math.round((data.reduce((s,r)=>s+(r.overall||0),0)/n)*100)/100;
   const chartId = 'courseSurveyChart_'+camp.id;
+  // Chiều cao khung tính theo đúng số hạng mục (mỗi cột ~42px) để KHÔNG bị chật/cắt bớt cột nào, dù
+  // sau này có thêm/bớt câu hỏi trong file mẫu khảo sát.
+  const chartHeight = Math.max(220, COURSE_SURVEY_CATEGORIES.length*42 + 40);
   let html = `<h4 style="margin:0 0 10px;color:var(--green-dark);">📊 Kết quả khoá học — ${n} phiếu khảo sát</h4>
     <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
-      <div style="flex:1 1 420px;min-width:320px;background:var(--white);border:1px solid var(--line);border-radius:10px;padding:14px;">
-        <canvas id="${chartId}" height="260"></canvas>
+      <div style="flex:1 1 420px;min-width:320px;background:var(--white);border:1px solid var(--line);border-radius:10px;padding:14px 22px 14px 14px;">
+        <div style="height:${chartHeight}px;"><canvas id="${chartId}"></canvas></div>
       </div>
       <div style="flex:0 0 180px;background:var(--green-pale);border-radius:10px;padding:18px;text-align:center;">
         <div style="font-size:11px;color:var(--green-dark);font-weight:700;margin-bottom:6px;">ĐÁNH GIÁ TỔNG QUAN</div>
@@ -5107,18 +5110,38 @@ async function renderCourseSurveyResults_(camp, subtype){
   box.innerHTML = html;
   const ctx = document.getElementById(chartId);
   if(ctx && courseChartLibLoaded_()){
+    // Plugin nhỏ tự vẽ: ghi số điểm trung bình ngay BÊN NGOÀI, sát đầu mút mỗi cột — dễ thấy ngay,
+    // không cần rê chuột vào mới xem được số (khác hẳn tooltip mặc định).
+    const valueLabelPlugin = {
+      id: 'courseSurveyValueLabel',
+      afterDatasetsDraw(chart){
+        const { ctx: c } = chart;
+        c.save();
+        c.font = '700 12px inherit';
+        c.fillStyle = '#0B5E36';
+        c.textAlign = 'left';
+        c.textBaseline = 'middle';
+        chart.getDatasetMeta(0).data.forEach((bar, i)=>{
+          const val = chart.data.datasets[0].data[i];
+          c.fillText(String(val), bar.x + 6, bar.y);
+        });
+        c.restore();
+      }
+    };
     new Chart(ctx, {
       type: 'bar',
       data: {
         labels: COURSE_SURVEY_CATEGORIES.map(c=>c.label),
         datasets: [{ label: 'Điểm trung bình (/5)', data: avgByCategory, backgroundColor: '#0B5E36', borderRadius:6 }]
       },
+      plugins: [valueLabelPlugin],
       options: {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { right: 30 } }, // chừa chỗ cho số liệu vẽ ngoài cột, không bị cắt mất ở mép phải
         plugins: { legend: { display:false }, tooltip:{ callbacks:{ label: c=> c.parsed.x + '/5' } } },
-        scales: { x: { min:0, max:5, ticks:{ stepSize:1 } } }
+        scales: { x: { min:0, max:5.5, ticks:{ stepSize:1 } } } // max nhích lên 5.5 (thay vì đúng 5) để số liệu ghi ngoài cột luôn còn đủ chỗ kể cả khi điểm đạt tối đa 5/5
       }
     });
   }
