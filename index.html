@@ -4672,7 +4672,7 @@ let courseSelectedCampaignId_ = { cvtv:null, pgs3sao:null };
 let courseCandidateFilter_ = { cvtv:{dateFrom:'',dateTo:''}, pgs3sao:{dateFrom:'',dateTo:'',star:''} };
 let courseRegCache_ = {}; // { [campId]: {code:{status,note}} }
 let courseScoreCache_ = {}; // { [campId]: {code:{theory,consult,total,excellent,note}} }
-let courseViewFilter_ = { region:'', trainerId:'', regStatus:'' }; // bộ lọc rà soát tạm thời (Khu vực/Trainer/Trạng thái) ở màn hình đăng ký
+let courseViewFilter_ = { region:'', trainerId:'', regStatus:'', search:'' }; // bộ lọc rà soát tạm thời (Khu vực/Trainer/Trạng thái/Tìm kiếm) ở màn hình đăng ký
 let courseRegPage_ = 1;
 let courseScorePage_ = 1;
 let courseCompletePage_ = 1;
@@ -4846,6 +4846,8 @@ function renderCourseStageRegistration_(body, camp, subtype){
     const regionOptions = Array.from(new Set(candidatesAll.map(c=>c.region).filter(Boolean))).sort().map(r=>`<option value="${r}" ${courseViewFilter_.region===r?'selected':''}>${r}</option>`).join('');
     const trainerOptionsFilter = Array.from(new Map(candidatesAll.map(c=>[c.trainerId,c.trainerName])).entries()).sort((a,b)=>a[1].localeCompare(b[1],'vi')).map(([id,name])=>`<option value="${id}" ${courseViewFilter_.trainerId===id?'selected':''}>${name}</option>`).join('');
     html += `<div class="scope-filters" style="margin:10px 0;flex-wrap:wrap;">
+      <span class="scope-label">Tìm theo Tên/Code:</span>
+      <input type="text" id="courseViewSearchInput" value="${(courseViewFilter_.search||'').replace(/"/g,'&quot;')}" placeholder="Nhập Tên hoặc Code..." style="padding:8px 14px;border:1.5px solid #9FD8CB;border-radius:10px;font-family:inherit;font-size:var(--cap);min-width:200px;">
       <span class="scope-label">Lọc theo Khu vực:</span>
       <select id="courseViewRegionSel"><option value="">Tất cả Khu vực</option>${regionOptions}</select>
       <span class="scope-label">Lọc theo Trainer:</span>
@@ -4858,6 +4860,10 @@ function renderCourseStageRegistration_(body, camp, subtype){
         <option value="Không tham gia" ${courseViewFilter_.regStatus==='Không tham gia'?'selected':''}>❌ Không tham gia</option>
       </select>
     </div>`;
+    if(courseViewFilter_.search){
+      const term = courseViewFilter_.search.trim().toLowerCase();
+      candidates = candidates.filter(c=> (c.name||'').toLowerCase().includes(term) || (c.code||'').toLowerCase().includes(term));
+    }
     if(courseViewFilter_.region) candidates = candidates.filter(c=>c.region===courseViewFilter_.region);
     if(courseViewFilter_.trainerId) candidates = candidates.filter(c=>c.trainerId===courseViewFilter_.trainerId);
     if(courseViewFilter_.regStatus==='chuachonn') candidates = candidates.filter(c=>!(regMap[c.code]||{}).status);
@@ -4915,6 +4921,23 @@ function renderCourseStageRegistration_(body, camp, subtype){
   if(trainerSel) trainerSel.addEventListener('change', ()=>{ courseViewFilter_.trainerId = trainerSel.value; courseRegPage_=1; renderCourseStage_(camp, subtype); });
   const regStatusSel = document.getElementById('courseViewRegStatusSel');
   if(regStatusSel) regStatusSel.addEventListener('change', ()=>{ courseViewFilter_.regStatus = regStatusSel.value; courseRegPage_=1; renderCourseStage_(camp, subtype); });
+  const searchInput = document.getElementById('courseViewSearchInput');
+  if(searchInput){
+    let searchDebounce_;
+    searchInput.addEventListener('input', ()=>{
+      clearTimeout(searchDebounce_);
+      const cursorPos = searchInput.selectionStart;
+      searchDebounce_ = setTimeout(()=>{
+        courseViewFilter_.search = searchInput.value;
+        courseRegPage_ = 1;
+        renderCourseStage_(camp, subtype);
+        // Vẽ lại toàn bộ bảng sẽ tạo ô tìm kiếm MỚI (mất focus) — chủ động focus lại + đặt đúng vị
+        // trí con trỏ như cũ để gõ tiếp không bị gián đoạn.
+        const newInput = document.getElementById('courseViewSearchInput');
+        if(newInput){ newInput.focus(); newInput.setSelectionRange(cursorPos, cursorPos); }
+      }, 350);
+    });
+  }
 
   const applyBtn = document.getElementById('courseApplyFilterBtn');
   if(applyBtn) applyBtn.addEventListener('click', async ()=>{
