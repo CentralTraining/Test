@@ -5305,7 +5305,7 @@ function renderCourseStageComplete_(body, camp, subtype){
       <div><strong>Lead khoá:</strong> ${lead?lead.name:'—'}</div>
       <div><strong>Số lượng học viên:</strong> ${candidates.length}</div>
     </div>
-    ${canEditAgain?`<div style="margin-top:10px;"><button class="secondary" id="courseReopenBtn" type="button">↩ Quay Lại</button></div>`:''}
+    ${canEditAgain?`<div style="margin-top:10px;"><button class="secondary" id="courseReopenBtn" type="button">✏️ Sửa lại (nếu có sai sót)</button></div>`:''}
   </div>`;
   html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Điểm cuối khoá</th><th>⭐</th><th>Note</th></tr></thead><tbody>`;
   const totalItems = candidates.length;
