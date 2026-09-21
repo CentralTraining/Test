@@ -5076,6 +5076,7 @@ function renderCourseStageScoring_(body, camp, subtype){
       <div><strong>Địa điểm:</strong> ${camp.classVenue}</div>
       <div><strong>Tỉnh:</strong> ${camp.classProvince||'—'}</div>
       <div><strong>Lead khoá:</strong> ${lead?lead.name:'—'}</div>
+      <div><strong>Số lượng học viên:</strong> ${candidates.length}</div>
     </div>
     ${isAdmin()?`<div style="margin-top:10px;"><button class="secondary" id="courseUnlockBtn" type="button">↩ Quay Lại</button></div>`:''}
   </div>`;
@@ -5089,7 +5090,7 @@ function renderCourseStageScoring_(body, camp, subtype){
   const startIdx = (courseScorePage_-1)*COURSE_REG_PAGE_SIZE;
   const pageCandidates = candidates.slice(startIdx, startIdx+COURSE_REG_PAGE_SIZE);
 
-  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Lý thuyết</th><th>Tư vấn</th><th>Tổng</th><th>⭐ Xuất sắc</th><th>Note đánh giá</th></tr></thead><tbody>`;
+  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Cá nhân</th><th>Tập thể</th><th>Tổng điểm</th><th>⭐ Xuất sắc</th><th>Note đánh giá</th></tr></thead><tbody>`;
   pageCandidates.forEach((c,i)=>{
     const sc = scoreMap[c.code] || {theory:'',consult:'',total:0,excellent:false,note:''};
     html += `<tr>
@@ -5178,10 +5179,11 @@ function renderCourseStageComplete_(body, camp, subtype){
       <div><strong>Địa điểm:</strong> ${camp.classVenue}</div>
       <div><strong>Tỉnh:</strong> ${camp.classProvince||'—'}</div>
       <div><strong>Lead khoá:</strong> ${lead?lead.name:'—'}</div>
+      <div><strong>Số lượng học viên:</strong> ${candidates.length}</div>
     </div>
     ${canEditAgain?`<div style="margin-top:10px;"><button class="secondary" id="courseReopenBtn" type="button">↩ Quay Lại</button></div>`:''}
   </div>`;
-  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Lý thuyết</th><th>Tư vấn</th><th>Tổng</th><th>⭐</th><th>Note</th></tr></thead><tbody>`;
+  html += `<table><thead><tr><th>STT</th><th>Code</th><th>Họ tên</th><th>Khu vực</th><th>Trainer</th><th>Cá nhân</th><th>Tập thể</th><th>Tổng điểm</th><th>⭐</th><th>Note</th></tr></thead><tbody>`;
   const totalItems = candidates.length;
   const totalPages = Math.max(1, Math.ceil(totalItems/COURSE_REG_PAGE_SIZE));
   if(courseCompletePage_>totalPages) courseCompletePage_ = totalPages;
