@@ -559,6 +559,7 @@
       <button id="uiViewToggleBtn" type="button">🖥 Tự động</button>
       <button class="ghost" id="pendingTargetBellBtn" style="display:none;color:var(--red);border-color:var(--red);">🔔 <span id="pendingTargetCount">0</span> chờ duyệt Target</button>
       <button class="ghost" id="pendingPgStatusBellBtn" style="display:none;color:var(--amber);border-color:var(--amber);">🔔 <span id="pendingPgStatusCount">0</span> chờ duyệt PG</button>
+      <button class="ghost" id="courseLeadTaskBellBtn" style="display:none;color:var(--green-dark);border-color:var(--green-dark);">🔔 <span id="courseLeadTaskCount">0</span> nhiệm vụ Lead khoá</button>
       <div class="avatar-circle" id="avatarInitials">--</div>
       <div class="userinfo">
         <span class="uname" id="currentUserName"></span>
@@ -5040,6 +5041,7 @@ function openCourseLockModal_(camp, subtype){
     camp.classDateFrom = classDateFrom; camp.classDateTo = classDateTo;
     camp.classVenue = classVenue; camp.classProvince = classProvince;
     camp.leadTrainerId = leadTrainerId; camp.locked = true;
+  renderCourseLeadTaskBell_();
     await dbSet('campaigns', campaigns);
     renderCourseStage_(camp, subtype);
     return true;
@@ -5056,6 +5058,7 @@ async function unlockCourseRegistration_(camp, subtype){
   const ok = await showConfirm('Quay lại danh sách Đăng ký? Thông tin lớp (Ngày/Địa điểm/Lead khoá) đã nhập vẫn được giữ nguyên, chỉ mở lại để bổ sung/sửa Trạng thái Tham gia của PGs. Điểm số (nếu đã nhập) vẫn được giữ nguyên, không mất.');
   if(!ok) return;
   camp.locked = false;
+  renderCourseLeadTaskBell_();
   courseRegPage_ = 1;
   await dbSet('campaigns', campaigns);
   renderCourseStage_(camp, subtype);
@@ -10747,6 +10750,7 @@ function renderAll(){
   applyMonthLockUI();
   renderPendingTargetBell_();
   renderPendingPgStatusBell_();
+  renderCourseLeadTaskBell_();
   updateSoTitle_();
   requestAnimationFrame(()=>{
     const maxY=Math.max(0, document.documentElement.scrollHeight-window.innerHeight);
@@ -10754,6 +10758,38 @@ function renderAll(){
   });
 }
 
+/* Thông báo "Nhiệm vụ Lead khoá" — hiện cho đúng Trainer được Admin chọn làm Lead khi Chốt danh sách
+   CVTV/PGs 3★ (đã locked=true nhưng completed=false, đang chờ nhập điểm). Quét trên TOÀN BỘ chiến
+   dịch CVTV/PGs 3★ đang có (không giới hạn theo currentMonth, vì khoá có thể được tạo ở tháng khác
+   tháng đang xem) — chỉ hiện cho role Trainer (Admin không cần, họ tự thấy qua Cài đặt ▸ Chiến dịch). */
+function pendingLeadCourseTasks_(){
+  if(!isTrainer()) return [];
+  return campaigns.filter(c=> c.group==='noibo' && (campaignSubtype(c)==='cvtv'||campaignSubtype(c)==='pgs3sao')
+    && c.locked && !c.completed && c.leadTrainerId===session.trainerId);
+}
+function renderCourseLeadTaskBell_(){
+  const btn = document.getElementById('courseLeadTaskBellBtn');
+  if(!btn) return;
+  const tasks = pendingLeadCourseTasks_();
+  if(tasks.length>0){
+    btn.style.display='inline-flex';
+    document.getElementById('courseLeadTaskCount').textContent = tasks.length;
+  } else {
+    btn.style.display='none';
+  }
+}
+document.getElementById('courseLeadTaskBellBtn').addEventListener('click', ()=>{
+  const tasks = pendingLeadCourseTasks_();
+  if(tasks.length===0) return;
+  const task = tasks[0]; // Vào thẳng nhiệm vụ đầu tiên — nếu có nhiều hơn 1, làm xong cái này chuông sẽ tự cập nhật số còn lại.
+  const subtype = campaignSubtype(task);
+  document.querySelector('nav.tabs button[data-tab="kpi"]').click();
+  document.querySelector(`#tab-kpi [data-kpi="noibo"]`).click();
+  kpiSubtype.noibo = subtype;
+  courseSelectedCampaignId_[subtype] = task.id;
+  renderKpiCategory('noibo');
+  document.querySelectorAll('#kpi-noibo [data-sub]').forEach(b=>b.classList.toggle('active', b.getAttribute('data-sub')===subtype));
+});
 document.getElementById('pendingTargetBellBtn').addEventListener('click', ()=>{
   renderPendingTargetModal_();
   const modal = document.getElementById('pendingTargetModal');
