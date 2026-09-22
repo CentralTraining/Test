@@ -1327,10 +1327,19 @@ function loadScriptBackground_(src){
 }
 // Nạp tuần tự (Chart.js phải có trước plugin datalabels) nhưng KHÔNG await ở đây — chạy nền, không
 // chặn phần còn lại của trang chạy tiếp phía dưới.
+// QUAN TRỌNG: vì Chart.js tải NỀN (không chặn trang), các biểu đồ được vẽ NGAY LÚC KHỞI ĐỘNG (trước
+// khi Chart.js kịp tải xong) sẽ bị lỗi "Chart is not defined" và KHÔNG có cơ chế tự vẽ lại — dẫn đến
+// bảng/mục Tổng quan mất hết số liệu biểu đồ. Phải chủ động render lại 1 lần sau khi Chart.js tải
+// xong thành công, để các biểu đồ lỡ bị vẽ hỏng lúc đầu được vẽ lại đúng.
 (async ()=>{
   await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
   const chartOk = await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js');
-  if(chartOk) await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js');
+  if(chartOk){
+    await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js');
+    if(typeof renderAll==='function' && typeof session!=='undefined' && session){
+      try{ renderAll(); }catch(e){ console.error('Lỗi vẽ lại biểu đồ sau khi Chart.js tải xong:', e); }
+    }
+  }
 })();
 /* ============ KẾT NỐI DATABASE: SUPABASE ============
    Dán đúng Project URL và anon public key lấy từ Supabase ▸ Project Settings ▸ API vào đây.
@@ -10967,18 +10976,25 @@ function trainerAvatarSvg_(trainerId, size){
 /* Tính % tiến độ 3 hạng mục lớn (Nội bộ/Đối tác/Truyền thông) cho 1 Trainer, kèm chi tiết hạng mục
    con — CHỈ hiện hạng mục con nào THỰC SỰ có chiến dịch trong tháng đang xem (currentMonth), không
    hiện cứng cố định — đúng yêu cầu "phụ thuộc vào chiến dịch hiển thị trong tháng đó". */
+/* Chặn TRẦN 100% cho từng dòng con trước khi tính trung bình cả nhóm — quan trọng với Truyền thông:
+   nếu Chiến dịch A đạt 200% mà Chiến dịch B chỉ 0%, KHÔNG được để điểm cao của A "che" điểm thấp của
+   B (200%+0%)/2=100% nhìn như đã xong hết — phải tính (100%+0%)/2=50% mới đúng bản chất còn dở dang. */
+function capPct100_(p){ return p===null ? null : Math.min(100, p); }
 async function computeTrainerCategoryProgress_(trainerId){
   const rec = trainerRecord(trainerId);
-  const noiboItems = [];
+
+  /* ===== NỘI BỘ ===== */
+  const noiboGroups = [];
   const pg01T = Number(rec.pg01Target||0), pg01A = Number(rec.pg01Actual||0);
   const pgMoiT = Number(rec.pgMoiTarget||0), pgMoiA = Number(rec.pgMoiActual||0);
-  const coachT = pg01T+pgMoiT, coachA = pg01A+pgMoiA;
-  if(coachT>0) noiboItems.push({ name:'PGs Dev (Coaching)', pct: pct(coachA, coachT) });
-  if(typeof workshopTargetRows!=='undefined' && workshopTargetRows.some(r=>r && r.trainerId===trainerId)){
-    const wT = workshopTargetRows.filter(r=>r && r.trainerId===trainerId).reduce((s,r)=>s+Number(r.students||r.hv||0),0);
-    const wA = (typeof workshopActualRows!=='undefined'?workshopActualRows:[]).filter(r=>r && r.trainerId===trainerId).reduce((s,r)=>s+Number(r.students||r.hv||0),0);
-    if(wT>0) noiboItems.push({ name:'Workshop', pct: pct(wA, wT) });
-  }
+  // "PGs Dev" là 1 nhánh cha, rẽ ra 2 nhánh con độc lập — không gộp thành 1 % chung (dễ che vấn đề
+  // nếu 1 trong 2 loại đang thấp mà loại kia lại cao).
+  const pgDevSub = [];
+  if(pg01T>0) pgDevSub.push({ name:'PGs 0★/1★', pct: pct(pg01A, pg01T) });
+  if(pgMoiT>0) pgDevSub.push({ name:'PGs mới', pct: pct(pgMoiA, pgMoiT) });
+  if(pgDevSub.length) noiboGroups.push({ name:'PGs Dev (Coaching)', sub: pgDevSub });
+  const wsT = Number(rec.wsNbBuoiTarget||0), wsA = Number(rec.wsNbBuoiActual||0);
+  if(wsT>0) noiboGroups.push({ name:'Workshop', pct: pct(wsA, wsT) });
   for(const subtype of ['testonline','tuvanai_checkshop']){
     const camp = campaignsForGroupMonth('noibo').find(c=>campaignSubtype(c)===subtype);
     if(!camp) continue;
@@ -10988,22 +11004,31 @@ async function computeTrainerCategoryProgress_(trainerId){
     if(list.length===0) continue;
     let qualified=0;
     list.forEach(p=>{ if(Number(progress[frequencyPgKey_(p)]||0)>=x) qualified++; });
-    noiboItems.push({ name: subtype==='testonline' ? 'Test Online' : 'Tư vấn AI & Check shop', pct: pct(qualified, list.length) });
+    noiboGroups.push({ name: subtype==='testonline' ? 'Test Online' : 'Tư vấn AI & Check shop', pct: pct(qualified, list.length) });
   }
 
-  const doitacItems = [];
-  const shops = (typeof ftfShopList!=='undefined'?ftfShopList:[]).filter(s=>s.trainerId===trainerId);
-  if(shops.length>0){
-    const shopTotal = shops.length, shopDone = shops.filter(s=>s.status==='DONE').length;
-    doitacItems.push({ name:'FTF — SL Shop hoàn thành', pct: pct(shopDone, shopTotal) });
-    const hrT = shops.reduce((s,x)=>s+Number(x.hrTarget||0),0), hrA = shops.reduce((s,x)=>s+Number(x.hrActual||0),0);
-    if(hrT>0) doitacItems.push({ name:'FTF — SL HR', pct: pct(hrA, hrT) });
-    const testT = shops.reduce((s,x)=>s+Number(x.testTotal||0),0), testA = shops.reduce((s,x)=>s+Number(x.testPass||0),0);
-    if(testT>0) doitacItems.push({ name:'FTF — Bài Test', pct: pct(testA, testT) });
-    const surT = shops.reduce((s,x)=>s+Number(x.surveyTotal||0),0), surA = shops.reduce((s,x)=>s+Number(x.surveyDone||0),0);
-    if(surT>0) doitacItems.push({ name:'FTF — Khảo sát', pct: pct(surA, surT) });
+  /* ===== ĐỐI TÁC (FTF) — rẽ nhánh theo Kênh MWG/K.A, mỗi kênh 5 chỉ số con =====
+     Dùng lại ĐÚNG hàm ftfChannelStats_ đã có sẵn (giống hệt bảng Tiến độ Đối tác đang hiển thị) —
+     đảm bảo khớp 100% số liệu, không tự suy luận lại. */
+  const doitacGroups = [];
+  const ftfMetricDefs = [
+    {key:'ftfShop', label:'SL Shop'}, {key:'ftfHr', label:'SL HR'}, {key:'ftfBaiTest', label:'SL Bài Test'},
+    {key:'ftfTuVanAI', label:'SL tư vấn mẫu AI'}, {key:'ftfKhaoSat', label:'SL Khảo sát'},
+  ];
+  if(typeof ftfChannelStats_==='function' && typeof ftfShopList!=='undefined'){
+    const myShops = ftfShopList.filter(s=>s.trainerId===trainerId);
+    const stats = ftfChannelStats_(myShops, [trainerId]);
+    ['MWG','K.A'].forEach(ch=>{
+      const sub = [];
+      ftfMetricDefs.forEach(m=>{
+        const cell = stats[m.key][ch];
+        if(cell && cell.t>0) sub.push({ name:m.label, pct: pct(cell.a, cell.t) });
+      });
+      if(sub.length) doitacGroups.push({ name:`FTF — Kênh ${ch}`, sub });
+    });
   }
 
+  /* ===== TRUYỀN THÔNG ===== */
   const truyenthongItems = [];
   const mediaCamps = (typeof mediaCampaignsThisMonth_==='function' ? mediaCampaignsThisMonth_() : campaigns.filter(c=>c.group==='truyenthong' && c.month===currentMonth));
   if(mediaCamps.length>0){
@@ -11016,13 +11041,25 @@ async function computeTrainerCategoryProgress_(trainerId){
     });
   }
 
-  const avgOf = (items)=>{
-    const valid = items.map(i=>i.pct).filter(p=>p!==null);
-    return valid.length ? Math.round(valid.reduce((a,b)=>a+b,0)/valid.length) : null;
+  // Gom TẤT CẢ % của các dòng lá (kể cả trong nhánh con) lại để tính % trung bình của cả nhóm lớn —
+  // LUÔN chặn trần 100%/dòng trước khi cộng trung bình (xem giải thích ở capPct100_ phía trên).
+  const leafPcts = (groupsOrItems)=>{
+    const out = [];
+    groupsOrItems.forEach(g=>{
+      if(g.sub) g.sub.forEach(s=>{ if(s.pct!==null) out.push(capPct100_(s.pct)); });
+      else if(g.pct!==null && g.pct!==undefined) out.push(capPct100_(g.pct));
+    });
+    return out;
   };
-  const noibo = { pct: avgOf(noiboItems), items: noiboItems };
-  const doitac = { pct: avgOf(doitacItems), items: doitacItems };
-  const truyenthong = { pct: avgOf(truyenthongItems), items: truyenthongItems };
+  const avgOf = (pcts)=> pcts.length ? Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length) : null;
+
+  const noiboLeaf = leafPcts(noiboGroups);
+  const doitacLeaf = leafPcts(doitacGroups);
+  const truyenthongLeaf = leafPcts(truyenthongItems);
+
+  const noibo = { pct: avgOf(noiboLeaf), groups: noiboGroups };
+  const doitac = { pct: avgOf(doitacLeaf), groups: doitacGroups };
+  const truyenthong = { pct: avgOf(truyenthongLeaf), groups: truyenthongItems };
   const allPcts = [noibo.pct, doitac.pct, truyenthong.pct].filter(p=>p!==null);
   const total = allPcts.length ? Math.round(allPcts.reduce((a,b)=>a+b,0)/allPcts.length) : null;
   return { noibo, doitac, truyenthong, total };
@@ -11038,6 +11075,13 @@ let homeProgressCache_ = {};
 async function renderHomeTab_(){
   const grid = document.getElementById('homeTrainerGrid');
   if(!grid) return;
+  // Chủ động đồng bộ lại pg01Actual/pgMoiActual/pgMoiTarget TRƯỚC khi tính % — các giá trị này được
+  // TÍNH LẠI ĐỘNG dựa theo dữ liệu PG/khảo sát thật (không phải số tĩnh), bình thường chỉ tự làm mới
+  // khi Admin/Trainer vào đúng trang "Tiến độ KPI ▸ Nội bộ ▸ PGs Dev". Nếu vào thẳng tab Home mà chưa
+  // từng ghé trang đó trong phiên này, số liệu có thể đang là bản cũ — gọi lại ở đây để luôn đúng.
+  syncAllPgMoiTargets();
+  syncAllPg01Actuals();
+  syncAllPgMoiActuals();
   const regionSel = document.getElementById('homeRegionFilter');
   if(regionSel && regionSel.options.length<=1){
     const regions = visibleRegions();
@@ -11110,14 +11154,22 @@ async function openHomeDetailPopup_(trainerId){
 
   const catHtml = (key, label)=>{
     const cat = p[key];
-    const items = cat.items;
-    const bodyRows = items.length ? items.map(it=>{
+    const groups = cat.groups;
+    const rowHtml = (it)=>{
       const color = homePctColor_(it.pct);
       return `<div class="home-subrow">
         <div class="home-subname">${it.name}</div>
-        <div class="home-subbar"><div class="home-subfill" style="width:${it.pct||0}%;background:${color};"></div></div>
+        <div class="home-subbar"><div class="home-subfill" style="width:${Math.min(100,it.pct||0)}%;background:${color};"></div></div>
         <div class="home-subpct" style="color:${color};">${it.pct===null?'—':it.pct+'%'}</div>
       </div>`;
+    };
+    const bodyRows = groups.length ? groups.map(g=>{
+      if(g.sub){
+        // Nhánh cha có nhiều nhánh con (VD "PGs Dev" → PGs 0-1 sao/PGs mới; "FTF — Kênh MWG" → 5 chỉ số)
+        return `<div style="margin:6px 0 2px;font-size:11px;font-weight:700;color:var(--green-dark,#0B5E36);">${g.name}</div>
+          <div style="padding-left:10px;border-left:2px solid #E8EEEA;">${g.sub.map(rowHtml).join('')}</div>`;
+      }
+      return rowHtml(g);
     }).join('') : `<div style="flex:1;display:flex;align-items:center;justify-content:center;padding:14px 0;"><div style="font-size:10.5px;color:#B7C2BB;font-style:italic;text-align:center;">Không có chiến dịch nào<br>trong tháng này</div></div>`;
     return `<div class="home-catcard">
       <div class="home-cathead">
