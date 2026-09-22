@@ -233,6 +233,35 @@
   .panel{display:none;} .panel.active{display:block;}
 
   .scope-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;background:var(--white);border:1px solid var(--line);border-radius:8px;padding:10px 14px;}
+  /* ===== Tag Home — Lưới thẻ Trainer ===== */
+  .home-trainer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-top:16px;}
+  .home-tcard{background:#fff;border-radius:20px;box-shadow:0 4px 18px rgba(11,94,54,0.07);padding:18px;display:flex;flex-direction:column;gap:12px;transition:transform .15s ease,box-shadow .15s ease;}
+  .home-tcard:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(11,94,54,0.13);}
+  .home-tcard-head{display:flex;align-items:center;gap:10px;}
+  .home-tcard-name{font-weight:700;font-size:14px;color:var(--text);}
+  .home-tcard-region{font-size:11px;color:var(--muted);}
+  .home-kpirow{display:flex;flex-direction:column;gap:4px;}
+  .home-kpilabel{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:600;color:#4B5D54;}
+  .home-kpibar{height:7px;border-radius:99px;background:#EEF3F0;overflow:hidden;}
+  .home-kpifill{height:100%;border-radius:99px;transition:width .3s ease;}
+  .home-btn-detail{margin-top:2px;background:var(--green-dark);color:#fff;text-align:center;padding:9px;border-radius:12px;font-size:12.5px;font-weight:700;border:none;cursor:pointer;width:100%;font-family:inherit;}
+  .home-btn-detail:hover{background:var(--green);}
+  /* ===== Popup chi tiết Trainer ===== */
+  #homeDetailOverlay{position:fixed;inset:0;background:rgba(20,30,25,0.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:24px;}
+  #homeDetailOverlay.hidden{display:none;}
+  .home-popup-card{width:100%;max-width:940px;max-height:90vh;background:#fff;border-radius:28px;box-shadow:0 30px 70px rgba(11,45,28,0.28);overflow:hidden;display:flex;flex-direction:column;}
+  .home-popup-header{background:linear-gradient(120deg,var(--green-dark) 0%,#177A48 100%);padding:26px 30px;position:relative;flex-shrink:0;}
+  .home-popup-close{position:absolute;top:20px;right:22px;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.16);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .home-popup-body{padding:22px 30px 26px;overflow-y:auto;}
+  .home-catcard{background:#F9FBFA;border:1px solid #EEF3F0;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:2px;}
+  .home-cathead{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+  .home-caticon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .home-subrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F0F4F1;}
+  .home-subrow:last-child{border-bottom:none;}
+  .home-subname{flex:1;font-size:12px;font-weight:600;color:#2C3B33;}
+  .home-subbar{width:64px;height:6px;border-radius:99px;background:#E8EEEA;overflow:hidden;flex-shrink:0;}
+  .home-subfill{height:100%;border-radius:99px;}
+  .home-subpct{width:38px;flex-shrink:0;text-align:right;font-size:11.5px;font-weight:700;}
   .scope-filters .scope-label{font-size:var(--cap);font-weight:700;color:var(--green-dark);}
   .scope-filters select{font-family:inherit;font-size:var(--cap);padding:8px 14px;border:1.5px solid #9FD8CB;border-radius:10px;background:#fff;color:var(--text);cursor:pointer;transition:border-color .15s ease;}
   .scope-filters select:hover{border-color:var(--green);}
@@ -584,7 +613,8 @@
     </div>
   <nav class="tabs">
     <div class="nav-group">
-      <button data-tab="overview" data-title="Tổng quan" class="active"><span class="nav-ic">▦</span><span class="nav-label">Tổng quan</span></button>
+      <button data-tab="home" data-title="Home" class="active"><span class="nav-ic">🏠</span><span class="nav-label">Home</span></button>
+      <button data-tab="overview" data-title="Tổng quan"><span class="nav-ic">▦</span><span class="nav-label">Tổng quan</span></button>
       <button data-tab="kpi" data-title="Tiến độ KPI"><span class="nav-ic">▤</span><span class="nav-label">Tiến độ KPI</span></button>
       <button data-tab="so" data-title="DATA S.O" id="navSoBtn"><span class="nav-ic">📊</span><span class="nav-label">DATA S.O</span></button>
     </div>
@@ -604,8 +634,28 @@
   </div>
 
   <div class="main-content">
+  <!-- ============ 0. HOME ============ -->
+  <section id="tab-home" class="maintab active">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
+      <div>
+        <h2 class="section-title" id="homeTitleH2">Danh sách Trainer</h2>
+        <p class="section-desc" id="homeSubDesc">Tiến độ KPI — cập nhật theo tháng đang xem.</p>
+      </div>
+      <div class="scope-filters" style="margin:0;">
+        <select id="homeRegionFilter"><option value="">Tất cả khu vực</option></select>
+        <select id="homeSortSelect">
+          <option value="total">Sắp xếp: Tổng tiến độ</option>
+          <option value="name">Sắp xếp: Tên A-Z</option>
+          <option value="noibo">Sắp xếp: Nội bộ</option>
+          <option value="doitac">Sắp xếp: Đối tác</option>
+          <option value="truyenthong">Sắp xếp: Truyền thông</option>
+        </select>
+      </div>
+    </div>
+    <div id="homeTrainerGrid" class="home-trainer-grid"></div>
+  </section>
   <!-- ============ 1. TỔNG QUAN ============ -->
-  <section id="tab-overview" class="maintab active">
+  <section id="tab-overview" class="maintab">
     <h2 class="section-title">Tổng quan</h2>
     <p class="section-desc">Nhân sự, tỉ lệ on/off, so sánh các hãng — phân bổ theo Trainer và khu vực.</p>
 
@@ -11219,12 +11269,222 @@ function renderMonthStatusBar(){
   if(lockBtn) lockBtn.addEventListener('click', toggleMonthLock);
 }
 /* ============ MASTER RENDER ============ */
+/* ============ TAG HOME — Danh sách Trainer dạng thẻ + Popup chi tiết ============
+   Avatar hoạt hình (SVG vẽ tay, không phải ảnh thật) — mỗi Trainer được gán CỐ ĐỊNH 1 trong 5 mẫu
+   mặt dựa theo mã băm (hash) của tên/id, để luôn hiện đúng 1 kiểu mỗi lần tải trang, không đổi
+   ngẫu nhiên. */
+const HOME_AVATAR_FACES = [
+  {bg:'#EAF4EF', skin:'#FFD9B3', hair:'#3A2A1E', hairPath:'M24 44c0-16 10-26 24-26s24 10 24 26c0-4-4-8-8-8-4 8-32 8-32 0-4 0-8 4-8 8Z'},
+  {bg:'#FEF3E1', skin:'#F4C09A', hair:'#1F1712', hairPath:'M22 46c2-18 12-30 26-30s24 12 26 30c-2-6-8-10-14-9-6-10-18-10-24 0-6-1-12 3-14 9Z'},
+  {bg:'#FDEDF0', skin:'#FFDCC2', hair:'#6B4226', hairPath:'M24 42c-2 20 4 8 6 4 2 8 36 8 38 0 2 4 8 16 6-4-2-18-14-28-25-28s-23 10-25 28Z', bun:true},
+  {bg:'#E9F1FE', skin:'#8D5A3B', hair:'#161311', hairPath:'M20 38c4-20 16-32 28-32s24 12 28 32c-4-10-12-16-28-16s-24 6-28 16Z'},
+  {bg:'#FEF0EC', skin:'#F7C9A3', hair:'#B5651D', hairPath:'M23 40c0-18 11-30 25-30s25 12 25 30c-4-6-8-4-8 0-6-8-34-8-34 0 0-4-4-6-8 0Z'},
+];
+function hashStr_(str){
+  let h = 0;
+  const s = String(str||'');
+  for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) | 0; }
+  return Math.abs(h);
+}
+function trainerAvatarSvg_(trainerId, size){
+  size = size || 44;
+  const f = HOME_AVATAR_FACES[hashStr_(trainerId) % HOME_AVATAR_FACES.length];
+  const bun = f.bun ? `<circle cx="30" cy="20" r="10" fill="${f.hair}"/><circle cx="66" cy="20" r="10" fill="${f.hair}"/>` : '';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 96 96" style="flex-shrink:0;display:block;">
+    <circle cx="48" cy="48" r="48" fill="${f.bg}"/>
+    <ellipse cx="48" cy="57" rx="23" ry="25" fill="${f.skin}"/>
+    <path d="${f.hairPath}" fill="${f.hair}"/>
+    ${bun}
+    <circle cx="39" cy="55" r="3" fill="#2B1E14"/><circle cx="57" cy="55" r="3" fill="#2B1E14"/>
+    <path d="M39 67c3 3 15 3 18 0" stroke="#2B1E14" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  </svg>`;
+}
+/* Tính % tiến độ 3 hạng mục lớn (Nội bộ/Đối tác/Truyền thông) cho 1 Trainer, kèm chi tiết hạng mục
+   con — CHỈ hiện hạng mục con nào THỰC SỰ có chiến dịch trong tháng đang xem (currentMonth), không
+   hiện cứng cố định — đúng yêu cầu "phụ thuộc vào chiến dịch hiển thị trong tháng đó". */
+async function computeTrainerCategoryProgress_(trainerId){
+  const rec = trainerRecord(trainerId);
+  const noiboItems = [];
+  const pg01T = Number(rec.pg01Target||0), pg01A = Number(rec.pg01Actual||0);
+  const pgMoiT = Number(rec.pgMoiTarget||0), pgMoiA = Number(rec.pgMoiActual||0);
+  const coachT = pg01T+pgMoiT, coachA = pg01A+pgMoiA;
+  if(coachT>0) noiboItems.push({ name:'PGs Dev (Coaching)', pct: pct(coachA, coachT) });
+  if(typeof workshopTargetRows!=='undefined' && workshopTargetRows.some(r=>r && r.trainerId===trainerId)){
+    const wT = workshopTargetRows.filter(r=>r && r.trainerId===trainerId).reduce((s,r)=>s+Number(r.students||r.hv||0),0);
+    const wA = (typeof workshopActualRows!=='undefined'?workshopActualRows:[]).filter(r=>r && r.trainerId===trainerId).reduce((s,r)=>s+Number(r.students||r.hv||0),0);
+    if(wT>0) noiboItems.push({ name:'Workshop', pct: pct(wA, wT) });
+  }
+  for(const subtype of ['testonline','tuvanai_checkshop']){
+    const camp = campaignsForGroupMonth('noibo').find(c=>campaignSubtype(c)===subtype);
+    if(!camp) continue;
+    const progress = await loadFrequencyProgress_(camp);
+    const x = campaignFrequencyX_(camp);
+    const list = activePgsOfTrainer_(trainerId);
+    if(list.length===0) continue;
+    let qualified=0;
+    list.forEach(p=>{ if(Number(progress[frequencyPgKey_(p)]||0)>=x) qualified++; });
+    noiboItems.push({ name: subtype==='testonline' ? 'Test Online' : 'Tư vấn AI & Check shop', pct: pct(qualified, list.length) });
+  }
+
+  const doitacItems = [];
+  const shops = (typeof ftfShopList!=='undefined'?ftfShopList:[]).filter(s=>s.trainerId===trainerId);
+  if(shops.length>0){
+    const shopTotal = shops.length, shopDone = shops.filter(s=>s.status==='DONE').length;
+    doitacItems.push({ name:'FTF — SL Shop hoàn thành', pct: pct(shopDone, shopTotal) });
+    const hrT = shops.reduce((s,x)=>s+Number(x.hrTarget||0),0), hrA = shops.reduce((s,x)=>s+Number(x.hrActual||0),0);
+    if(hrT>0) doitacItems.push({ name:'FTF — SL HR', pct: pct(hrA, hrT) });
+    const testT = shops.reduce((s,x)=>s+Number(x.testTotal||0),0), testA = shops.reduce((s,x)=>s+Number(x.testPass||0),0);
+    if(testT>0) doitacItems.push({ name:'FTF — Bài Test', pct: pct(testA, testT) });
+    const surT = shops.reduce((s,x)=>s+Number(x.surveyTotal||0),0), surA = shops.reduce((s,x)=>s+Number(x.surveyDone||0),0);
+    if(surT>0) doitacItems.push({ name:'FTF — Khảo sát', pct: pct(surA, surT) });
+  }
+
+  const truyenthongItems = [];
+  const mediaCamps = (typeof mediaCampaignsThisMonth_==='function' ? mediaCampaignsThisMonth_() : campaigns.filter(c=>c.group==='truyenthong' && c.month===currentMonth));
+  if(mediaCamps.length>0){
+    const allData = await loadAllMediaCampaignsData_(mediaCamps);
+    mediaCamps.forEach(c=>{
+      const d = allData[c.id] || {responses:[],targets:{}};
+      const target = (d.targets[trainerId]!==undefined) ? Number(d.targets[trainerId]||0) : Number(rec.ttTarget||0);
+      const actual = d.responses.filter(r=>r.trainerId===trainerId).length;
+      if(target>0) truyenthongItems.push({ name:c.name, pct: pct(actual, target) });
+    });
+  }
+
+  const avgOf = (items)=>{
+    const valid = items.map(i=>i.pct).filter(p=>p!==null);
+    return valid.length ? Math.round(valid.reduce((a,b)=>a+b,0)/valid.length) : null;
+  };
+  const noibo = { pct: avgOf(noiboItems), items: noiboItems };
+  const doitac = { pct: avgOf(doitacItems), items: doitacItems };
+  const truyenthong = { pct: avgOf(truyenthongItems), items: truyenthongItems };
+  const allPcts = [noibo.pct, doitac.pct, truyenthong.pct].filter(p=>p!==null);
+  const total = allPcts.length ? Math.round(allPcts.reduce((a,b)=>a+b,0)/allPcts.length) : null;
+  return { noibo, doitac, truyenthong, total };
+}
+function homePctColor_(p){
+  if(p===null) return '#B7C2BB';
+  if(p>=80) return '#0B5E36';
+  if(p>=50) return '#E0A93E';
+  return '#C0392B';
+}
+let homeRegionFilter_ = '', homeSortMode_ = 'total';
+let homeProgressCache_ = {};
+async function renderHomeTab_(){
+  const grid = document.getElementById('homeTrainerGrid');
+  if(!grid) return;
+  const regionSel = document.getElementById('homeRegionFilter');
+  if(regionSel && regionSel.options.length<=1){
+    const regions = visibleRegions();
+    regionSel.innerHTML = '<option value="">Tất cả khu vực</option>' + regions.map(r=>`<option value="${r}">${r}</option>`).join('');
+  }
+  document.getElementById('homeSubDesc').textContent = `Tiến độ KPI ${monthLabel(currentMonth)} — cập nhật theo tháng đang xem.`;
+
+  let tList = visibleTrainers();
+  if(homeRegionFilter_) tList = tList.filter(t=>t.region===homeRegionFilter_);
+  if(tList.length===0){ grid.innerHTML = '<div class="empty">Chưa có Trainer nào trong phạm vi đang xem.</div>'; return; }
+
+  grid.innerHTML = '<div class="empty">⏳ Đang tính tiến độ...</div>';
+  const progresses = {};
+  await Promise.all(tList.map(async t=>{ progresses[t.id] = await computeTrainerCategoryProgress_(t.id); }));
+  homeProgressCache_ = progresses;
+
+  let sorted = [...tList];
+  if(homeSortMode_==='name') sorted.sort((a,b)=>a.name.localeCompare(b.name,'vi'));
+  else if(homeSortMode_==='total') sorted.sort((a,b)=>(progresses[b.id].total||0)-(progresses[a.id].total||0));
+  else sorted.sort((a,b)=>(progresses[b.id][homeSortMode_].pct||0)-(progresses[a.id][homeSortMode_].pct||0));
+
+  grid.innerHTML = sorted.map(t=>{
+    const p = progresses[t.id];
+    const rows = ['noibo','doitac','truyenthong'].map(key=>{
+      const label = key==='noibo'?'Nội bộ':(key==='doitac'?'Đối tác':'Truyền thông');
+      const val = p[key].pct;
+      const color = homePctColor_(val);
+      return `<div class="home-kpirow">
+        <div class="home-kpilabel"><span>${label}</span><span style="color:${color};">${val===null?'—':val+'%'}</span></div>
+        <div class="home-kpibar"><div class="home-kpifill" style="width:${val||0}%;background:${color};"></div></div>
+      </div>`;
+    }).join('');
+    return `<div class="home-tcard">
+      <div class="home-tcard-head">
+        ${trainerAvatarSvg_(t.id, 44)}
+        <div><div class="home-tcard-name">${t.name}</div><div class="home-tcard-region">${t.region||'—'}</div></div>
+      </div>
+      ${rows}
+      <button class="home-btn-detail" data-home-detail="${t.id}" type="button">Xem chi tiết</button>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('[data-home-detail]').forEach(btn=>{
+    btn.addEventListener('click', ()=> openHomeDetailPopup_(btn.getAttribute('data-home-detail')));
+  });
+}
+function homeCatIconSvg_(key){
+  if(key==='noibo') return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0B5E36" stroke-width="2.2"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>`;
+  if(key==='doitac') return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3A8C63" stroke-width="2.2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1M9 21v-4h6v4"/></svg>`;
+  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B8863B" stroke-width="2.2"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`;
+}
+function homeCatIconBg_(key){ return key==='noibo'?'#EAF4EF':(key==='doitac'?'#EAF2ED':'#FDF3E3'); }
+async function openHomeDetailPopup_(trainerId){
+  const t = config.trainers.find(x=>x.id===trainerId);
+  if(!t) return;
+  const overlay = document.getElementById('homeDetailOverlay');
+  overlay.classList.remove('hidden');
+  document.getElementById('homeDetailAvatar').innerHTML = trainerAvatarSvg_(t.id, 72);
+  document.getElementById('homeDetailName').textContent = t.name;
+  document.getElementById('homeDetailSub').textContent = `${t.region||'—'} · Tiến độ KPI ${monthLabel(currentMonth)}`;
+  document.getElementById('homeDetailTotalPct').textContent = '…';
+
+  const p = homeProgressCache_[trainerId] || await computeTrainerCategoryProgress_(trainerId);
+  const total = p.total;
+  document.getElementById('homeDetailTotalPct').textContent = total===null?'—':total+'%';
+  const ring = document.getElementById('homeDetailRing');
+  const circumference = 2*Math.PI*36;
+  ring.setAttribute('stroke-dasharray', circumference.toFixed(2));
+  ring.setAttribute('stroke-dashoffset', (circumference*(1-(total||0)/100)).toFixed(2));
+
+  const catHtml = (key, label)=>{
+    const cat = p[key];
+    const items = cat.items;
+    const bodyRows = items.length ? items.map(it=>{
+      const color = homePctColor_(it.pct);
+      return `<div class="home-subrow">
+        <div class="home-subname">${it.name}</div>
+        <div class="home-subbar"><div class="home-subfill" style="width:${it.pct||0}%;background:${color};"></div></div>
+        <div class="home-subpct" style="color:${color};">${it.pct===null?'—':it.pct+'%'}</div>
+      </div>`;
+    }).join('') : `<div style="flex:1;display:flex;align-items:center;justify-content:center;padding:14px 0;"><div style="font-size:10.5px;color:#B7C2BB;font-style:italic;text-align:center;">Không có chiến dịch nào<br>trong tháng này</div></div>`;
+    return `<div class="home-catcard">
+      <div class="home-cathead">
+        <div class="home-caticon" style="background:${homeCatIconBg_(key)};">${homeCatIconSvg_(key)}</div>
+        <div style="flex:1;"><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;">${label}</div></div>
+        <div style="font-size:13px;font-weight:800;color:${homePctColor_(cat.pct)};">${cat.pct===null?'—':cat.pct+'%'}</div>
+      </div>
+      ${bodyRows}
+    </div>`;
+  };
+  document.getElementById('homeDetailBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;">
+      ${catHtml('noibo','Nội bộ')}
+      ${catHtml('doitac','Đối tác')}
+      ${catHtml('truyenthong','Truyền thông')}
+    </div>
+    <div style="margin-top:16px;font-size:10.5px;color:#9BA9A1;font-style:italic;">* Danh sách hạng mục tự động đổi theo đúng chiến dịch đang có trong tháng đang xem.</div>
+  `;
+}
+function closeHomeDetailPopup_(){ document.getElementById('homeDetailOverlay').classList.add('hidden'); }
+document.getElementById('homeDetailCloseBtn').addEventListener('click', closeHomeDetailPopup_);
+document.getElementById('homeDetailOverlay').addEventListener('click', (e)=>{ if(e.target.id==='homeDetailOverlay') closeHomeDetailPopup_(); });
+document.getElementById('homeRegionFilter').addEventListener('change', (e)=>{ homeRegionFilter_ = e.target.value; renderHomeTab_(); });
+document.getElementById('homeSortSelect').addEventListener('change', (e)=>{ homeSortMode_ = e.target.value; renderHomeTab_(); });
+
 function renderAll(){
   // Dashboard có nhiều khu vực render động. Lưu vị trí viewport trước khi render để
   // thao tác cập nhật dữ liệu không làm người dùng bị “nhảy” lên/xuống trang.
   const keepX = window.scrollX || 0;
   const keepY = window.scrollY || 0;
   renderMonthStatusBar();
+  renderHomeTab_();
   renderOverviewAll();
   renderKpiAll();
   renderSettingsConfig();
@@ -11879,6 +12139,33 @@ new MutationObserver(muts=>{
   });
 }).observe(document.body, { childList:true, subtree:true });
 </script>
+<div id="homeDetailOverlay" class="hidden">
+  <div class="home-popup-card">
+    <div class="home-popup-header">
+      <button class="home-popup-close" id="homeDetailCloseBtn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div style="display:flex;align-items:center;gap:22px;">
+        <div id="homeDetailAvatar" style="flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:22px;color:#fff;" id="homeDetailName"></div>
+          <div style="font-size:13px;color:#CFE9D9;margin-top:3px;" id="homeDetailSub"></div>
+        </div>
+        <div style="position:relative;width:84px;height:84px;flex-shrink:0;">
+          <svg width="84" height="84" viewBox="0 0 84 84">
+            <circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="7"/>
+            <circle cx="42" cy="42" r="36" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" id="homeDetailRing" transform="rotate(-90 42 42)"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:19px;color:#fff;" id="homeDetailTotalPct"></div>
+            <div style="font-size:8.5px;color:#CFE9D9;">TỔNG</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="home-popup-body" id="homeDetailBody"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="confirmModal" style="display:none;">
   <div class="modal-box">
     <div class="modal-text" id="confirmModalText"></div>
