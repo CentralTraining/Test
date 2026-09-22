@@ -247,7 +247,7 @@
   #homeDetailOverlay.hidden{display:none;}
   .home-popup-card{width:100%;max-width:940px;max-height:90vh;background:#fff;border-radius:28px;box-shadow:0 30px 70px rgba(11,45,28,0.28);overflow:hidden;display:flex;flex-direction:column;}
   .home-popup-header{background:linear-gradient(120deg,var(--green-dark) 0%,#177A48 100%);padding:26px 30px;position:relative;flex-shrink:0;}
-  .home-popup-close{position:absolute;top:20px;right:22px;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.16);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .home-popup-close{width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,0.16);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
   .home-popup-body{padding:22px 30px 26px;overflow-y:auto;}
   .home-catcard{background:#F9FBFA;border:1px solid #EEF3F0;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:2px;}
   .home-cathead{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
@@ -11153,6 +11153,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if(regionSel) regionSel.addEventListener('change', (e)=>{ homeRegionFilter_ = e.target.value; renderHomeTab_(); });
   const sortSel = document.getElementById('homeSortSelect');
   if(sortSel) sortSel.addEventListener('change', (e)=>{ homeSortMode_ = e.target.value; renderHomeTab_(); });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='Escape'){
+      const ov = document.getElementById('homeDetailOverlay');
+      if(ov && !ov.classList.contains('hidden')) closeHomeDetailPopup_();
+    }
+  });
 });
 
 function renderAll(){
@@ -11819,9 +11825,11 @@ new MutationObserver(muts=>{
 <div id="homeDetailOverlay" class="hidden">
   <div class="home-popup-card">
     <div class="home-popup-header">
-      <button class="home-popup-close" id="homeDetailCloseBtn" type="button">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+        <button class="home-popup-close" id="homeDetailCloseBtn" type="button">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
       <div style="display:flex;align-items:center;gap:22px;">
         <div id="homeDetailAvatar" style="flex-shrink:0;"></div>
         <div style="flex:1;">
