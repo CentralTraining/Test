@@ -5162,18 +5162,53 @@ function courseDateRangeLabel_(camp){
   const t = camp.classDateTo && camp.classDateTo!==camp.classDateFrom ? new Date(camp.classDateTo).toLocaleDateString('vi-VN') : '';
   return t ? `${f} → ${t}` : f;
 }
-/* ============ XUẤT BÁO CÁO PPT HÀNG THÁNG (12 slide) ============
+/* ============ XUẤT BÁO CÁO PPT HÀNG THÁNG ============
    Dùng thư viện PptxGenJS (tải qua CDN) — tự động lấy dữ liệu TƯƠI của tháng đang xem (currentMonth)
-   trên Dashboard để dựng báo cáo, không cần làm thủ công mỗi tháng. Nhất quán đúng số liệu đang hiển
-   thị trên màn hình (dùng lại các hàm/biến đã có: scopedActivePgs, brandShopList, trainerRecord...). */
-const RP_GREEN = '0B5E36', RP_GREEN_LIGHT='E7F3EC', RP_WHITE='FFFFFF', RP_TEXT='222222', RP_GRAY='6B7280';
-function rp_addHeader_(slide, title, subtitle){
+   trên Dashboard để dựng báo cáo, không cần làm thủ công mỗi tháng.
+   THIẾT KẾ dựa theo đúng mẫu báo cáo chuẩn công ty (file CENTRAL_BAO_CAO_T8.pptx bạn gửi): thanh nhấn
+   mỏng màu xanh OPPO trên đầu mỗi slide, tiêu đề chữ đậm màu xám đen (không phải chữ trắng nền xanh),
+   footer dạng breadcrumb + số trang, và ĐẶC BIỆT là cặp khung "INSIGHT" (nền xanh nhạt) / "ACTION"
+   (nền xanh đậm, chữ trắng) đặt song song dưới mỗi biểu đồ — đúng văn phong báo cáo tư vấn. */
+const RP_GREEN = '0B5E36', RP_GREEN2 = '016C38', RP_GREEN_LIGHT='E7F3EC', RP_INSIGHT_BG='EAF5EE';
+const RP_WHITE = 'FFFFFF', RP_TEXT='333333', RP_GRAY='6B6B6B', RP_ALERT='C0392B';
+let rp_pageNum_ = 0, rp_pageTotal_ = 0;
+function rp_addHeader_(slide, title, breadcrumbSuffix){
   slide.background = { color: RP_WHITE };
-  slide.addShape('rect', { x:0, y:0, w:'100%', h:0.9, fill:{color:RP_GREEN} });
-  slide.addText(title, { x:0.4, y:0.12, w:9.5, h:0.5, fontFace:'Montserrat', fontSize:22, bold:true, color:RP_WHITE });
-  if(subtitle) slide.addText(subtitle, { x:0.4, y:0.55, w:9.5, h:0.3, fontFace:'Montserrat', fontSize:11, color:RP_GREEN_LIGHT });
+  slide.addShape('rect', { x:0, y:0, w:'100%', h:0.09, fill:{color:RP_GREEN2} });
+  slide.addText(title.toUpperCase(), { x:0.4, y:0.32, w:12.5, h:0.4, fontFace:'Montserrat', fontSize:16, bold:true, color:RP_TEXT });
+  rp_pageNum_++;
+  slide.addText(`OPPO VIỆT NAM  •  BÁO CÁO ĐÀO TẠO MIỀN TRUNG  •  ${breadcrumbSuffix||''}`, { x:0.4, y:7.16, w:10.5, h:0.28, fontFace:'Arial', fontSize:8, color:RP_GRAY });
+  slide.addText(`${rp_pageNum_}/${rp_pageTotal_}`, { x:12.5, y:7.16, w:0.5, h:0.28, fontFace:'Arial', fontSize:8, color:RP_GRAY, align:'right' });
+}
+/* Tiêu đề nhỏ phía trên mỗi biểu đồ (đúng kiểu mẫu: chữ đen đậm, cỡ 10, ngay sát trên chart) */
+function rp_chartTitle_(slide, text, x, y, w){
+  slide.addText(text, { x, y, w, h:0.26, fontFace:'Arial', fontSize:10, bold:true, color:RP_TEXT });
+}
+/* Cặp khung INSIGHT (trái, nền xanh nhạt) + ACTION (phải, nền xanh đậm chữ trắng) đặt song song —
+   mỗi phần nhận 1 mảng chuỗi (mỗi chuỗi có thể là string thường, hoặc {text, alert:true} để tô đỏ
+   nhấn mạnh số liệu quan trọng giống hệt mẫu gốc). */
+function rp_addInsightAction_(slide, insights, actions, y, h){
+  h = h || 2.8;
+  const boxW = 6.15, gap = 0.23, x1 = 0.4, x2 = x1+boxW+gap;
+  slide.addShape('roundRect', { x:x1, y, w:boxW, h, fill:{color:RP_INSIGHT_BG}, rectRadius:0.06 });
+  slide.addText('INSIGHT', { x:x1+0.2, y:y+0.12, w:boxW-0.4, h:0.28, fontFace:'Arial', fontSize:11, bold:true, color:RP_GREEN });
+  const insightRuns = [];
+  insights.forEach((it,i)=>{
+    const text = typeof it==='string' ? it : it.text;
+    insightRuns.push({ text:'•  '+text, options:{ fontFace:'Arial', fontSize:10.5, color:RP_TEXT, breakLine:true, paraSpaceAfter:6 } });
+  });
+  slide.addText(insightRuns, { x:x1+0.2, y:y+0.46, w:boxW-0.4, h:h-0.6, fontFace:'Arial', fontSize:10.5, color:RP_TEXT, valign:'top' });
+  if(actions && actions.length){
+    slide.addShape('roundRect', { x:x2, y, w:boxW, h, fill:{color:RP_GREEN2}, rectRadius:0.06 });
+    slide.addText('ACTION', { x:x2+0.2, y:y+0.12, w:boxW-0.4, h:0.28, fontFace:'Arial', fontSize:11, bold:true, color:RP_WHITE });
+    const actionRuns = actions.map(a=>({ text:'•  '+a, options:{ fontFace:'Arial', fontSize:10.5, color:RP_WHITE, breakLine:true, paraSpaceAfter:6 } }));
+    slide.addText(actionRuns, { x:x2+0.2, y:y+0.46, w:boxW-0.4, h:h-0.6, fontFace:'Arial', fontSize:10.5, color:RP_WHITE, valign:'top' });
+  } else {
+    slide.addShape('roundRect', { x:x1, y, w:boxW*2+gap, h, fill:{color:RP_INSIGHT_BG}, rectRadius:0.06, line:{type:'none'} });
+  }
 }
 function rp_seniorityBucketLabel_(months){ return seniorityBucket(months); }
+function rp_pct_(a,b){ return b ? Math.round(a/b*100) : 0; }
 async function generateMonthlyReportPPT_(){
   if(typeof PptxGenJS==='undefined'){ alert('Chưa tải được thư viện xuất PPT — kiểm tra lại kết nối mạng rồi thử lại.'); return; }
   const btn = document.getElementById('exportMonthlyReportBtn');
@@ -5184,22 +5219,48 @@ async function generateMonthlyReportPPT_(){
     pptx.defineLayout({ name:'RP_WIDE', width:13.33, height:7.5 });
     pptx.layout = 'RP_WIDE';
     const mLabel = monthLabel(currentMonth);
+    rp_pageNum_ = 0; rp_pageTotal_ = 11;
 
     /* ===== Slide 1: Trang bìa ===== */
     {
       const slide = pptx.addSlide();
-      slide.background = { color: RP_GREEN };
-      slide.addText('BÁO CÁO ĐÀO TẠO', { x:0.8, y:2.5, w:11.7, h:1, fontFace:'Montserrat', fontSize:40, bold:true, color:RP_WHITE });
-      slide.addText('OPPO Miền Trung', { x:0.8, y:3.4, w:11.7, h:0.7, fontFace:'Montserrat', fontSize:24, color:RP_GREEN_LIGHT });
-      slide.addText(mLabel, { x:0.8, y:4.3, w:11.7, h:0.6, fontFace:'Montserrat', fontSize:20, bold:true, color:RP_WHITE });
-      slide.addText('Xuất tự động từ Dashboard — '+new Date().toLocaleDateString('vi-VN'), { x:0.8, y:6.8, w:11.7, h:0.4, fontFace:'Montserrat', fontSize:11, color:RP_GREEN_LIGHT });
+      slide.background = { color: RP_GREEN2 };
+      slide.addShape('rect', { x:0, y:0, w:0.18, h:7.5, fill:{color:RP_GREEN} });
+      slide.addShape('rect', { x:0.9, y:4.65, w:1.1, h:0.09, fill:{color:RP_WHITE} });
+      slide.addText('OPPO VIỆT NAM', { x:0.9, y:1.65, w:8, h:0.4, fontFace:'Arial', fontSize:13, bold:true, color:'E6F2EC' });
+      slide.addText('BÁO CÁO ĐÀO TẠO', { x:0.9, y:2.75, w:11.5, h:1.1, fontFace:'Montserrat', fontSize:44, bold:true, color:RP_WHITE });
+      slide.addText('Miền Trung Training Team', { x:0.9, y:3.75, w:11.5, h:0.65, fontFace:'Montserrat', fontSize:22, bold:true, color:'E6F2EC' });
+      slide.addText(`Tổng kết hoạt động Training ${mLabel} & định hướng tháng tới`, { x:0.9, y:4.9, w:11, h:0.4, fontFace:'Arial', fontSize:13, color:'E6F2EC' });
+      slide.addText(mLabel, { x:0.9, y:6.9, w:3, h:0.3, fontFace:'Arial', fontSize:10, color:'E6F2EC' });
+    }
+
+    /* ===== Slide 2: Nội dung báo cáo (TOC) ===== */
+    {
+      const slide = pptx.addSlide();
+      slide.background = { color: RP_WHITE };
+      slide.addShape('rect', { x:0, y:0, w:'100%', h:0.09, fill:{color:RP_GREEN2} });
+      slide.addText('NỘI DUNG BÁO CÁO', { x:0.9, y:0.6, w:11, h:0.35, fontFace:'Arial', fontSize:12, bold:true, color:RP_GREEN2 });
+      slide.addText(`Báo cáo ${mLabel} — Miền Trung Training Team`, { x:0.9, y:0.95, w:11, h:0.7, fontFace:'Montserrat', fontSize:26, bold:true, color:RP_TEXT });
+      const tocItems = [
+        { n:'01', t:'Tổng quan Nhân sự', d:'Bức tranh nhân sự PG toàn miền và các phát hiện chính' },
+        { n:'02', t:'Training nội bộ', d:'Coaching PGs Dev, Test Online, Tư vấn AI & khoá CVTV/PGs 3★' },
+        { n:'03', t:'Training đối tác', d:'Hoạt động FTF tại shop' },
+        { n:'04', t:'Truyền thông', d:'Các chiến dịch truyền thông trong tháng' },
+        { n:'05', t:'Kế hoạch tháng tới', d:'Định hướng và mục tiêu trọng tâm' },
+      ];
+      tocItems.forEach((item,i)=>{
+        const y = 2.05 + i*0.92;
+        slide.addShape('roundRect', { x:0.9, y, w:0.62, h:0.62, fill:{color:RP_GREEN2}, rectRadius:0.08 });
+        slide.addText(item.n, { x:0.9, y, w:0.62, h:0.62, align:'center', valign:'middle', fontFace:'Montserrat', fontSize:16, bold:true, color:RP_WHITE });
+        slide.addText(item.t, { x:1.75, y:y+0.02, w:10.6, h:0.4, fontFace:'Montserrat', fontSize:17, bold:true, color:RP_TEXT });
+        slide.addText(item.d, { x:1.75, y:y+0.42, w:10.6, h:0.35, fontFace:'Arial', fontSize:11.5, color:RP_GRAY });
+      });
+      slide.addText(`OPPO VIỆT NAM  •  BÁO CÁO ${mLabel.toUpperCase()}  •  MIỀN TRUNG TRAINING TEAM`, { x:0.9, y:7.16, w:10, h:0.28, fontFace:'Arial', fontSize:8, color:RP_GRAY });
     }
 
     /* ===== Chuẩn bị dữ liệu Nhân sự dùng chung nhiều slide ===== */
     const allOppoPgs = pgs.filter(p=>p.brand==='OPPO');
     const activeOppoPgs = allOppoPgs.filter(p=>p.status==='Đang làm');
-    const statusCounts = {};
-    allOppoPgs.forEach(p=>{ const st=p.status||'Đang làm'; statusCounts[st]=(statusCounts[st]||0)+1; });
     const regionsForReport = visibleRegions();
     const byRegion = regionsForReport.map(r=> activeOppoPgs.filter(p=>{ const tr=trainerOf(p.trainerId); return tr && tr.region===r; }).length);
     const channelLabels = ['MWG','K.A','IND'];
@@ -5209,77 +5270,107 @@ async function generateMonthlyReportPPT_(){
     const senLabels = SENIORITY_BUCKETS;
     const byShopSize = Array.from(new Set(activeOppoPgs.map(p=>resolvedShopSize_(p)).filter(Boolean)));
 
-    /* ===== Slide 2: Tổng quan Nhân sự ===== */
+    /* ===== Slide 3: Tổng quan Nhân sự (3 biểu đồ: Khu vực / Kênh / Size shop) ===== */
     {
       const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Tổng quan Nhân sự', mLabel);
-      const kpiCards = [
-        { label:'Tổng số PGs', value: String(allOppoPgs.length) },
-        { label:'Đang làm', value: String(statusCounts['Đang làm']||0) },
-        { label:'Số Khu vực', value: String(regionsForReport.length) },
-        { label:'Số Trainer', value: String(visibleTrainers().length) },
-      ];
-      kpiCards.forEach((c,i)=>{
-        const x = 0.5 + i*3.1;
-        slide.addShape('roundRect', { x, y:1.3, w:2.8, h:1.6, fill:{color:RP_GREEN_LIGHT}, line:{color:RP_GREEN,width:1}, rectRadius:0.08 });
-        slide.addText(c.value, { x, y:1.45, w:2.8, h:0.8, align:'center', fontFace:'Montserrat', fontSize:32, bold:true, color:RP_GREEN });
-        slide.addText(c.label, { x, y:2.25, w:2.8, h:0.5, align:'center', fontFace:'Montserrat', fontSize:12, color:RP_TEXT });
+      rp_addHeader_(slide, 'Tổng quan Nhân sự OPPO Miền Trung', 'Tổng quan Nhân sự');
+      const chartY = 1.25, chartH = 2.3, colW = 3.95, gapX = 0.3;
+      const xs = [0.4, 0.4+colW+gapX, 0.4+2*(colW+gapX)];
+      rp_chartTitle_(slide, 'PG OPPO theo khu vực', xs[0], chartY, colW);
+      if(regionsForReport.length) slide.addChart(pptx.ChartType.bar, [{ name:'Số PGs', labels:regionsForReport, values:byRegion }], {
+        x:xs[0], y:chartY+0.25, w:colW, h:chartH, barDir:'col', chartColors:[RP_GREEN2], showValue:true, dataLabelFontSize:8, showLegend:false, catAxisLabelFontSize:8, valAxisLabelFontSize:8,
       });
-      const statusRows = [[{text:'Trạng thái',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}},{text:'Số lượng',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}}]];
-      Object.keys(statusCounts).forEach(st=> statusRows.push([String(st), String(statusCounts[st])]));
-      slide.addTable(statusRows, { x:0.5, y:3.3, w:5.5, h:3, fontFace:'Montserrat', fontSize:12, border:{color:'DDDDDD',pt:1}, autoPage:false });
-    }
-
-    /* ===== Slide 3: Phân bổ PGs theo Khu vực ===== */
-    {
-      const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Phân bổ PGs theo Khu vực', mLabel);
-      if(regionsForReport.length){
-        slide.addChart(pptx.ChartType.bar, [{ name:'Số PGs (Đang làm)', labels:regionsForReport, values:byRegion }], {
-          x:0.6, y:1.2, w:12, h:5.8, barDir:'col', chartColors:[RP_GREEN], showValue:true, dataLabelColor:RP_TEXT, dataLabelFontSize:11,
-          catAxisLabelFontFace:'Montserrat', valAxisLabelFontFace:'Montserrat', showLegend:false,
-        });
-      }
-    }
-
-    /* ===== Slide 4: Phân bổ PGs theo Kênh ===== */
-    {
-      const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Phân bổ PGs theo Kênh', mLabel);
+      rp_chartTitle_(slide, 'PG OPPO theo kênh (toàn miền)', xs[1], chartY, colW);
       slide.addChart(pptx.ChartType.doughnut, [{ name:'Kênh', labels:channelLabels, values:byChannel }], {
-        x:2.5, y:1.2, w:8, h:5.8, chartColors:[RP_GREEN,'#0B5E36AA','#0B5E3666'], showLegend:true, legendPos:'r',
-        showValue:true, dataLabelFontFace:'Montserrat',
+        x:xs[1], y:chartY+0.25, w:colW, h:chartH, chartColors:[RP_GREEN2,'4C9B72','A8D5BE'], showLegend:true, legendPos:'b', legendFontSize:8, showValue:true, dataLabelFontSize:8,
       });
+      rp_chartTitle_(slide, 'PG OPPO theo Size shop', xs[2], chartY, colW);
+      if(byShopSize.length) slide.addChart(pptx.ChartType.bar, [{ name:'Số PGs', labels:byShopSize, values:byShopSize.map(l=>activeOppoPgs.filter(p=>resolvedShopSize_(p)===l).length) }], {
+        x:xs[2], y:chartY+0.25, w:colW, h:chartH, barDir:'bar', chartColors:[RP_GREEN2], showValue:true, dataLabelFontSize:8, showLegend:false, catAxisLabelFontSize:8, valAxisLabelFontSize:8,
+      });
+
+      const maxIdx = byRegion.length ? byRegion.indexOf(Math.max(...byRegion)) : -1;
+      const minIdx = byRegion.length ? byRegion.indexOf(Math.min(...byRegion)) : -1;
+      const totalCh = byChannel.reduce((a,b)=>a+b,0);
+      const maxChIdx = byChannel.indexOf(Math.max(...byChannel));
+      const insights = [], actions = [];
+      if(maxIdx>=0 && maxIdx!==minIdx){
+        insights.push(`Khu vực "${regionsForReport[maxIdx]}" có số PGs nhiều nhất (${byRegion[maxIdx]} người), "${regionsForReport[minIdx]}" ít nhất (${byRegion[minIdx]} người).`);
+      } else if(maxIdx>=0){
+        insights.push(`Các khu vực có số PGs khá đồng đều (khoảng ${byRegion[maxIdx]} người/khu vực).`);
+      }
+      if(totalCh){
+        const chPct = rp_pct_(byChannel[maxChIdx], totalCh);
+        insights.push(`Kênh "${channelLabels[maxChIdx]}" chiếm ${chPct}% PG OPPO (${byChannel[maxChIdx]}/${totalCh})${chPct>65?' → phụ thuộc khá nặng vào 1 kênh, rủi ro nếu kênh này đổi chính sách PG':''}.`);
+        if(chPct>65) actions.push(`Xây kế hoạch dự phòng nhân sự ngoài kênh "${channelLabels[maxChIdx]}" để giảm rủi ro phụ thuộc.`);
+      }
+      if(maxIdx>=0) actions.push(`Rà soát nhu cầu nhân sự tại "${regionsForReport[minIdx]}" — khu vực có số PGs thấp nhất hiện tại.`);
+      if(insights.length===0) insights.push('Chưa có đủ dữ liệu Khu vực/Kênh để đưa ra nhận định trong tháng này.');
+      rp_addInsightAction_(slide, insights, actions, 4.05, 2.8);
+    }
+
+    /* ===== Slide 4: Phân bổ PGs theo Sao ===== */
+    {
+      const slide = pptx.addSlide();
+      rp_addHeader_(slide, `Phân bổ PGs theo Sao ${mLabel}`, 'Phân bổ PGs theo Sao');
+      const starLabels = ['0★','1★','2★','3★','4★','5★'];
+      const byStar = [0,1,2,3,4,5].map(s=> activeOppoPgs.filter(p=>Number(p.star)===s).length);
+      rp_chartTitle_(slide, 'Tỉ trọng PG theo số sao — toàn Miền Trung', 0.4, 1.25, 8);
+      slide.addChart(pptx.ChartType.bar, [{ name:'Số PGs', labels:starLabels, values:byStar }], {
+        x:0.4, y:1.55, w:12.5, h:2.3, barDir:'col', chartColors:[RP_GREEN2], showValue:true, dataLabelFontSize:9, showLegend:false, catAxisLabelFontFace:'Montserrat',
+      });
+      const totalStar = byStar.reduce((a,b)=>a+b,0);
+      const highStarRatio = rp_pct_(byStar[2]+byStar[3]+byStar[4]+byStar[5], totalStar);
+      const zeroOneRatio = rp_pct_(byStar[0]+byStar[1], totalStar);
+      const insights = [`Tỉ lệ PGs đạt ≥2★: ${highStarRatio}% (${byStar[2]+byStar[3]+byStar[4]+byStar[5]}/${totalStar}).`,
+        `PGs 0★/1★ (cần coaching nâng sao) chiếm ${zeroOneRatio}% đội ngũ.`];
+      const actions = [zeroOneRatio>30 ? 'Tỉ lệ 0★/1★ còn cao — đẩy mạnh Coaching PGs Dev theo đúng Target đã giao cho từng Trainer.' : 'Duy trì nhịp độ Coaching hiện tại, tiếp tục theo dõi sát PGs 0★/1★ còn lại.'];
+      rp_addInsightAction_(slide, insights, actions, 4.05, 2.8);
     }
 
     /* ===== Slide 5: Phân bổ PGs theo Thâm niên ===== */
     {
       const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Phân bổ PGs theo Thâm niên', mLabel);
+      rp_addHeader_(slide, 'Phân bổ PGs theo Thâm niên', 'Thâm niên & chất lượng nhân sự');
       const bySen = senLabels.map(bucket=> activeOppoPgs.filter(p=>seniorityBucket(p.seniority)===bucket).length);
+      rp_chartTitle_(slide, 'Phân bổ Thâm niên — toàn Miền Trung', 0.4, 1.25, 8);
       slide.addChart(pptx.ChartType.bar, [{ name:'Số PGs', labels:senLabels, values:bySen }], {
-        x:0.6, y:1.2, w:12, h:5.8, barDir:'col', chartColors:[RP_GREEN], showValue:true, dataLabelColor:RP_TEXT,
-        catAxisLabelFontFace:'Montserrat', showLegend:false,
+        x:0.4, y:1.55, w:12.5, h:2.3, barDir:'col', chartColors:[RP_GREEN2], showValue:true, dataLabelFontSize:9, showLegend:false, catAxisLabelFontFace:'Montserrat',
       });
+      const newRatio = rp_pct_(bySen[0]||0, activeOppoPgs.length);
+      const veteranRatio = rp_pct_(bySen[bySen.length-1]||0, activeOppoPgs.length);
+      const insights = [`PGs mới (dưới 3 tháng) chiếm ${newRatio}% đội ngũ.`, `PGs lâu năm (trên 3 năm) chiếm ${veteranRatio}% đội ngũ.`];
+      const actions = [newRatio>25 ? 'Tỉ lệ PGs mới khá cao — ưu tiên Coaching + khoá CVTV để rút ngắn thời gian làm quen công việc.' : 'Tỉ lệ PGs mới ở mức ổn định, duy trì lộ trình đào tạo hiện tại.'];
+      rp_addInsightAction_(slide, insights, actions, 4.05, 2.8);
     }
 
     /* ===== Slide 6: OPPO vs Đối thủ theo Kênh ===== */
     {
       const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Tương quan OPPO vs Đối thủ — theo Kênh', mLabel);
+      rp_addHeader_(slide, 'Tương quan OPPO vs Đối thủ — theo Kênh', 'Cạnh tranh nhân sự theo Kênh');
       const dataSets = [{ name:'OPPO', labels:channelLabels, values:byChannel }];
       BRANDS.filter(b=>b!=='OPPO').forEach(brand=> dataSets.push({ name:brand, labels:channelLabels, values:byChannelCompetitor[brand] }));
+      rp_chartTitle_(slide, 'Số PG mỗi hãng theo Kênh', 0.4, 1.25, 8);
       slide.addChart(pptx.ChartType.bar, dataSets, {
-        x:0.4, y:1.2, w:12.5, h:5.8, barDir:'col', barGrouping:'clustered', showValue:true, dataLabelFontSize:8,
-        chartColors:BRANDS.map(b=>(BRAND_COLORS[b]||'#999').replace('#','')), showLegend:true, legendPos:'b', legendFontSize:10,
-        catAxisLabelFontFace:'Montserrat',
+        x:0.4, y:1.55, w:12.5, h:2.3, barDir:'col', barGrouping:'clustered', showValue:true, dataLabelFontSize:7,
+        chartColors:BRANDS.map(b=>(BRAND_COLORS[b]||'#999').replace('#','')), showLegend:true, legendPos:'b', legendFontSize:9,
       });
+      const insights = [], actions = [];
+      channelLabels.forEach((ch,i)=>{
+        const oppoVal = byChannel[i];
+        let topCompetitor='', topVal=-1;
+        BRANDS.filter(b=>b!=='OPPO').forEach(b=>{ const v=byChannelCompetitor[b][i]; if(v>topVal){topVal=v;topCompetitor=b;} });
+        if(oppoVal>topVal) insights.push(`Kênh ${ch}: OPPO dẫn đầu với ${oppoVal} PGs, vượt ${topCompetitor} (${topVal} PGs).`);
+        else if(topVal>oppoVal){ insights.push(`Kênh ${ch}: OPPO (${oppoVal} PGs) đang tụt hậu so với ${topCompetitor} (${topVal} PGs).`); actions.push(`Kênh ${ch}: tăng độ phủ PG để rút ngắn khoảng cách với ${topCompetitor}.`); }
+      });
+      if(actions.length===0) actions.push('OPPO đang dẫn đầu ở các kênh chính — duy trì lợi thế hiện có.');
+      rp_addInsightAction_(slide, insights.slice(0,3), actions.slice(0,3), 4.05, 2.8);
     }
 
     /* ===== Slide 7: OPPO vs Đối thủ theo Thâm niên ===== */
     {
       const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Tương quan OPPO vs Đối thủ — theo Thâm niên', mLabel);
+      rp_addHeader_(slide, 'Tương quan OPPO vs Đối thủ — theo Thâm niên', 'Cạnh tranh nhân sự theo Thâm niên');
       const oppoAvgSen = activeOppoPgs.length ? Math.round(activeOppoPgs.reduce((s,p)=>s+Number(p.seniority||0),0)/activeOppoPgs.length) : 0;
       const brandAvgSen = { OPPO: oppoAvgSen };
       BRANDS.filter(b=>b!=='OPPO').forEach(brand=>{
@@ -5287,49 +5378,69 @@ async function generateMonthlyReportPPT_(){
         brandShopList.forEach(shop=>{ const b=shop.brands?shop.brands[brand]:null; if(!b) return; (b.seniorities||[]).forEach(s=>{ const n=Number(s)||0; if(n>0){senSum+=n;senCount++;} }); });
         brandAvgSen[brand] = senCount ? Math.round(senSum/senCount) : 0;
       });
-      slide.addChart(pptx.ChartType.bar, [{ name:'Thâm niên trung bình (tháng)', labels:BRANDS, values:BRANDS.map(b=>brandAvgSen[b]) }], {
-        x:0.6, y:1.2, w:12, h:5.8, barDir:'col', showValue:true, dataLabelColor:RP_TEXT,
-        chartColors:[RP_GREEN], showLegend:false, catAxisLabelFontFace:'Montserrat',
-        chartColorsOpacity:100,
+      rp_chartTitle_(slide, 'Thâm niên trung bình theo hãng (tháng)', 0.4, 1.25, 8);
+      slide.addChart(pptx.ChartType.bar, [{ name:'Thâm niên TB (tháng)', labels:BRANDS, values:BRANDS.map(b=>brandAvgSen[b]) }], {
+        x:0.4, y:1.55, w:12.5, h:2.3, barDir:'col', showValue:true, dataLabelFontSize:9, chartColors:[RP_GREEN2], showLegend:false,
       });
-      // Tô màu riêng từng cột theo đúng thương hiệu (OPPO xanh đậm, còn lại theo BRAND_COLORS)
+      const others = BRANDS.filter(b=>b!=='OPPO');
+      const higherThanOppo = others.filter(b=>brandAvgSen[b]>oppoAvgSen);
+      const insights = [`Thâm niên trung bình OPPO: ${oppoAvgSen} tháng.`];
+      const actions = [];
+      if(higherThanOppo.length){ insights.push(`${higherThanOppo.join(', ')} có thâm niên trung bình cao hơn OPPO.`); actions.push('Rà soát chính sách gắn bó nhân sự để rút ngắn khoảng cách thâm niên với đối thủ.'); }
+      else { insights.push('OPPO có thâm niên trung bình cao hơn hoặc bằng tất cả đối thủ.'); actions.push('Duy trì chính sách giữ chân nhân sự hiện tại — đang tạo lợi thế ổn định.'); }
+      rp_addInsightAction_(slide, insights, actions, 4.05, 2.8);
     }
 
     /* ===== Slide 8: OPPO vs Đối thủ theo Size Shop ===== */
     {
       const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Tương quan OPPO vs Đối thủ — theo Size/Loại Shop', mLabel);
+      rp_addHeader_(slide, 'Tương quan OPPO vs Đối thủ — theo Size/Loại Shop', 'Cạnh tranh nhân sự theo Size Shop');
       const competitorTypes = Array.from(new Set(brandShopList.map(s=>s.shopType).filter(Boolean)));
       const sizeLabels = Array.from(new Set([...byShopSize, ...competitorTypes])).sort();
+      const insights = [], actions = [];
       if(sizeLabels.length){
-        const dataSets = [{ name:'OPPO', labels:sizeLabels, values:sizeLabels.map(l=>activeOppoPgs.filter(p=>resolvedShopSize_(p)===l).length) }];
+        const oppoValues = sizeLabels.map(l=>activeOppoPgs.filter(p=>resolvedShopSize_(p)===l).length);
+        const dataSets = [{ name:'OPPO', labels:sizeLabels, values:oppoValues }];
         BRANDS.filter(b=>b!=='OPPO').forEach(brand=> dataSets.push({ name:brand, labels:sizeLabels, values:sizeLabels.map(l=>competitorCountByPredicate_(brand, s=>s.shopType===l)) }));
+        rp_chartTitle_(slide, 'Số PG mỗi hãng theo Size/Loại Shop', 0.4, 1.25, 8);
         slide.addChart(pptx.ChartType.bar, dataSets, {
-          x:0.4, y:1.2, w:12.5, h:5.8, barDir:'col', barGrouping:'clustered', showValue:true, dataLabelFontSize:8,
-          chartColors:BRANDS.map(b=>(BRAND_COLORS[b]||'#999').replace('#','')), showLegend:true, legendPos:'b', legendFontSize:10,
-          catAxisLabelFontFace:'Montserrat',
+          x:0.4, y:1.55, w:12.5, h:2.3, barDir:'col', barGrouping:'clustered', showValue:true, dataLabelFontSize:7,
+          chartColors:BRANDS.map(b=>(BRAND_COLORS[b]||'#999').replace('#','')), showLegend:true, legendPos:'b', legendFontSize:9,
         });
+        const maxIdx = oppoValues.indexOf(Math.max(...oppoValues));
+        insights.push(`OPPO tập trung nhiều nhất ở Shop loại "${sizeLabels[maxIdx]}" (${oppoValues[maxIdx]} PGs).`);
+        actions.push('Đối chiếu Size shop trọng điểm để phân bổ PG chất lượng cao đúng trọng tâm cạnh tranh.');
+      } else {
+        insights.push('Chưa có dữ liệu Size/Loại Shop để phân tích.');
       }
+      rp_addInsightAction_(slide, insights, actions, 4.05, 2.8);
     }
 
-    /* ===== Slide 9: Kết quả KPI Nội bộ ===== */
+    /* ===== Slide 9: Training Nội bộ — Coaching PGs Dev ===== */
     {
       const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Kết quả KPI Nội bộ', mLabel);
+      rp_addHeader_(slide, 'Training Nội bộ — Coaching PGs Dev', `Training nội bộ · Coaching PGs Dev ${mLabel}`);
       let sum01T=0, sum01A=0, sumMoiT=0, sumMoiA=0;
       visibleTrainers().forEach(t=>{ const r=trainerRecord(t.id); sum01T+=Number(r.pg01Target||0); sum01A+=Number(r.pg01Actual||0); sumMoiT+=Number(r.pgMoiTarget||0); sumMoiA+=Number(r.pgMoiActual||0); });
+      const pct01 = rp_pct_(sum01A, sum01T), pctMoi = rp_pct_(sumMoiA, sumMoiT);
       const rows = [
-        [{text:'Hạng mục',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}},{text:'Actual',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}},{text:'Target',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}},{text:'% Hoàn thành',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}}],
-        ['Coaching PGs 0★/1★', String(sum01A), String(sum01T), (sum01T?Math.round(sum01A/sum01T*100):0)+'%'],
-        ['Coaching PGs mới', String(sumMoiA), String(sumMoiT), (sumMoiT?Math.round(sumMoiA/sumMoiT*100):0)+'%'],
+        [{text:'Hạng mục',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}},{text:'Actual',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}},{text:'Target',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}},{text:'% Hoàn thành',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}}],
+        ['Coaching PGs 0★/1★', String(sum01A), String(sum01T), pct01+'%'],
+        ['Coaching PGs mới', String(sumMoiA), String(sumMoiT), pctMoi+'%'],
       ];
-      slide.addTable(rows, { x:0.6, y:1.4, w:12, h:2, fontFace:'Montserrat', fontSize:14, border:{color:'DDDDDD',pt:1}, autoPage:false, align:'center' });
+      slide.addTable(rows, { x:0.4, y:1.28, w:8.4, h:1.6, fontFace:'Arial', fontSize:12, border:{color:'DDDDDD',pt:1}, autoPage:false, align:'center' });
+      const insights = [
+        `Coaching PGs 0★/1★ đạt ${pct01}% Target${pct01>=100?' — vượt kế hoạch':''}.`,
+        `Coaching PGs mới đạt ${pctMoi}% Target${pctMoi>=100?' — vượt kế hoạch':''}.`,
+      ];
+      const actions = [ (pct01<80||pctMoi<80) ? 'Rà soát danh sách Trainer/Khu vực có tiến độ thấp để hỗ trợ kịp thời trước cuối tháng.' : 'Duy trì nhịp độ Coaching hiện tại cho tháng tiếp theo.' ];
+      rp_addInsightAction_(slide, insights, actions, 3.4, 3.3);
     }
 
-    /* ===== Slide 10: Kết quả KPI Đối tác (FTF) ===== */
+    /* ===== Slide 10: Training Đối tác (FTF) ===== */
     {
       const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Kết quả KPI Đối tác (FTF)', mLabel);
+      rp_addHeader_(slide, 'Training Đối tác — FTF', `Training đối tác · FTF ${mLabel}`);
       const shopTotal = ftfShopList.length;
       const shopDone = ftfShopList.filter(s=>s.status==='DONE').length;
       const hrTarget = ftfShopList.reduce((s,x)=>s+Number(x.hrTarget||0),0);
@@ -5338,36 +5449,59 @@ async function generateMonthlyReportPPT_(){
       const testPass = ftfShopList.reduce((s,x)=>s+Number(x.testPass||0),0);
       const surveyTotal = ftfShopList.reduce((s,x)=>s+Number(x.surveyTotal||0),0);
       const surveyDone = ftfShopList.reduce((s,x)=>s+Number(x.surveyDone||0),0);
+      const pctShop = rp_pct_(shopDone, shopTotal), pctHr = rp_pct_(hrActual, hrTarget), pctTest = rp_pct_(testPass, testTotal), pctSurvey = rp_pct_(surveyDone, surveyTotal);
       const rows = [
-        [{text:'Hạng mục',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}},{text:'Actual',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}},{text:'Target',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}},{text:'%',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}}],
-        ['SL Shop hoàn thành', String(shopDone), String(shopTotal), (shopTotal?Math.round(shopDone/shopTotal*100):0)+'%'],
-        ['SL HR', String(hrActual), String(hrTarget), (hrTarget?Math.round(hrActual/hrTarget*100):0)+'%'],
-        ['Bài Test', String(testPass), String(testTotal), (testTotal?Math.round(testPass/testTotal*100):0)+'%'],
-        ['Khảo sát', String(surveyDone), String(surveyTotal), (surveyTotal?Math.round(surveyDone/surveyTotal*100):0)+'%'],
+        [{text:'Hạng mục',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}},{text:'Actual',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}},{text:'Target',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}},{text:'%',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}}],
+        ['SL Shop hoàn thành', String(shopDone), String(shopTotal), pctShop+'%'],
+        ['SL HR', String(hrActual), String(hrTarget), pctHr+'%'],
+        ['Bài Test', String(testPass), String(testTotal), pctTest+'%'],
+        ['Khảo sát', String(surveyDone), String(surveyTotal), pctSurvey+'%'],
       ];
-      slide.addTable(rows, { x:0.6, y:1.4, w:12, h:3, fontFace:'Montserrat', fontSize:14, border:{color:'DDDDDD',pt:1}, autoPage:false, align:'center' });
+      slide.addTable(rows, { x:0.4, y:1.28, w:8.4, h:2.4, fontFace:'Arial', fontSize:12, border:{color:'DDDDDD',pt:1}, autoPage:false, align:'center' });
+      const weakest = [{n:'SL Shop',v:pctShop},{n:'SL HR',v:pctHr},{n:'Bài Test',v:pctTest},{n:'Khảo sát',v:pctSurvey}].sort((a,b)=>a.v-b.v)[0];
+      const insights = [`Tiến độ Shop hoàn thành: ${pctShop}% (${shopDone}/${shopTotal} Shop).`, `Hạng mục thấp nhất: "${weakest.n}" chỉ đạt ${weakest.v}%.`];
+      const actions = [`Tập trung nguồn lực đẩy nhanh hạng mục "${weakest.n}" trong thời gian còn lại của tháng.`];
+      rp_addInsightAction_(slide, insights, actions, 4, 2.9);
     }
 
-    /* ===== Slide 11: Kết quả Truyền thông ===== */
+    /* ===== Slide 11: Truyền thông ===== */
     {
       const slide = pptx.addSlide();
-      rp_addHeader_(slide, 'Kết quả Truyền thông', mLabel);
+      rp_addHeader_(slide, 'Truyền thông', `Truyền thông ${mLabel}`);
       const mediaCamps = campaigns.filter(c=>c.group==='truyenthong' && c.month===currentMonth);
       if(mediaCamps.length===0){
-        slide.addText('Chưa có chiến dịch Truyền thông nào trong '+mLabel, { x:0.6, y:2, w:12, h:1, fontFace:'Montserrat', fontSize:16, color:RP_GRAY, align:'center' });
+        slide.addText('Chưa có chiến dịch Truyền thông nào trong '+mLabel, { x:0.4, y:2.2, w:12, h:0.6, fontFace:'Arial', fontSize:14, color:RP_GRAY });
+        rp_addInsightAction_(slide, ['Chưa có dữ liệu chiến dịch Truyền thông để đưa ra nhận định trong tháng này.'], [], 3.2, 2.6);
       } else {
-        const rows = [[{text:'Chiến dịch',options:{bold:true,fill:{color:RP_GREEN},color:RP_WHITE}}]];
+        const rows = [[{text:'Chiến dịch',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}}]];
         mediaCamps.forEach(c=> rows.push([c.name]));
-        slide.addTable(rows, { x:0.6, y:1.4, w:8, h:Math.min(5, 0.5+mediaCamps.length*0.5), fontFace:'Montserrat', fontSize:13, border:{color:'DDDDDD',pt:1}, autoPage:false });
+        slide.addTable(rows, { x:0.4, y:1.28, w:8, h:Math.min(2.2, 0.4+mediaCamps.length*0.4), fontFace:'Arial', fontSize:12, border:{color:'DDDDDD',pt:1}, autoPage:false });
+        rp_addInsightAction_(slide, [`Có ${mediaCamps.length} chiến dịch Truyền thông đang triển khai trong ${mLabel}.`], ['Theo dõi tiến độ chi tiết từng chiến dịch trong mục Tiến độ KPI ▸ Truyền thông.'], 3.7, 2.9);
       }
     }
 
-    /* ===== Slide 12: Tổng kết ===== */
+    /* ===== Slide 12: Kế hoạch tháng tới ===== */
     {
       const slide = pptx.addSlide();
-      slide.background = { color: RP_GREEN };
-      slide.addText('CẢM ƠN', { x:0.8, y:3, w:11.7, h:1, fontFace:'Montserrat', fontSize:36, bold:true, color:RP_WHITE, align:'center' });
-      slide.addText('Báo cáo Đào tạo Miền Trung — '+mLabel, { x:0.8, y:4, w:11.7, h:0.6, fontFace:'Montserrat', fontSize:18, color:RP_GREEN_LIGHT, align:'center' });
+      rp_addHeader_(slide, 'Kế hoạch tháng tới', 'Định hướng & mục tiêu trọng tâm');
+      const rows = [
+        [{text:'Hạng mục',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}},{text:'Mục tiêu',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}},{text:'Ghi chú',options:{bold:true,fill:{color:RP_GREEN2},color:RP_WHITE}}],
+        ['Coaching PGs 0★/1★', '', ''],
+        ['Coaching PGs mới', '', ''],
+        ['FTF Đối tác', '', ''],
+        ['Truyền thông', '', ''],
+      ];
+      slide.addTable(rows, { x:0.4, y:1.4, w:12.5, h:3, fontFace:'Arial', fontSize:13, border:{color:'DDDDDD',pt:1}, autoPage:false, valign:'middle' });
+      slide.addText('(Điền mục tiêu cụ thể trước khi gửi báo cáo chính thức)', { x:0.4, y:4.6, w:10, h:0.4, fontFace:'Arial', fontSize:10, italic:true, color:RP_GRAY });
+    }
+
+    /* ===== Slide 13: Cảm ơn ===== */
+    {
+      const slide = pptx.addSlide();
+      slide.background = { color: RP_GREEN2 };
+      slide.addText('CẢM ƠN', { x:0.8, y:2.9, w:11.7, h:1, fontFace:'Montserrat', fontSize:38, bold:true, color:RP_WHITE, align:'center' });
+      slide.addShape('rect', { x:5.86, y:3.85, w:1.6, h:0.05, fill:{color:RP_WHITE} });
+      slide.addText('Báo cáo Đào tạo Miền Trung — '+mLabel, { x:0.8, y:4.05, w:11.7, h:0.6, fontFace:'Montserrat', fontSize:18, color:'E6F2EC', align:'center' });
     }
 
     await pptx.writeFile({ fileName: `BaoCao_DaoTao_${currentMonth}.pptx` });
