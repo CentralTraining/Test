@@ -1335,7 +1335,13 @@ function loadScriptBackground_(src){
   await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
   const chartOk = await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js');
   if(chartOk){
-    await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js');
+    const datalabelsOk = await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js');
+    // Đăng ký plugin NGAY SAU KHI cả 2 thư viện tải xong — đây mới là thời điểm Chart/ChartDataLabels
+    // chắc chắn đã tồn tại. Đăng ký PHẢI xảy ra TRƯỚC lần renderAll() gọi lại bên dưới, nếu không các
+    // biểu đồ vẽ lại lần này vẫn thiếu nhãn số liệu (dù đã có đúng cấu hình datalabels trong options).
+    if(datalabelsOk && typeof Chart!=='undefined' && typeof ChartDataLabels!=='undefined'){
+      Chart.register(ChartDataLabels);
+    }
     if(typeof renderAll==='function' && typeof session!=='undefined' && session){
       try{ renderAll(); }catch(e){ console.error('Lỗi vẽ lại biểu đồ sau khi Chart.js tải xong:', e); }
     }
@@ -3553,7 +3559,9 @@ const STAR_COLORS = { 0:'#9098A0', 1:'#2F6FB0', 2:'#E8B923', 3:'#016C38', 4:'#7B
 
 let chartTrainerInstance=null, chartChannelInstance=null, chartSeniorityInstance=null, chartStarInstance=null, chartRegionBarInstance=null, chartShopSizeInstance=null, chartSaleInstance=null;
 let kpiChartInstances = {};
-if(typeof Chart!=='undefined' && typeof ChartDataLabels!=='undefined'){ Chart.register(ChartDataLabels); }
+// Đăng ký plugin ChartDataLabels được chuyển sang thực hiện SAU KHI Chart.js + plugin tải xong ở chế
+// độ nền (xem IIFE loadScriptBackground_ ở đầu file) — dòng đăng ký NGAY TẠI ĐÂY luôn thất bại vì 2
+// thư viện chưa kịp tải lúc script này chạy, khiến mọi biểu đồ mất nhãn số liệu dù cấu hình đã đúng.
 
 function renderCylinderChart(containerId, dataMap){
   const el = document.getElementById(containerId);
