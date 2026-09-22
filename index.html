@@ -11122,7 +11122,7 @@ async function renderHomeTab_(){
         <div class="home-kpibar"><div class="home-kpifill" style="width:${val||0}%;background:${color};"></div></div>
       </div>`;
     }).join('');
-    return `<div class="home-tcard">
+    return `<div class="home-tcard" data-home-detail="${t.id}" style="cursor:pointer;">
       <div class="home-tcard-head">
         ${trainerAvatarSvg_(t.id, 44)}
         <div><div class="home-tcard-name">${t.name}</div><div class="home-tcard-region">${t.region||'—'}</div></div>
@@ -11133,7 +11133,7 @@ async function renderHomeTab_(){
   }).join('');
 
   grid.querySelectorAll('[data-home-detail]').forEach(btn=>{
-    btn.addEventListener('click', ()=> openHomeDetailPopup_(btn.getAttribute('data-home-detail')));
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); openHomeDetailPopup_(btn.getAttribute('data-home-detail')); });
   });
 }
 function homeCatIconSvg_(key){
