@@ -17,9 +17,6 @@
 <title>Dashboard Trainer Miền Trung - OPPO Việt Nam</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <style>
   :root{
     --green:#016C38; --green-dark:#0B5E36; --green-pale:#E7F3EC;
@@ -1312,6 +1309,29 @@
 </div>
 
 <script>
+/* ============ TẢI THƯ VIỆN NGOÀI (XLSX, Chart.js) Ở CHẾ ĐỘ NỀN ============
+   QUAN TRỌNG: các thư viện này KHÔNG được đặt bằng thẻ <script src="..."> tĩnh ở đầu trang — vì thẻ
+   đó CHẶN việc parse HTML, nghĩa là nếu CDN bị mạng công ty/tường lửa chặn hoặc phản hồi chậm, TOÀN
+   BỘ TRANG sẽ bị treo ở màn hình "Đang tải...", không vào được kể cả màn hình đăng nhập (đã từng xảy
+   ra thực tế). Thay vào đó, tải các thư viện này bằng JS ở chế độ NỀN (không chặn gì cả) — Dashboard
+   vẫn mở bình thường ngay cả khi các thư viện này tải chậm hoặc tải lỗi; chỉ những tính năng cần đến
+   chúng (Import/Export Excel, vẽ biểu đồ) mới bị ảnh hưởng, không kéo sập cả app. */
+function loadScriptBackground_(src){
+  return new Promise((resolve)=>{
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = ()=>resolve(true);
+    s.onerror = ()=>{ console.error('Không tải được thư viện:', src); resolve(false); };
+    document.head.appendChild(s);
+  });
+}
+// Nạp tuần tự (Chart.js phải có trước plugin datalabels) nhưng KHÔNG await ở đây — chạy nền, không
+// chặn phần còn lại của trang chạy tiếp phía dưới.
+(async ()=>{
+  await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  const chartOk = await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js');
+  if(chartOk) await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js');
+})();
 /* ============ KẾT NỐI DATABASE: SUPABASE ============
    Dán đúng Project URL và anon public key lấy từ Supabase ▸ Project Settings ▸ API vào đây.
    Để trống '' = vẫn dùng localStorage của từng máy (chế độ demo, không dùng chung được). */
@@ -11118,10 +11138,22 @@ async function openHomeDetailPopup_(trainerId){
   `;
 }
 function closeHomeDetailPopup_(){ document.getElementById('homeDetailOverlay').classList.add('hidden'); }
-document.getElementById('homeDetailCloseBtn').addEventListener('click', closeHomeDetailPopup_);
-document.getElementById('homeDetailOverlay').addEventListener('click', (e)=>{ if(e.target.id==='homeDetailOverlay') closeHomeDetailPopup_(); });
-document.getElementById('homeRegionFilter').addEventListener('change', (e)=>{ homeRegionFilter_ = e.target.value; renderHomeTab_(); });
-document.getElementById('homeSortSelect').addEventListener('change', (e)=>{ homeSortMode_ = e.target.value; renderHomeTab_(); });
+// Các phần tử này (homeDetailCloseBtn, homeDetailOverlay, homeRegionFilter, homeSortSelect) nằm
+// TRONG HTML Ở PHÍA SAU thẻ <script> này (gần cuối trang) — nếu gắn addEventListener ngay tại đây
+// (mức top-level, chạy ngay lúc trình duyệt parse tới dòng này) thì các phần tử đó CHƯA TỒN TẠI
+// (browser chưa parse tới), document.getElementById trả về null → gọi .addEventListener bị lỗi,
+// làm hỏng luôn phần code phía sau trong CÙNG script — đây là lỗi thật đã xảy ra. Phải đợi toàn bộ
+// trang parse xong (DOMContentLoaded) mới gắn sự kiện, đúng theo mẫu an toàn dùng trong showConfirm().
+document.addEventListener('DOMContentLoaded', ()=>{
+  const closeBtn = document.getElementById('homeDetailCloseBtn');
+  if(closeBtn) closeBtn.addEventListener('click', closeHomeDetailPopup_);
+  const overlay = document.getElementById('homeDetailOverlay');
+  if(overlay) overlay.addEventListener('click', (e)=>{ if(e.target.id==='homeDetailOverlay') closeHomeDetailPopup_(); });
+  const regionSel = document.getElementById('homeRegionFilter');
+  if(regionSel) regionSel.addEventListener('change', (e)=>{ homeRegionFilter_ = e.target.value; renderHomeTab_(); });
+  const sortSel = document.getElementById('homeSortSelect');
+  if(sortSel) sortSel.addEventListener('change', (e)=>{ homeSortMode_ = e.target.value; renderHomeTab_(); });
+});
 
 function renderAll(){
   // Dashboard có nhiều khu vực render động. Lưu vị trí viewport trước khi render để
