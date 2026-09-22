@@ -11003,16 +11003,37 @@ async function computeTrainerCategoryProgress_(trainerId){
   if(pgDevSub.length) noiboGroups.push({ name:'PGs Dev (Coaching)', sub: pgDevSub });
   const wsT = Number(rec.wsNbBuoiTarget||0), wsA = Number(rec.wsNbBuoiActual||0);
   if(wsT>0) noiboGroups.push({ name:'Workshop', pct: pct(wsA, wsT) });
-  for(const subtype of ['testonline','tuvanai_checkshop']){
-    const camp = campaignsForGroupMonth('noibo').find(c=>campaignSubtype(c)===subtype);
-    if(!camp) continue;
-    const progress = await loadFrequencyProgress_(camp);
-    const x = campaignFrequencyX_(camp);
+  const testOnlineCamp = campaignsForGroupMonth('noibo').find(c=>campaignSubtype(c)==='testonline');
+  if(testOnlineCamp){
+    const progress = await loadFrequencyProgress_(testOnlineCamp);
+    const x = campaignFrequencyX_(testOnlineCamp);
     const list = activePgsOfTrainer_(trainerId);
-    if(list.length===0) continue;
-    let qualified=0;
-    list.forEach(p=>{ if(Number(progress[frequencyPgKey_(p)]||0)>=x) qualified++; });
-    noiboGroups.push({ name: subtype==='testonline' ? 'Test Online' : 'Tư vấn AI & Check shop', pct: pct(qualified, list.length) });
+    if(list.length>0){
+      let qualified=0;
+      list.forEach(p=>{ if(Number(progress[frequencyPgKey_(p)]||0)>=x) qualified++; });
+      noiboGroups.push({ name:'Test Online', pct: pct(qualified, list.length) });
+    }
+  }
+  // Tư vấn AI và Check shop là 2 CHỈ SỐ ĐỘC LẬP trong cùng 1 chiến dịch (khác điều kiện đạt: Tư vấn AI
+  // theo số lần Luyện TV ≥ ngưỡng, Check shop theo kết quả Check = Pass) — KHÔNG được gộp chung 1 %.
+  // Tính TRỰC TIẾP từ dữ liệu gốc (loadAiCheckProgress_) thay vì dùng rec.tuVanAINbActual/
+  // checkShopNbActual đã lưu sẵn — 2 trường đó chỉ được làm mới khi có người ghé đúng trang "Tư vấn AI
+  // & Check shop" trong phiên, y hệt lỗi đã gặp với pg01Actual/pgMoiActual trước đây.
+  const aiCheckCamp = campaignsForGroupMonth('noibo').find(c=>campaignSubtype(c)==='tuvanai_checkshop');
+  if(aiCheckCamp){
+    const aiCheck = await loadAiCheckProgress_(aiCheckCamp);
+    const aiThreshold = campaignFrequencyX_(aiCheckCamp);
+    const list = activePgsOfTrainer_(trainerId);
+    if(list.length>0){
+      let aiQualified=0, checkQualified=0;
+      list.forEach(p=>{
+        const d = aiCheck[frequencyPgKey_(p)]||{};
+        if(Number(d.aiCount||0)>=aiThreshold) aiQualified++;
+        if(d.checkPass) checkQualified++;
+      });
+      noiboGroups.push({ name:'Tư vấn AI', pct: pct(aiQualified, list.length) });
+      noiboGroups.push({ name:'Check shop', pct: pct(checkQualified, list.length) });
+    }
   }
 
   /* ===== ĐỐI TÁC (FTF) — rẽ nhánh theo Kênh MWG/K.A, mỗi kênh 5 chỉ số con =====
