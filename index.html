@@ -6932,7 +6932,7 @@ function buildUnifiedShopList_(){
   brandShopList.forEach(shop=>{
     const { rec, isNew } = findOrCreate(shop.storeId, shop.storeName, ()=>({
       shopId: shop.storeId||'', shopName: shop.storeName||'', region: shop.region||'', province: shop.province||'', channel: shop.channel||'',
-      shopSize: '', trainerId: '', brands: {}, nameVariants: new Set(),
+      shopSize: '', trainerId: '', brands: {}, nameVariants: new Set(), manualSl: {},
     }));
     if(isNew) allRecs.push(rec);
     if(shop.storeName) rec.nameVariants.add(normName(shop.storeName));
@@ -6947,10 +6947,10 @@ function buildUnifiedShopList_(){
   shopTrainerMap.forEach(sm=>{
     const { rec, isNew } = findOrCreate(sm.shopId, sm.shopName, ()=>({
       shopId: sm.shopId||'', shopName: sm.shopName||'', region: sm.area||'', province: sm.province||'', channel: sm.channel||'',
-      shopSize: sm.shopSize||'', trainerId: sm.trainerId||'', brands: {}, nameVariants: new Set(),
+      shopSize: sm.shopSize||'', trainerId: sm.trainerId||'', brands: {}, nameVariants: new Set(), manualSl: {},
     }));
     if(sm.shopName) rec.nameVariants.add(normName(sm.shopName));
-    if(isNew){ allRecs.push(rec); return; }
+    if(isNew){ allRecs.push(rec); }
     // Đã có từ brandShopList (hoặc 1 dòng Gán Shop khác) — bổ sung thêm Khu vực/Tỉnh/Kênh/Size
     // shop/Trainer nếu bên kia còn thiếu (Gán Shop thường đầy đủ hơn vì Admin OPPO tự nhập).
     if(!rec.region) rec.region = sm.area||'';
@@ -6958,8 +6958,11 @@ function buildUnifiedShopList_(){
     if(!rec.channel) rec.channel = sm.channel||'';
     if(!rec.shopId) rec.shopId = sm.shopId||'';
     if(!rec.shopName) rec.shopName = sm.shopName||'';
-    rec.shopSize = sm.shopSize||rec.shopSize;
-    rec.trainerId = sm.trainerId||rec.trainerId;
+    if(!isNew){ rec.shopSize = sm.shopSize||rec.shopSize; rec.trainerId = sm.trainerId||rec.trainerId; }
+    // Số liệu SL từng hãng đã được Trainer/Admin SỬA TAY (ghi đè) qua nút "Sửa" — chỉ có ở nguồn Gán
+    // Shop (nơi duy nhất lưu được việc chỉnh sửa tay), lưu riêng biệt để không lẫn với số tự tính từ
+    // PGs/Nhân sự hãng ở trên.
+    rec.manualSl = sm.manualSl || {};
   });
 
   // Tính SL OPPO — đếm PGs OPPO trạng thái "Đang làm", khớp theo TÊN Shop (PGs chỉ lưu tên Shop dạng
@@ -6996,6 +6999,11 @@ function buildUnifiedShopList_(){
       }
     });
     const slOf = (brand)=> Number((shop.brands[brand]&&shop.brands[brand].count)||0);
+    // Nếu Trainer/Admin đã SỬA TAY 1 chỉ số nào đó qua nút "Sửa" (VD số tự tính bị sai do lệch dữ
+    // liệu), dùng ĐÚNG số đã sửa tay đó thay vì số tự tính — kiểm tra != null vì 0 là 1 giá trị hợp
+    // lệ (không được coi 0 là "chưa sửa").
+    const manualSl = shop.manualSl || {};
+    const finalSl = (key, computed)=> (manualSl[key]!==undefined && manualSl[key]!==null) ? Number(manualSl[key]) : computed;
     // Phân biệt rõ 2 tình huống để dễ chẩn đoán: (1) Shop CHƯA từng được gán Trainer nào (shop.
     // trainerId rỗng) — hiện "—" như bình thường; (2) Shop CÓ trainerId nhưng không khớp Trainer nào
     // đang tồn tại (VD Trainer đã bị xoá, ID cũ còn sót lại trong Gán Shop) — hiện cảnh báo rõ ràng
@@ -7005,7 +7013,9 @@ function buildUnifiedShopList_(){
     return {
       shopId: shop.shopId, shopName: shop.shopName, region: shop.region, province: shop.province, channel: shop.channel,
       shopSize: shop.shopSize||'', trainerName, trainerId: shop.trainerId||'',
-      slOppo, slSS: slOf('Samsung'), slXM: slOf('Xiaomi'), slVV: slOf('Vivo'), slRM: slOf('Realme'), slHonor: slOf('Honor'),
+      slOppo: finalSl('oppo', slOppo), slSS: finalSl('ss', slOf('Samsung')), slXM: finalSl('xm', slOf('Xiaomi')),
+      slVV: finalSl('vv', slOf('Vivo')), slRM: finalSl('rm', slOf('Realme')), slHonor: finalSl('honor', slOf('Honor')),
+      manualSl,
     };
   }).filter(s=>s.shopName || s.shopId);
 
@@ -7144,6 +7154,14 @@ async function openEditShopModal_(shop){
   if(!shop) return;
   const regions = visibleRegions();
   const trainers = visibleTrainers();
+  const manualSl = shop.manualSl || {};
+  // Mỗi ô số lượng: nếu ĐÃ từng sửa tay trước đó thì điền sẵn đúng số đã sửa; nếu chưa, để TRỐNG và
+  // hiện số tự tính hiện tại làm placeholder (gợi ý) — để trống = tiếp tục tự tính như bình thường,
+  // chỉ cần gõ số vào thì mới coi là ghi đè tay.
+  const slField = (id, label, manualKey, computedVal)=> `
+    <div class="form-row"><label>${label}</label>
+      <input type="number" id="${id}" min="0" value="${manualSl[manualKey]!==undefined && manualSl[manualKey]!==null ? manualSl[manualKey] : ''}" placeholder="Tự tính: ${computedVal}">
+    </div>`;
   const bodyHtml = `
     <div class="form-row"><label>ID Shop</label><input type="text" id="editShopId" value="${(shop.shopId||'').replace(/"/g,'&quot;')}" placeholder="(không bắt buộc)"></div>
     <div class="form-row"><label>Tên Shop</label><input type="text" id="editShopName" value="${(shop.shopName||'').replace(/"/g,'&quot;')}"></div>
@@ -7152,6 +7170,15 @@ async function openEditShopModal_(shop){
     <div class="form-row"><label>Kênh</label><input type="text" id="editShopChannel" value="${(shop.channel||'').replace(/"/g,'&quot;')}"></div>
     <div class="form-row"><label>Size shop</label><input type="text" id="editShopSize" value="${(shop.shopSize||'').replace(/"/g,'&quot;')}" placeholder="VD: A, B, C..."></div>
     <div class="form-row"><label>Trainer phụ trách</label><select id="editShopTrainer"><option value="">— Chưa gán —</option>${trainers.map(t=>`<option value="${t.id}" ${shop.trainerId===t.id?'selected':''}>${t.name}</option>`).join('')}</select></div>
+    <div style="margin:14px 0 6px;font-size:12px;font-weight:700;color:var(--green-dark);">Số lượng PGs từng hãng (để trống = tiếp tục tự động tính)</div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+      ${slField('editSlOppo','SL OPPO','oppo',shop.slOppo)}
+      ${slField('editSlSS','SL SS','ss',shop.slSS)}
+      ${slField('editSlXM','SL XM','xm',shop.slXM)}
+      ${slField('editSlVV','SL VV','vv',shop.slVV)}
+      ${slField('editSlRM','SL RM','rm',shop.slRM)}
+      ${slField('editSlHonor','SL Honor','honor',shop.slHonor)}
+    </div>
   `;
   const result = await showFormModal_(`Sửa thông tin Shop: ${shop.shopName||shop.shopId}`, bodyHtml, async ()=>{
     const newId = document.getElementById('editShopId').value.trim();
@@ -7162,6 +7189,13 @@ async function openEditShopModal_(shop){
     const newChannel = document.getElementById('editShopChannel').value.trim();
     const newSize = document.getElementById('editShopSize').value.trim();
     const newTrainerId = document.getElementById('editShopTrainer').value;
+    // Ô nào có nhập số thì lưu làm ghi đè tay (manualSl); ô nào để trống thì XÓA ghi đè cũ (nếu có)
+    // để quay lại tự tính bình thường — không giữ mãi giá trị cũ đã lỡ ghi đè trước đó.
+    const newManualSl = {};
+    [['editSlOppo','oppo'],['editSlSS','ss'],['editSlXM','xm'],['editSlVV','vv'],['editSlRM','rm'],['editSlHonor','honor']].forEach(([inputId,key])=>{
+      const v = document.getElementById(inputId).value.trim();
+      if(v!=='') newManualSl[key] = Math.max(0, Math.round(Number(v)||0));
+    });
 
     // Tìm đúng bản ghi Gán Shop hiện có của Shop này (khớp ID HOẶC Tên CŨ, trước khi sửa) — nếu chưa
     // có thì tạo mới, đảm bảo không tạo trùng 1 Shop thành 2 dòng khác nhau trong Gán Shop.
@@ -7172,7 +7206,7 @@ async function openEditShopModal_(shop){
       shopTrainerMap.push(rec);
     }
     rec.shopId = newId; rec.shopName = newName; rec.area = newRegion; rec.province = newProvince;
-    rec.channel = newChannel; rec.shopSize = newSize; rec.trainerId = newTrainerId;
+    rec.channel = newChannel; rec.shopSize = newSize; rec.trainerId = newTrainerId; rec.manualSl = newManualSl;
     await dbSet('shopTrainerMap', shopTrainerMap);
     renderBrandShopList_();
     return true;
