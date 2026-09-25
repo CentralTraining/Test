@@ -841,11 +841,15 @@
           <select id="brandShopListProvinceSel"><option value="">Tất cả</option></select>
           <span class="scope-label">Kênh:</span>
           <select id="brandShopListChannelSel"><option value="">Tất cả</option></select>
+          <span class="scope-label">Size shop:</span>
+          <select id="brandShopListSizeSel"><option value="">Tất cả</option></select>
         </div>
       </div>
+      <div id="brandShopListSummary" class="kpi-row cols-6" style="margin-bottom:14px;"></div>
       <div id="brandShopListBox"></div>
     </div>
   </section>
+
 
   <!-- ============ 2. TIẾN ĐỘ KPI ============ -->
   <section id="tab-kpi" class="maintab">
@@ -6890,7 +6894,7 @@ function shopMatchesScope_(shop){
    thì khớp theo TÊN Shop (đã trim) — để không bỏ sót Shop chỉ có 1 trong 2 nguồn. */
 let brandShopListPage_ = 1;
 const BRAND_SHOP_LIST_PAGE_SIZE = 10;
-let brandShopListFilter_ = { search:'', region:'', province:'', channel:'' };
+let brandShopListFilter_ = { search:'', region:'', province:'', channel:'', size:'' };
 function buildUnifiedShopList_(){
   const byKey = new Map(); // key: shopId (ưu tiên) hoặc tên Shop đã chuẩn hoá
   const keyOf = (id, name) => (id && id.trim()) ? 'ID::'+id.trim() : 'NAME::'+(name||'').trim().toLowerCase();
@@ -6936,7 +6940,7 @@ function buildUnifiedShopList_(){
     return {
       shopId: shop.shopId, shopName: shop.shopName, region: shop.region, province: shop.province, channel: shop.channel,
       shopSize: shop.shopSize||'', trainerName: tr ? tr.name : '',
-      slOppo, slSS: slOf('Samsung'), slVV: slOf('Vivo'), slRM: slOf('Realme'), slHonor: slOf('Honor'),
+      slOppo, slSS: slOf('Samsung'), slXM: slOf('Xiaomi'), slVV: slOf('Vivo'), slRM: slOf('Realme'), slHonor: slOf('Honor'),
     };
   }).filter(s=>s.shopName || s.shopId);
 
@@ -6945,38 +6949,53 @@ function buildUnifiedShopList_(){
 function renderBrandShopList_(){
   const box = document.getElementById('brandShopListBox');
   if(!box) return;
-  let list = buildUnifiedShopList_();
+  const fullList = buildUnifiedShopList_();
 
-  // Đổ danh sách lựa chọn cho 3 dropdown lọc (chỉ đổ 1 lần, giữ lựa chọn hiện tại nếu đã chọn)
   const regionSel = document.getElementById('brandShopListRegionSel');
   const provinceSel = document.getElementById('brandShopListProvinceSel');
   const channelSel = document.getElementById('brandShopListChannelSel');
-  if(regionSel){
-    const cur = regionSel.value;
-    const regions = Array.from(new Set(list.map(s=>s.region).filter(Boolean))).sort();
-    regionSel.innerHTML = '<option value="">Tất cả</option>' + regions.map(r=>`<option value="${r}">${r}</option>`).join('');
-    if(regions.includes(cur)) regionSel.value = cur;
-  }
-  if(provinceSel){
-    const cur = provinceSel.value;
-    const provinces = Array.from(new Set(list.map(s=>s.province).filter(Boolean))).sort();
-    provinceSel.innerHTML = '<option value="">Tất cả</option>' + provinces.map(p=>`<option value="${p}">${p}</option>`).join('');
-    if(provinces.includes(cur)) provinceSel.value = cur;
-  }
-  if(channelSel){
-    const cur = channelSel.value;
-    const channels = Array.from(new Set(list.map(s=>s.channel).filter(Boolean))).sort();
-    channelSel.innerHTML = '<option value="">Tất cả</option>' + channels.map(c=>`<option value="${c}">${c}</option>`).join('');
-    if(channels.includes(cur)) channelSel.value = cur;
-  }
+  const sizeSel = document.getElementById('brandShopListSizeSel');
+  const fillSel = (sel, values, cur)=>{
+    if(!sel) return;
+    sel.innerHTML = '<option value="">Tất cả</option>' + values.map(v=>`<option value="${v}">${v}</option>`).join('');
+    if(values.includes(cur)) sel.value = cur;
+  };
+  // Bộ lọc PHỤ THUỘC THEO CHUỖI (Khu vực → Tỉnh → Kênh → Size shop) — mỗi dropdown chỉ đổ ra lựa
+  // chọn khớp với các dropdown ĐÃ CHỌN TRƯỚC ĐÓ trong chuỗi, không đổ hết toàn bộ dữ liệu ra cùng lúc
+  // (đúng mẫu đã dùng ở bộ lọc Gán Shop — Cài đặt ▸ DATA).
+  const afterRegion = brandShopListFilter_.region ? fullList.filter(s=>s.region===brandShopListFilter_.region) : fullList;
+  fillSel(regionSel, Array.from(new Set(fullList.map(s=>s.region).filter(Boolean))).sort(), brandShopListFilter_.region);
 
+  const afterProvince = brandShopListFilter_.province ? afterRegion.filter(s=>s.province===brandShopListFilter_.province) : afterRegion;
+  fillSel(provinceSel, Array.from(new Set(afterRegion.map(s=>s.province).filter(Boolean))).sort(), brandShopListFilter_.province);
+
+  const afterChannel = brandShopListFilter_.channel ? afterProvince.filter(s=>s.channel===brandShopListFilter_.channel) : afterProvince;
+  fillSel(channelSel, Array.from(new Set(afterProvince.map(s=>s.channel).filter(Boolean))).sort(), brandShopListFilter_.channel);
+
+  fillSel(sizeSel, Array.from(new Set(afterChannel.map(s=>s.shopSize).filter(Boolean))).sort(), brandShopListFilter_.size);
+
+  let list = afterChannel;
+  if(brandShopListFilter_.size) list = list.filter(s=>s.shopSize===brandShopListFilter_.size);
   if(brandShopListFilter_.search){
     const term = brandShopListFilter_.search.trim().toLowerCase();
     list = list.filter(s=> (s.shopId||'').toLowerCase().includes(term) || (s.shopName||'').toLowerCase().includes(term));
   }
-  if(brandShopListFilter_.region) list = list.filter(s=>s.region===brandShopListFilter_.region);
-  if(brandShopListFilter_.province) list = list.filter(s=>s.province===brandShopListFilter_.province);
-  if(brandShopListFilter_.channel) list = list.filter(s=>s.channel===brandShopListFilter_.channel);
+
+  // Dòng số liệu động — tính TRÊN ĐÚNG danh sách đã lọc (không phải toàn bộ dữ liệu gốc), để luôn khớp
+  // với những gì bảng bên dưới đang hiển thị.
+  const summaryBox = document.getElementById('brandShopListSummary');
+  if(summaryBox){
+    const sum = (key)=> list.reduce((s,x)=>s+Number(x[key]||0),0);
+    summaryBox.innerHTML = `
+      <div class="kpi-card"><div class="label">SL Shop</div><div class="value">${list.length}</div></div>
+      <div class="kpi-card"><div class="label">SL OPPO</div><div class="value" style="color:#016C38;">${sum('slOppo')}</div></div>
+      <div class="kpi-card"><div class="label">SL SS</div><div class="value">${sum('slSS')}</div></div>
+      <div class="kpi-card"><div class="label">SL XM</div><div class="value">${sum('slXM')}</div></div>
+      <div class="kpi-card"><div class="label">SL VV</div><div class="value">${sum('slVV')}</div></div>
+      <div class="kpi-card"><div class="label">SL RM</div><div class="value">${sum('slRM')}</div></div>
+      <div class="kpi-card"><div class="label">SL HN</div><div class="value">${sum('slHonor')}</div></div>
+    `;
+  }
 
   if(list.length===0){
     box.innerHTML = '<div class="empty">Chưa có Shop nào khớp bộ lọc.</div>';
@@ -6989,13 +7008,13 @@ function renderBrandShopList_(){
   const startIdx = (brandShopListPage_-1)*BRAND_SHOP_LIST_PAGE_SIZE;
   const pageItems = list.slice(startIdx, startIdx+BRAND_SHOP_LIST_PAGE_SIZE);
 
-  let html = `<table><thead><tr><th>ID Shop</th><th>Tên Shop</th><th>Khu vực</th><th>Tỉnh</th><th>Kênh</th><th>Size shop</th><th>Trainer</th><th>SL OPPO</th><th>SL SS</th><th>SL VV</th><th>SL RM</th><th>SL Honor</th></tr></thead><tbody>`;
+  let html = `<table><thead><tr><th>ID Shop</th><th>Tên Shop</th><th>Khu vực</th><th>Tỉnh</th><th>Kênh</th><th>Size shop</th><th>Trainer</th><th>SL OPPO</th><th>SL SS</th><th>SL XM</th><th>SL VV</th><th>SL RM</th><th>SL Honor</th></tr></thead><tbody>`;
   pageItems.forEach(s=>{
     html += `<tr>
       <td>${s.shopId||'—'}</td><td>${s.shopName||'—'}</td><td>${s.region||'—'}</td><td>${s.province||'—'}</td><td>${s.channel||'—'}</td>
       <td>${s.shopSize||'—'}</td><td>${s.trainerName||'—'}</td>
       <td style="text-align:center;font-weight:700;color:var(--green-dark);">${s.slOppo}</td>
-      <td style="text-align:center;">${s.slSS}</td><td style="text-align:center;">${s.slVV}</td><td style="text-align:center;">${s.slRM}</td><td style="text-align:center;">${s.slHonor}</td>
+      <td style="text-align:center;">${s.slSS}</td><td style="text-align:center;">${s.slXM}</td><td style="text-align:center;">${s.slVV}</td><td style="text-align:center;">${s.slRM}</td><td style="text-align:center;">${s.slHonor}</td>
     </tr>`;
   });
   html += `</tbody></table><div class="pagination-bar" id="brandShopListPagination"></div>`;
@@ -7043,11 +7062,26 @@ document.addEventListener('DOMContentLoaded', ()=>{
     });
   }
   const regionSel = document.getElementById('brandShopListRegionSel');
-  if(regionSel) regionSel.addEventListener('change', (e)=>{ brandShopListFilter_.region = e.target.value; brandShopListPage_=1; renderBrandShopList_(); });
+  if(regionSel) regionSel.addEventListener('change', (e)=>{
+    brandShopListFilter_.region = e.target.value;
+    // Đổi Khu vực -> Tỉnh/Kênh/Size đã chọn trước đó có thể không còn phù hợp -> reset về "Tất cả"
+    brandShopListFilter_.province = ''; brandShopListFilter_.channel = ''; brandShopListFilter_.size = '';
+    brandShopListPage_=1; renderBrandShopList_();
+  });
   const provinceSel = document.getElementById('brandShopListProvinceSel');
-  if(provinceSel) provinceSel.addEventListener('change', (e)=>{ brandShopListFilter_.province = e.target.value; brandShopListPage_=1; renderBrandShopList_(); });
+  if(provinceSel) provinceSel.addEventListener('change', (e)=>{
+    brandShopListFilter_.province = e.target.value;
+    brandShopListFilter_.channel = ''; brandShopListFilter_.size = '';
+    brandShopListPage_=1; renderBrandShopList_();
+  });
   const channelSel = document.getElementById('brandShopListChannelSel');
-  if(channelSel) channelSel.addEventListener('change', (e)=>{ brandShopListFilter_.channel = e.target.value; brandShopListPage_=1; renderBrandShopList_(); });
+  if(channelSel) channelSel.addEventListener('change', (e)=>{
+    brandShopListFilter_.channel = e.target.value;
+    brandShopListFilter_.size = '';
+    brandShopListPage_=1; renderBrandShopList_();
+  });
+  const sizeSel = document.getElementById('brandShopListSizeSel');
+  if(sizeSel) sizeSel.addEventListener('change', (e)=>{ brandShopListFilter_.size = e.target.value; brandShopListPage_=1; renderBrandShopList_(); });
 });
 function renderBrandStats(){
   const kpiRow=document.getElementById('brandKpiRow');
