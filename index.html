@@ -6907,8 +6907,19 @@ function buildUnifiedShopList_(){
   // lệch do hoa/thường hoặc khoảng trắng thừa giữa các file Excel nhập từ nhiều nguồn khác nhau.
   const byId = new Map();
   const byName = new Map();
-  const normId = (id)=> (id||'').trim().toLowerCase();
-  const normName = (name)=> (name||'').trim().toLowerCase();
+  // Chuẩn hoá MẠNH hơn bản trước — ngoài trim đầu/cuối, còn gộp MỌI khoảng trắng thừa Ở GIỮA chuỗi
+  // thành 1 khoảng trắng duy nhất (VD "Shop  ABC   -  123" và "Shop ABC - 123" giờ coi là khớp nhau) —
+  // đây là nguyên nhân phổ biến khiến 2 file Excel từ 2 nguồn khác nhau tưởng trùng tên nhưng thực ra
+  // lệch nhau vài khoảng trắng, khiến so khớp chính xác tuyệt đối (exact match) bị trượt.
+  // Chuẩn hoá thêm dạng Unicode (NFC) — 2 file Excel từ 2 nguồn có thể lưu CÙNG 1 chữ tiếng Việt theo
+  // 2 cách mã hoá Unicode khác nhau (VD "ệ" ghép sẵn 1 ký tự, hoặc ghép từ "e" + dấu nặng + dấu mũ
+  // riêng biệt) — nhìn HOÀN TOÀN GIỐNG NHAU trên màn hình nhưng máy so sánh chuỗi vẫn coi là khác
+  // nhau, khiến Shop không ghép được dù tên/mã đọc y hệt. .normalize('NFC') đưa mọi cách viết về cùng
+  // 1 dạng chuẩn trước khi so sánh. Đồng thời gộp luôn các loại dấu gạch ngang hay bị lẫn giữa các
+  // nguồn (- gạch thường, – en-dash, — em-dash) về cùng 1 ký tự "-", vì tên Shop OPPO thường có nhiều
+  // dấu gạch ngang phân tách (VD "TGDĐ - 8126 - ĐMS_QTR_VLI - Bến Quan").
+  const normId = (id)=> (id||'').normalize('NFC').trim().toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' ');
+  const normName = (name)=> (name||'').normalize('NFC').trim().toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' ');
 
   function findOrCreate(id, name, seed){
     const idKey = normId(id), nameKey = normName(name);
@@ -6993,10 +7004,15 @@ function buildUnifiedShopList_(){
       }
     });
     const slOf = (brand)=> Number((shop.brands[brand]&&shop.brands[brand].count)||0);
+    // Phân biệt rõ 2 tình huống để dễ chẩn đoán: (1) Shop CHƯA từng được gán Trainer nào (shop.
+    // trainerId rỗng) — hiện "—" như bình thường; (2) Shop CÓ trainerId nhưng không khớp Trainer nào
+    // đang tồn tại (VD Trainer đã bị xoá, ID cũ còn sót lại trong Gán Shop) — hiện cảnh báo rõ ràng
+    // thay vì để trống im lặng, để Admin biết cần vào Cài đặt ▸ DATA ▸ Gán Shop cập nhật lại.
     const tr = shop.trainerId ? config.trainers.find(t=>t.id===shop.trainerId) : null;
+    const trainerName = shop.trainerId ? (tr ? tr.name : '⚠ ID Trainer không khớp (đã xoá?)') : '';
     return {
       shopId: shop.shopId, shopName: shop.shopName, region: shop.region, province: shop.province, channel: shop.channel,
-      shopSize: shop.shopSize||'', trainerName: tr ? tr.name : '',
+      shopSize: shop.shopSize||'', trainerName,
       slOppo, slSS: slOf('Samsung'), slXM: slOf('Xiaomi'), slVV: slOf('Vivo'), slRM: slOf('Realme'), slHonor: slOf('Honor'),
     };
   }).filter(s=>s.shopName || s.shopId);
@@ -11053,7 +11069,15 @@ document.getElementById('addTrainerBtn').addEventListener('click', async ()=>{
   let relinkedInfo = null;
   if(editingTrainerId){
     const t = config.trainers.find(x=>x.id===editingTrainerId);
-    if(t){ t.name=name; t.region=regionSel.value||''; }
+    if(t){
+      t.name=name; t.region=regionSel.value||'';
+      // QUAN TRỌNG: đồng bộ luôn sang tài khoản đăng nhập của đúng Trainer này — vì lúc đăng nhập,
+      // hệ thống lấy Khu vực từ TÀI KHOẢN (users[].region), KHÔNG phải từ hồ sơ Trainer trực tiếp.
+      // Nếu chỉ sửa hồ sơ mà không đồng bộ tài khoản, Trainer vẫn bị kẹt ở Khu vực CŨ (lúc tài khoản
+      // được tạo) dù hồ sơ đã hiện đúng Khu vực mới — đây chính là lỗi đã xảy ra thực tế.
+      const acc = users.find(u=>u.trainerId===editingTrainerId);
+      if(acc){ acc.region = t.region; acc.displayName = toTitleCaseVN(t.name); await saveUsers(); }
+    }
   } else {
     const newTrainer = {id:uid('tr'),name,region:regionSel.value||''};
     // Kiểm tra có tài khoản "mồ côi" nào trùng tên (Trainer đã bị Xoá trước đó, tạo lại đúng tên) —
