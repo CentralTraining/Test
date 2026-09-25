@@ -830,7 +830,10 @@
         <div class="chart-wrap" style="height:340px;"><canvas id="chartBrandDist"></canvas></div>
       </div>
 
-      <h3 class="kpi-section-title">Danh sách Shop Miền Trung</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <h3 class="kpi-section-title" style="margin:0;">Danh sách Shop Miền Trung</h3>
+        <button class="secondary" id="exportBrandShopListBtn" type="button">⬇ Export Excel</button>
+      </div>
       <div class="scope-filters" style="justify-content:space-between;">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <span class="scope-label">Tìm ID/Tên Shop:</span>
@@ -7011,10 +7014,33 @@ function buildUnifiedShopList_(){
 
   return list;
 }
+/* Lấy đúng danh sách Shop ĐANG HIỂN THỊ trên màn hình (đã áp dụng đầy đủ: giới hạn theo vai trò +
+   toàn bộ bộ lọc đang chọn) — dùng riêng cho nút Export, đảm bảo file xuất ra luôn khớp 100% với
+   những gì Trainer/Admin đang thấy trên bảng, không cần lặp lại logic lọc 1 lần nữa. */
+function getFilteredBrandShopListForExport_(){
+  let list = buildUnifiedShopList_();
+  if(isTrainer() && session.region){
+    list = list.filter(s=> (s.region||'').trim().toUpperCase()===String(session.region).trim().toUpperCase() || s.region==='—');
+  }
+  if(brandShopListFilter_.region) list = list.filter(s=>s.region===brandShopListFilter_.region);
+  if(brandShopListFilter_.province) list = list.filter(s=>s.province===brandShopListFilter_.province);
+  if(brandShopListFilter_.channel) list = list.filter(s=>s.channel===brandShopListFilter_.channel);
+  if(brandShopListFilter_.size) list = list.filter(s=>s.shopSize===brandShopListFilter_.size);
+  if(brandShopListFilter_.search){
+    const term = brandShopListFilter_.search.trim().toLowerCase();
+    list = list.filter(s=> (s.shopId||'').toLowerCase().includes(term) || (s.shopName||'').toLowerCase().includes(term));
+  }
+  return list;
+}
 function renderBrandShopList_(){
   const box = document.getElementById('brandShopListBox');
   if(!box) return;
-  const fullList = buildUnifiedShopList_();
+  let fullList = buildUnifiedShopList_();
+  // Trainer CHỈ thấy Shop thuộc đúng Khu vực mình phụ trách — Admin thấy toàn bộ Miền Trung. Áp dụng
+  // đúng mẫu giới hạn theo vai trò đã dùng nhất quán ở các màn hình khác trong Dashboard.
+  if(isTrainer() && session.region){
+    fullList = fullList.filter(s=> (s.region||'').trim().toUpperCase()===String(session.region).trim().toUpperCase() || s.region==='—');
+  }
 
   const regionSel = document.getElementById('brandShopListRegionSel');
   const provinceSel = document.getElementById('brandShopListProvinceSel');
@@ -7030,6 +7056,13 @@ function renderBrandShopList_(){
   // (đúng mẫu đã dùng ở bộ lọc Gán Shop — Cài đặt ▸ DATA).
   const afterRegion = brandShopListFilter_.region ? fullList.filter(s=>s.region===brandShopListFilter_.region) : fullList;
   fillSel(regionSel, Array.from(new Set(fullList.map(s=>s.region).filter(Boolean))).sort(), brandShopListFilter_.region);
+  if(isTrainer() && session.region && regionSel){
+    // Trainer không cần (và không được) đổi sang khu vực khác — khoá cứng dropdown về đúng 1 lựa chọn.
+    regionSel.innerHTML = `<option value="${session.region}">${session.region}</option>`;
+    regionSel.value = session.region;
+    regionSel.disabled = true;
+    brandShopListFilter_.region = session.region;
+  }
 
   const afterProvince = brandShopListFilter_.province ? afterRegion.filter(s=>s.province===brandShopListFilter_.province) : afterRegion;
   fillSel(provinceSel, Array.from(new Set(afterRegion.map(s=>s.province).filter(Boolean))).sort(), brandShopListFilter_.province);
@@ -7147,6 +7180,22 @@ document.addEventListener('DOMContentLoaded', ()=>{
   });
   const sizeSel = document.getElementById('brandShopListSizeSel');
   if(sizeSel) sizeSel.addEventListener('change', (e)=>{ brandShopListFilter_.size = e.target.value; brandShopListPage_=1; renderBrandShopList_(); });
+  const exportBtn = document.getElementById('exportBrandShopListBtn');
+  if(exportBtn) exportBtn.addEventListener('click', ()=>{
+    const list = getFilteredBrandShopListForExport_();
+    if(list.length===0){ alert('Không có Shop nào để xuất (kiểm tra lại bộ lọc đang chọn).'); return; }
+    const rows = list.map((s,i)=>({
+      'STT': i+1, 'ID Shop': s.shopId||'', 'Tên Shop': s.shopName||'', 'Khu vực': s.region||'', 'Tỉnh': s.province||'',
+      'Kênh': s.channel||'', 'Size shop': s.shopSize||'', 'Trainer': s.trainerName||'',
+      'SL OPPO': s.slOppo, 'SL SS': s.slSS, 'SL XM': s.slXM, 'SL VV': s.slVV, 'SL RM': s.slRM, 'SL Honor': s.slHonor,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Danh sách Shop');
+    const today = new Date().toISOString().slice(0,10);
+    const scopeLabel = (isTrainer() && session.region) ? session.region.replace(/\s+/g,'') : 'MienTrung';
+    XLSX.writeFile(wb, `DanhSachShop_${scopeLabel}_${today}.xlsx`);
+  });
 });
 function renderBrandStats(){
   const kpiRow=document.getElementById('brandKpiRow');
