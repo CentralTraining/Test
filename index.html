@@ -829,6 +829,21 @@
         </div>
         <div class="chart-wrap" style="height:340px;"><canvas id="chartBrandDist"></canvas></div>
       </div>
+
+      <h3 class="kpi-section-title">Danh sách Shop Miền Trung</h3>
+      <div class="scope-filters" style="justify-content:space-between;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <span class="scope-label">Tìm ID/Tên Shop:</span>
+          <input type="text" id="brandShopListSearch" placeholder="Nhập ID hoặc Tên Shop..." style="min-width:180px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
+          <span class="scope-label">Khu vực:</span>
+          <select id="brandShopListRegionSel"><option value="">Tất cả</option></select>
+          <span class="scope-label">Tỉnh:</span>
+          <select id="brandShopListProvinceSel"><option value="">Tất cả</option></select>
+          <span class="scope-label">Kênh:</span>
+          <select id="brandShopListChannelSel"><option value="">Tất cả</option></select>
+        </div>
+      </div>
+      <div id="brandShopListBox"></div>
     </div>
   </section>
 
@@ -6869,6 +6884,171 @@ function shopMatchesScope_(shop){
   if(regionVal) return normalizeAreaVN(shop.region)===regionVal;
   return true;
 }
+/* ============ Danh sách Shop Miền Trung (Tổng quan HR ▸ Nhân sự các hãng) ============
+   Hợp nhất 2 nguồn: brandShopList (Shop có dữ liệu HR đối thủ — Samsung/Vivo/Realme/Honor) và
+   shopTrainerMap (Shop đã Gán Trainer/Sale của OPPO) — khớp theo shopId (storeId) trước, nếu không có
+   thì khớp theo TÊN Shop (đã trim) — để không bỏ sót Shop chỉ có 1 trong 2 nguồn. */
+let brandShopListPage_ = 1;
+const BRAND_SHOP_LIST_PAGE_SIZE = 10;
+let brandShopListFilter_ = { search:'', region:'', province:'', channel:'' };
+function buildUnifiedShopList_(){
+  const byKey = new Map(); // key: shopId (ưu tiên) hoặc tên Shop đã chuẩn hoá
+  const keyOf = (id, name) => (id && id.trim()) ? 'ID::'+id.trim() : 'NAME::'+(name||'').trim().toLowerCase();
+
+  brandShopList.forEach(shop=>{
+    const key = keyOf(shop.storeId, shop.storeName);
+    byKey.set(key, {
+      shopId: shop.storeId||'', shopName: shop.storeName||'', region: shop.region||'', province: shop.province||'', channel: shop.channel||'',
+      shopSize: '', trainerId: '', brands: shop.brands||{},
+    });
+  });
+  shopTrainerMap.forEach(sm=>{
+    const key = keyOf(sm.shopId, sm.shopName);
+    const existing = byKey.get(key);
+    if(existing){
+      // Đã có từ brandShopList — bổ sung thêm Khu vực/Tỉnh/Kênh/Size shop/Trainer nếu bên kia còn
+      // thiếu (Gán Shop thường đầy đủ hơn vì Admin OPPO tự nhập).
+      if(!existing.region) existing.region = sm.area||'';
+      if(!existing.province) existing.province = sm.province||'';
+      if(!existing.channel) existing.channel = sm.channel||'';
+      if(!existing.shopId) existing.shopId = sm.shopId||'';
+      if(!existing.shopName) existing.shopName = sm.shopName||'';
+      existing.shopSize = sm.shopSize||'';
+      existing.trainerId = sm.trainerId||'';
+    } else {
+      byKey.set(key, { shopId: sm.shopId||'', shopName: sm.shopName||'', region: sm.area||'', province: sm.province||'', channel: sm.channel||'', shopSize: sm.shopSize||'', trainerId: sm.trainerId||'', brands:{} });
+    }
+  });
+
+  // Tính SL OPPO — đếm PGs OPPO trạng thái "Đang làm", khớp theo TÊN Shop (PGs chỉ lưu tên Shop dạng
+  // text, không có mã Shop riêng) — dùng đúng cách so khớp đã áp dụng nhất quán ở shopSizeFromMap_().
+  const activeOppoPgsByShopName = {};
+  pgs.filter(p=>p.brand==='OPPO' && p.status==='Đang làm' && p.shop).forEach(p=>{
+    const k = p.shop.trim().toLowerCase();
+    activeOppoPgsByShopName[k] = (activeOppoPgsByShopName[k]||0) + 1;
+  });
+
+  const list = Array.from(byKey.values()).map(shop=>{
+    const nameKey = (shop.shopName||'').trim().toLowerCase();
+    const slOppo = nameKey ? (activeOppoPgsByShopName[nameKey]||0) : 0;
+    const slOf = (brand)=> Number((shop.brands[brand]&&shop.brands[brand].count)||0);
+    const tr = shop.trainerId ? config.trainers.find(t=>t.id===shop.trainerId) : null;
+    return {
+      shopId: shop.shopId, shopName: shop.shopName, region: shop.region, province: shop.province, channel: shop.channel,
+      shopSize: shop.shopSize||'', trainerName: tr ? tr.name : '',
+      slOppo, slSS: slOf('Samsung'), slVV: slOf('Vivo'), slRM: slOf('Realme'), slHonor: slOf('Honor'),
+    };
+  }).filter(s=>s.shopName || s.shopId);
+
+  return list;
+}
+function renderBrandShopList_(){
+  const box = document.getElementById('brandShopListBox');
+  if(!box) return;
+  let list = buildUnifiedShopList_();
+
+  // Đổ danh sách lựa chọn cho 3 dropdown lọc (chỉ đổ 1 lần, giữ lựa chọn hiện tại nếu đã chọn)
+  const regionSel = document.getElementById('brandShopListRegionSel');
+  const provinceSel = document.getElementById('brandShopListProvinceSel');
+  const channelSel = document.getElementById('brandShopListChannelSel');
+  if(regionSel){
+    const cur = regionSel.value;
+    const regions = Array.from(new Set(list.map(s=>s.region).filter(Boolean))).sort();
+    regionSel.innerHTML = '<option value="">Tất cả</option>' + regions.map(r=>`<option value="${r}">${r}</option>`).join('');
+    if(regions.includes(cur)) regionSel.value = cur;
+  }
+  if(provinceSel){
+    const cur = provinceSel.value;
+    const provinces = Array.from(new Set(list.map(s=>s.province).filter(Boolean))).sort();
+    provinceSel.innerHTML = '<option value="">Tất cả</option>' + provinces.map(p=>`<option value="${p}">${p}</option>`).join('');
+    if(provinces.includes(cur)) provinceSel.value = cur;
+  }
+  if(channelSel){
+    const cur = channelSel.value;
+    const channels = Array.from(new Set(list.map(s=>s.channel).filter(Boolean))).sort();
+    channelSel.innerHTML = '<option value="">Tất cả</option>' + channels.map(c=>`<option value="${c}">${c}</option>`).join('');
+    if(channels.includes(cur)) channelSel.value = cur;
+  }
+
+  if(brandShopListFilter_.search){
+    const term = brandShopListFilter_.search.trim().toLowerCase();
+    list = list.filter(s=> (s.shopId||'').toLowerCase().includes(term) || (s.shopName||'').toLowerCase().includes(term));
+  }
+  if(brandShopListFilter_.region) list = list.filter(s=>s.region===brandShopListFilter_.region);
+  if(brandShopListFilter_.province) list = list.filter(s=>s.province===brandShopListFilter_.province);
+  if(brandShopListFilter_.channel) list = list.filter(s=>s.channel===brandShopListFilter_.channel);
+
+  if(list.length===0){
+    box.innerHTML = '<div class="empty">Chưa có Shop nào khớp bộ lọc.</div>';
+    return;
+  }
+  const totalItems = list.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems/BRAND_SHOP_LIST_PAGE_SIZE));
+  if(brandShopListPage_>totalPages) brandShopListPage_ = totalPages;
+  if(brandShopListPage_<1) brandShopListPage_ = 1;
+  const startIdx = (brandShopListPage_-1)*BRAND_SHOP_LIST_PAGE_SIZE;
+  const pageItems = list.slice(startIdx, startIdx+BRAND_SHOP_LIST_PAGE_SIZE);
+
+  let html = `<table><thead><tr><th>ID Shop</th><th>Tên Shop</th><th>Khu vực</th><th>Tỉnh</th><th>Kênh</th><th>Size shop</th><th>Trainer</th><th>SL OPPO</th><th>SL SS</th><th>SL VV</th><th>SL RM</th><th>SL Honor</th></tr></thead><tbody>`;
+  pageItems.forEach(s=>{
+    html += `<tr>
+      <td>${s.shopId||'—'}</td><td>${s.shopName||'—'}</td><td>${s.region||'—'}</td><td>${s.province||'—'}</td><td>${s.channel||'—'}</td>
+      <td>${s.shopSize||'—'}</td><td>${s.trainerName||'—'}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green-dark);">${s.slOppo}</td>
+      <td style="text-align:center;">${s.slSS}</td><td style="text-align:center;">${s.slVV}</td><td style="text-align:center;">${s.slRM}</td><td style="text-align:center;">${s.slHonor}</td>
+    </tr>`;
+  });
+  html += `</tbody></table><div class="pagination-bar" id="brandShopListPagination"></div>`;
+  box.innerHTML = html;
+  renderBrandShopListPagination_(totalItems);
+}
+function renderBrandShopListPagination_(totalItems){
+  const box = document.getElementById('brandShopListPagination');
+  if(!box) return;
+  const totalPages = Math.max(1, Math.ceil(totalItems/BRAND_SHOP_LIST_PAGE_SIZE));
+  let pageButtons='';
+  const maxShown = 7;
+  let start = Math.max(1, brandShopListPage_ - 3);
+  let end = Math.min(totalPages, start + maxShown - 1);
+  start = Math.max(1, end - maxShown + 1);
+  for(let i=start;i<=end;i++){
+    pageButtons += `<button data-brand-shop-page="${i}" class="${i===brandShopListPage_?'active':''}">${i}</button>`;
+  }
+  const from = (brandShopListPage_-1)*BRAND_SHOP_LIST_PAGE_SIZE + 1;
+  const to = Math.min(brandShopListPage_*BRAND_SHOP_LIST_PAGE_SIZE, totalItems);
+  box.innerHTML = `
+    <span class="pagination-info">Hiển thị ${from}-${to} / ${totalItems} Shop</span>
+    <button data-brand-shop-page="${brandShopListPage_-1}" ${brandShopListPage_<=1?'disabled':''}>‹</button>
+    ${pageButtons}
+    <button data-brand-shop-page="${brandShopListPage_+1}" ${brandShopListPage_>=totalPages?'disabled':''}>›</button>
+  `;
+  box.querySelectorAll('[data-brand-shop-page]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ brandShopListPage_ = Number(btn.getAttribute('data-brand-shop-page')); renderBrandShopList_(); });
+  });
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  const searchInput = document.getElementById('brandShopListSearch');
+  if(searchInput){
+    let debounceTimer_;
+    searchInput.addEventListener('input', ()=>{
+      clearTimeout(debounceTimer_);
+      const cursorPos = searchInput.selectionStart;
+      debounceTimer_ = setTimeout(()=>{
+        brandShopListFilter_.search = searchInput.value;
+        brandShopListPage_ = 1;
+        renderBrandShopList_();
+        const newInput = document.getElementById('brandShopListSearch');
+        if(newInput){ newInput.focus(); newInput.setSelectionRange(cursorPos, cursorPos); }
+      }, 350);
+    });
+  }
+  const regionSel = document.getElementById('brandShopListRegionSel');
+  if(regionSel) regionSel.addEventListener('change', (e)=>{ brandShopListFilter_.region = e.target.value; brandShopListPage_=1; renderBrandShopList_(); });
+  const provinceSel = document.getElementById('brandShopListProvinceSel');
+  if(provinceSel) provinceSel.addEventListener('change', (e)=>{ brandShopListFilter_.province = e.target.value; brandShopListPage_=1; renderBrandShopList_(); });
+  const channelSel = document.getElementById('brandShopListChannelSel');
+  if(channelSel) channelSel.addEventListener('change', (e)=>{ brandShopListFilter_.channel = e.target.value; brandShopListPage_=1; renderBrandShopList_(); });
+});
 function renderBrandStats(){
   const kpiRow=document.getElementById('brandKpiRow');
   kpiRow.innerHTML='';
@@ -6924,6 +7104,7 @@ function renderBrandStats(){
   `;
 
   renderBrandDistChart(brandDistMode);
+  renderBrandShopList_();
 }
 const BRAND_COLORS = { 'OPPO':'#016C38','Samsung':'#2F6FB0','Xiaomi':'#E8B923','Vivo':'#2F9BD6','Realme':'#E8C023','Honor':'#9098A0' };
 function competitorCountByPredicate_(brand, predicate){
