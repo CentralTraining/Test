@@ -6898,28 +6898,20 @@ function shopMatchesScope_(shop){
 let brandShopListPage_ = 1;
 const BRAND_SHOP_LIST_PAGE_SIZE = 10;
 let brandShopListFilter_ = { search:'', region:'', province:'', channel:'', size:'' };
+let brandShopListCurrentPageItems_ = [];
+// Chuẩn hoá ID/Tên Shop dùng CHUNG cho cả việc hợp nhất danh sách lẫn tìm-đúng-bản-ghi khi Sửa —
+// chuẩn hoá Unicode (NFC), gộp các loại dấu gạch ngang (- – —) về 1 loại, gộp khoảng trắng thừa.
+function normShopKey_(s){ return (s||'').normalize('NFC').trim().toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' '); }
 function buildUnifiedShopList_(){
   // Hợp nhất theo nguyên tắc: 2 bản ghi được coi là CÙNG 1 Shop nếu khớp ID **HOẶC** khớp Tên (không
   // cần khớp cả 2). Dùng 2 chỉ mục byId/byName cùng trỏ về đúng 1 object Shop — khi xử lý 1 bản ghi
   // mới, thử tìm theo ID trước, không thấy thì thử tìm theo Tên; tìm thấy ở chỉ mục nào thì cập nhật
   // luôn CẢ 2 chỉ mục để chỉ mục còn thiếu (VD nguồn A có ID nhưng nguồn B chỉ có Tên) cũng trỏ đúng
-  // về chung 1 Shop cho những lần khớp sau. Cả ID lẫn Tên đều chuẩn hoá (trim + viết thường) để tránh
-  // lệch do hoa/thường hoặc khoảng trắng thừa giữa các file Excel nhập từ nhiều nguồn khác nhau.
+  // về chung 1 Shop cho những lần khớp sau.
   const byId = new Map();
   const byName = new Map();
-  // Chuẩn hoá MẠNH hơn bản trước — ngoài trim đầu/cuối, còn gộp MỌI khoảng trắng thừa Ở GIỮA chuỗi
-  // thành 1 khoảng trắng duy nhất (VD "Shop  ABC   -  123" và "Shop ABC - 123" giờ coi là khớp nhau) —
-  // đây là nguyên nhân phổ biến khiến 2 file Excel từ 2 nguồn khác nhau tưởng trùng tên nhưng thực ra
-  // lệch nhau vài khoảng trắng, khiến so khớp chính xác tuyệt đối (exact match) bị trượt.
-  // Chuẩn hoá thêm dạng Unicode (NFC) — 2 file Excel từ 2 nguồn có thể lưu CÙNG 1 chữ tiếng Việt theo
-  // 2 cách mã hoá Unicode khác nhau (VD "ệ" ghép sẵn 1 ký tự, hoặc ghép từ "e" + dấu nặng + dấu mũ
-  // riêng biệt) — nhìn HOÀN TOÀN GIỐNG NHAU trên màn hình nhưng máy so sánh chuỗi vẫn coi là khác
-  // nhau, khiến Shop không ghép được dù tên/mã đọc y hệt. .normalize('NFC') đưa mọi cách viết về cùng
-  // 1 dạng chuẩn trước khi so sánh. Đồng thời gộp luôn các loại dấu gạch ngang hay bị lẫn giữa các
-  // nguồn (- gạch thường, – en-dash, — em-dash) về cùng 1 ký tự "-", vì tên Shop OPPO thường có nhiều
-  // dấu gạch ngang phân tách (VD "TGDĐ - 8126 - ĐMS_QTR_VLI - Bến Quan").
-  const normId = (id)=> (id||'').normalize('NFC').trim().toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' ');
-  const normName = (name)=> (name||'').normalize('NFC').trim().toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' ');
+  const normId = normShopKey_;
+  const normName = normShopKey_;
 
   function findOrCreate(id, name, seed){
     const idKey = normId(id), nameKey = normName(name);
@@ -7012,7 +7004,7 @@ function buildUnifiedShopList_(){
     const trainerName = shop.trainerId ? (tr ? tr.name : '⚠ ID Trainer không khớp (đã xoá?)') : '';
     return {
       shopId: shop.shopId, shopName: shop.shopName, region: shop.region, province: shop.province, channel: shop.channel,
-      shopSize: shop.shopSize||'', trainerName,
+      shopSize: shop.shopSize||'', trainerName, trainerId: shop.trainerId||'',
       slOppo, slSS: slOf('Samsung'), slXM: slOf('Xiaomi'), slVV: slOf('Vivo'), slRM: slOf('Realme'), slHonor: slOf('Honor'),
     };
   }).filter(s=>s.shopName || s.shopId);
@@ -7122,18 +7114,69 @@ function renderBrandShopList_(){
   const startIdx = (brandShopListPage_-1)*BRAND_SHOP_LIST_PAGE_SIZE;
   const pageItems = list.slice(startIdx, startIdx+BRAND_SHOP_LIST_PAGE_SIZE);
 
-  let html = `<table><thead><tr><th>ID Shop</th><th>Tên Shop</th><th>Khu vực</th><th>Tỉnh</th><th>Kênh</th><th>Size shop</th><th>Trainer</th><th>SL OPPO</th><th>SL SS</th><th>SL XM</th><th>SL VV</th><th>SL RM</th><th>SL Honor</th></tr></thead><tbody>`;
-  pageItems.forEach(s=>{
+  let html = `<table><thead><tr><th>ID Shop</th><th>Tên Shop</th><th>Khu vực</th><th>Tỉnh</th><th>Kênh</th><th>Size shop</th><th>Trainer</th><th>SL OPPO</th><th>SL SS</th><th>SL XM</th><th>SL VV</th><th>SL RM</th><th>SL Honor</th><th></th></tr></thead><tbody>`;
+  brandShopListCurrentPageItems_ = pageItems;
+  pageItems.forEach((s,idx)=>{
+    // Không cho sửa 2 dòng cảnh báo gộp ("⚠ Tên Shop chưa khớp...", "⚠ PGs chưa được gán...") — đây
+    // không phải 1 Shop cụ thể để sửa, chỉ là dòng tổng hợp cảnh báo.
+    const isRealShop = s.shopId!=='—' || (s.shopName && !s.shopName.startsWith('⚠'));
     html += `<tr>
       <td>${s.shopId||'—'}</td><td>${s.shopName||'—'}</td><td>${s.region||'—'}</td><td>${s.province||'—'}</td><td>${s.channel||'—'}</td>
       <td>${s.shopSize||'—'}</td><td>${s.trainerName||'—'}</td>
       <td style="text-align:center;font-weight:700;color:var(--green-dark);">${s.slOppo}</td>
       <td style="text-align:center;">${s.slSS}</td><td style="text-align:center;">${s.slXM}</td><td style="text-align:center;">${s.slVV}</td><td style="text-align:center;">${s.slRM}</td><td style="text-align:center;">${s.slHonor}</td>
+      <td>${isRealShop?`<button class="secondary" data-edit-shop-idx="${idx}" type="button" style="padding:4px 10px;font-size:11.5px;">✏ Sửa</button>`:''}</td>
     </tr>`;
   });
   html += `</tbody></table><div class="pagination-bar" id="brandShopListPagination"></div>`;
   box.innerHTML = html;
+  box.querySelectorAll('[data-edit-shop-idx]').forEach(btn=>{
+    btn.addEventListener('click', ()=> openEditShopModal_(brandShopListCurrentPageItems_[Number(btn.getAttribute('data-edit-shop-idx'))]));
+  });
   renderBrandShopListPagination_(totalItems);
+}
+/* Sửa thông tin 1 Shop trong danh sách hợp nhất — mọi trường sửa được (Tên/Khu vực/Tỉnh/Kênh/Size
+   shop/Trainer) đều thuộc về dữ liệu "Gán Shop" (shopTrainerMap), vì đây là nguồn OPPO tự quản lý —
+   KHÔNG sửa vào brandShopList (dữ liệu Nhân sự các hãng, chỉ Import lại mới đổi được). Nếu Shop này
+   trước giờ CHƯA có trong Gán Shop (chỉ có ở Nhân sự hãng), lưu sẽ TỰ TẠO MỚI 1 dòng Gán Shop cho
+   Shop đó — từ giờ Shop sẽ được quản lý đầy đủ trong Gán Shop luôn. */
+async function openEditShopModal_(shop){
+  if(!shop) return;
+  const regions = visibleRegions();
+  const trainers = visibleTrainers();
+  const bodyHtml = `
+    <div class="form-row"><label>ID Shop</label><input type="text" id="editShopId" value="${(shop.shopId||'').replace(/"/g,'&quot;')}" placeholder="(không bắt buộc)"></div>
+    <div class="form-row"><label>Tên Shop</label><input type="text" id="editShopName" value="${(shop.shopName||'').replace(/"/g,'&quot;')}"></div>
+    <div class="form-row"><label>Khu vực</label><select id="editShopRegion"><option value="">— Chọn —</option>${regions.map(r=>`<option value="${r}" ${shop.region===r?'selected':''}>${r}</option>`).join('')}</select></div>
+    <div class="form-row"><label>Tỉnh</label><input type="text" id="editShopProvince" value="${(shop.province||'').replace(/"/g,'&quot;')}"></div>
+    <div class="form-row"><label>Kênh</label><input type="text" id="editShopChannel" value="${(shop.channel||'').replace(/"/g,'&quot;')}"></div>
+    <div class="form-row"><label>Size shop</label><input type="text" id="editShopSize" value="${(shop.shopSize||'').replace(/"/g,'&quot;')}" placeholder="VD: A, B, C..."></div>
+    <div class="form-row"><label>Trainer phụ trách</label><select id="editShopTrainer"><option value="">— Chưa gán —</option>${trainers.map(t=>`<option value="${t.id}" ${shop.trainerId===t.id?'selected':''}>${t.name}</option>`).join('')}</select></div>
+  `;
+  const result = await showFormModal_(`Sửa thông tin Shop: ${shop.shopName||shop.shopId}`, bodyHtml, async ()=>{
+    const newId = document.getElementById('editShopId').value.trim();
+    const newName = document.getElementById('editShopName').value.trim();
+    if(!newName && !newId){ alert('Cần nhập ít nhất Tên Shop hoặc ID Shop.'); return false; }
+    const newRegion = document.getElementById('editShopRegion').value;
+    const newProvince = document.getElementById('editShopProvince').value.trim();
+    const newChannel = document.getElementById('editShopChannel').value.trim();
+    const newSize = document.getElementById('editShopSize').value.trim();
+    const newTrainerId = document.getElementById('editShopTrainer').value;
+
+    // Tìm đúng bản ghi Gán Shop hiện có của Shop này (khớp ID HOẶC Tên CŨ, trước khi sửa) — nếu chưa
+    // có thì tạo mới, đảm bảo không tạo trùng 1 Shop thành 2 dòng khác nhau trong Gán Shop.
+    const oldIdKey = normShopKey_(shop.shopId), oldNameKey = normShopKey_(shop.shopName);
+    let rec = shopTrainerMap.find(r=> (oldIdKey && normShopKey_(r.shopId)===oldIdKey) || (oldNameKey && normShopKey_(r.shopName)===oldNameKey));
+    if(!rec){
+      rec = { id: uid('shoptr') };
+      shopTrainerMap.push(rec);
+    }
+    rec.shopId = newId; rec.shopName = newName; rec.area = newRegion; rec.province = newProvince;
+    rec.channel = newChannel; rec.shopSize = newSize; rec.trainerId = newTrainerId;
+    await dbSet('shopTrainerMap', shopTrainerMap);
+    renderBrandShopList_();
+    return true;
+  });
 }
 function renderBrandShopListPagination_(totalItems){
   const box = document.getElementById('brandShopListPagination');
