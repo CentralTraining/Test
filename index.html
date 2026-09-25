@@ -6896,45 +6896,99 @@ let brandShopListPage_ = 1;
 const BRAND_SHOP_LIST_PAGE_SIZE = 10;
 let brandShopListFilter_ = { search:'', region:'', province:'', channel:'', size:'' };
 function buildUnifiedShopList_(){
-  const byKey = new Map(); // key: shopId (ưu tiên) hoặc tên Shop đã chuẩn hoá
-  const keyOf = (id, name) => (id && id.trim()) ? 'ID::'+id.trim() : 'NAME::'+(name||'').trim().toLowerCase();
+  // Hợp nhất theo nguyên tắc: 2 bản ghi được coi là CÙNG 1 Shop nếu khớp ID **HOẶC** khớp Tên (không
+  // cần khớp cả 2). Dùng 2 chỉ mục byId/byName cùng trỏ về đúng 1 object Shop — khi xử lý 1 bản ghi
+  // mới, thử tìm theo ID trước, không thấy thì thử tìm theo Tên; tìm thấy ở chỉ mục nào thì cập nhật
+  // luôn CẢ 2 chỉ mục để chỉ mục còn thiếu (VD nguồn A có ID nhưng nguồn B chỉ có Tên) cũng trỏ đúng
+  // về chung 1 Shop cho những lần khớp sau. Cả ID lẫn Tên đều chuẩn hoá (trim + viết thường) để tránh
+  // lệch do hoa/thường hoặc khoảng trắng thừa giữa các file Excel nhập từ nhiều nguồn khác nhau.
+  const byId = new Map();
+  const byName = new Map();
+  const normId = (id)=> (id||'').trim().toLowerCase();
+  const normName = (name)=> (name||'').trim().toLowerCase();
 
+  function findOrCreate(id, name, seed){
+    const idKey = normId(id), nameKey = normName(name);
+    let rec = (idKey && byId.get(idKey)) || (nameKey && byName.get(nameKey)) || null;
+    if(!rec){
+      rec = seed();
+      if(idKey) byId.set(idKey, rec);
+      if(nameKey) byName.set(nameKey, rec);
+      return { rec, isNew:true };
+    }
+    // Đã tìm thấy qua 1 trong 2 chỉ mục — đăng ký thêm chỉ mục còn thiếu để khớp nhất quán về sau.
+    if(idKey && !byId.has(idKey)) byId.set(idKey, rec);
+    if(nameKey && !byName.has(nameKey)) byName.set(nameKey, rec);
+    return { rec, isNew:false };
+  }
+
+  const allRecs = [];
   brandShopList.forEach(shop=>{
-    const key = keyOf(shop.storeId, shop.storeName);
-    byKey.set(key, {
+    const { rec, isNew } = findOrCreate(shop.storeId, shop.storeName, ()=>({
       shopId: shop.storeId||'', shopName: shop.storeName||'', region: shop.region||'', province: shop.province||'', channel: shop.channel||'',
-      shopSize: '', trainerId: '', brands: shop.brands||{},
+      shopSize: '', trainerId: '', brands: {}, nameVariants: new Set(),
+    }));
+    if(isNew) allRecs.push(rec);
+    if(shop.storeName) rec.nameVariants.add(normName(shop.storeName));
+    // Nhiều dòng brandShopList có thể cùng khớp 1 Shop (hiếm, nhưng vẫn cộng dồn brands cho chắc)
+    Object.keys(shop.brands||{}).forEach(b=>{
+      if(!rec.brands[b]) rec.brands[b] = { count:0, seniorities:[] };
+      rec.brands[b].count += Number((shop.brands[b]&&shop.brands[b].count)||0);
     });
+    if(!rec.shopId && shop.storeId) rec.shopId = shop.storeId;
+    if(!rec.shopName && shop.storeName) rec.shopName = shop.storeName;
   });
   shopTrainerMap.forEach(sm=>{
-    const key = keyOf(sm.shopId, sm.shopName);
-    const existing = byKey.get(key);
-    if(existing){
-      // Đã có từ brandShopList — bổ sung thêm Khu vực/Tỉnh/Kênh/Size shop/Trainer nếu bên kia còn
-      // thiếu (Gán Shop thường đầy đủ hơn vì Admin OPPO tự nhập).
-      if(!existing.region) existing.region = sm.area||'';
-      if(!existing.province) existing.province = sm.province||'';
-      if(!existing.channel) existing.channel = sm.channel||'';
-      if(!existing.shopId) existing.shopId = sm.shopId||'';
-      if(!existing.shopName) existing.shopName = sm.shopName||'';
-      existing.shopSize = sm.shopSize||'';
-      existing.trainerId = sm.trainerId||'';
-    } else {
-      byKey.set(key, { shopId: sm.shopId||'', shopName: sm.shopName||'', region: sm.area||'', province: sm.province||'', channel: sm.channel||'', shopSize: sm.shopSize||'', trainerId: sm.trainerId||'', brands:{} });
-    }
+    const { rec, isNew } = findOrCreate(sm.shopId, sm.shopName, ()=>({
+      shopId: sm.shopId||'', shopName: sm.shopName||'', region: sm.area||'', province: sm.province||'', channel: sm.channel||'',
+      shopSize: sm.shopSize||'', trainerId: sm.trainerId||'', brands: {}, nameVariants: new Set(),
+    }));
+    if(sm.shopName) rec.nameVariants.add(normName(sm.shopName));
+    if(isNew){ allRecs.push(rec); return; }
+    // Đã có từ brandShopList (hoặc 1 dòng Gán Shop khác) — bổ sung thêm Khu vực/Tỉnh/Kênh/Size
+    // shop/Trainer nếu bên kia còn thiếu (Gán Shop thường đầy đủ hơn vì Admin OPPO tự nhập).
+    if(!rec.region) rec.region = sm.area||'';
+    if(!rec.province) rec.province = sm.province||'';
+    if(!rec.channel) rec.channel = sm.channel||'';
+    if(!rec.shopId) rec.shopId = sm.shopId||'';
+    if(!rec.shopName) rec.shopName = sm.shopName||'';
+    rec.shopSize = sm.shopSize||rec.shopSize;
+    rec.trainerId = sm.trainerId||rec.trainerId;
   });
 
   // Tính SL OPPO — đếm PGs OPPO trạng thái "Đang làm", khớp theo TÊN Shop (PGs chỉ lưu tên Shop dạng
   // text, không có mã Shop riêng) — dùng đúng cách so khớp đã áp dụng nhất quán ở shopSizeFromMap_().
   const activeOppoPgsByShopName = {};
-  pgs.filter(p=>p.brand==='OPPO' && p.status==='Đang làm' && p.shop).forEach(p=>{
+  let pgsWithoutShop = 0;
+  pgs.filter(p=>p.brand==='OPPO' && p.status==='Đang làm').forEach(p=>{
+    if(!p.shop || !p.shop.trim()){ pgsWithoutShop++; return; }
     const k = p.shop.trim().toLowerCase();
     activeOppoPgsByShopName[k] = (activeOppoPgsByShopName[k]||0) + 1;
   });
 
-  const list = Array.from(byKey.values()).map(shop=>{
-    const nameKey = (shop.shopName||'').trim().toLowerCase();
-    const slOppo = nameKey ? (activeOppoPgsByShopName[nameKey]||0) : 0;
+  // Đánh dấu MỌI biến thể tên Shop đã từng thấy (từ cả 2 nguồn) — tên Shop nào của PG không khớp
+  // bất kỳ biến thể nào trong toàn bộ danh sách hợp nhất sẽ bị "rơi mất" khỏi tổng nếu không được
+  // cộng bù riêng — đây chính là nguyên nhân Tổng SL OPPO hiển thị ít hơn số PGs "Đang làm" thực tế.
+  const matchedShopNameKeys = new Set();
+  allRecs.forEach(s=> s.nameVariants.forEach(v=>matchedShopNameKeys.add(v)));
+  let pgsUnmatchedShop = 0;
+  Object.keys(activeOppoPgsByShopName).forEach(k=>{ if(!matchedShopNameKeys.has(k)) pgsUnmatchedShop += activeOppoPgsByShopName[k]; });
+
+  // Chốt chặn chống đếm nhân đôi — dùng ID Shop (nếu có) làm mốc claim chính, vì đã hợp nhất theo
+  // ID/Tên ở bước trên nên về lý thuyết mỗi Shop chỉ còn 1 bản ghi; vẫn giữ Set claimedNames để chắc
+  // chắn 1 biến thể tên KHÔNG bị cộng 2 lần nếu lỡ vẫn còn sót 2 bản ghi cùng dùng chung 1 tên.
+  const shopNameClaimed = new Set();
+  const list = allRecs.map(shop=>{
+    // Cộng dồn SL PGs khớp BẤT KỲ biến thể tên nào của Shop này (VD Gán Shop ghi "Shop A khác tên",
+    // Nhân sự hãng ghi "Shop A" — PG có thể đang dùng 1 trong 2 tên đó, đều phải tính đúng vào Shop
+    // này thay vì chỉ khớp đúng 1 tên duy nhất được lưu làm shopName hiển thị).
+    let slOppo = 0;
+    shop.nameVariants.forEach(v=>{
+      if(!shopNameClaimed.has(v)){
+        slOppo += activeOppoPgsByShopName[v]||0;
+        shopNameClaimed.add(v);
+      }
+    });
     const slOf = (brand)=> Number((shop.brands[brand]&&shop.brands[brand].count)||0);
     const tr = shop.trainerId ? config.trainers.find(t=>t.id===shop.trainerId) : null;
     return {
@@ -6943,6 +6997,17 @@ function buildUnifiedShopList_(){
       slOppo, slSS: slOf('Samsung'), slXM: slOf('Xiaomi'), slVV: slOf('Vivo'), slRM: slOf('Realme'), slHonor: slOf('Honor'),
     };
   }).filter(s=>s.shopName || s.shopId);
+
+  // Cộng bù 2 nhóm PGs "Đang làm" đáng lẽ bị rơi mất — hiện thành dòng riêng, có cảnh báo rõ ràng để
+  // Admin biết cần bổ sung dữ liệu Gán Shop cho đúng Shop đó, thay vì âm thầm biến mất khỏi Tổng.
+  if(pgsUnmatchedShop>0){
+    list.push({ shopId:'—', shopName:'⚠ Tên Shop chưa khớp Gán Shop/Nhân sự hãng', region:'—', province:'—', channel:'—', shopSize:'—', trainerName:'—',
+      slOppo: pgsUnmatchedShop, slSS:0, slXM:0, slVV:0, slRM:0, slHonor:0 });
+  }
+  if(pgsWithoutShop>0){
+    list.push({ shopId:'—', shopName:'⚠ PGs chưa được gán vào Shop nào', region:'—', province:'—', channel:'—', shopSize:'—', trainerName:'—',
+      slOppo: pgsWithoutShop, slSS:0, slXM:0, slVV:0, slRM:0, slHonor:0 });
+  }
 
   return list;
 }
