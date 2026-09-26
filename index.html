@@ -529,6 +529,26 @@
     .sidebar-inner{max-height:none;overflow:visible;padding-right:0;}
     html{scrollbar-gutter:auto;}
   }
+
+/* ===== OPPO MODERN 2.0 — Executive Dashboard ===== */
+:root{--pro-green:#006B3C;--pro-green2:#00A868;--pro-ink:#10231A;--pro-soft:#F2F7F4;--pro-blue:#2477F3;--pro-purple:#7655E8;--pro-orange:#F29A2E;--pro-red:#E44D5E;}
+body{background:#F3F7F5;background-image:radial-gradient(circle at 88% 4%,rgba(0,168,104,.07),transparent 28%);}
+.app{max-width:1600px;padding:16px 20px 64px;}
+header.top{border:0;border-radius:16px;box-shadow:0 6px 26px rgba(17,54,36,.06);padding:12px 18px;}
+.app-body{gap:20px}.sidebar-col{flex-basis:205px}.sidebar-inner{background:linear-gradient(180deg,#064E36 0%,#033C2B 100%);border-radius:20px;padding:18px 12px;box-shadow:0 16px 40px rgba(4,63,43,.16);}
+.sidebar-brand{color:#fff;padding:4px 8px 16px}.sidebar-brand .brand-icon{background:#fff;color:#07553A}.sidebar-brand h1,.sidebar-brand .sub{color:#fff}.sidebar-brand .sub{opacity:.72}
+nav.tabs button{color:rgba(255,255,255,.84);padding:10px 12px;border-radius:10px}nav.tabs button.active{background:linear-gradient(90deg,#00A868,#0A8D5D);color:#fff;box-shadow:0 6px 16px rgba(0,168,104,.22)}nav.tabs button:hover:not(.active){background:rgba(255,255,255,.08);color:#fff}
+.sidebar-scope{border-top-color:rgba(255,255,255,.14)}.sidebar-scope .scope-value,.sidebar-scope .scope-sub{color:#fff}.sidebar-scope .scope-avatar{background:rgba(255,255,255,.12);color:#fff}
+.main-content{min-width:0}.pro-hero{min-height:132px;border-radius:22px;padding:26px 28px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;overflow:hidden;position:relative;background:linear-gradient(105deg,#E5F7EF 0%,#F8FCFA 50%,#DDF4EC 100%);border:1px solid #D6EBE1;box-shadow:0 8px 28px rgba(17,54,36,.06)}
+.pro-hero:after{content:"";position:absolute;width:360px;height:360px;border:56px solid rgba(0,168,104,.08);border-radius:50%;right:-100px;top:-170px}.pro-hero>div{position:relative;z-index:1}.pro-eyebrow{font-size:10px;font-weight:800;letter-spacing:1.4px;color:#087A50;margin-bottom:8px}.pro-hero h2{font-size:28px;margin:0;color:#0B3F2C;letter-spacing:-.8px}.pro-hero p{font-size:11px;color:#567066;margin:7px 0 0}.pro-hero-actions{display:flex;gap:8px;flex-wrap:wrap}.pro-hero-actions select{background:#fff;border:1px solid #D5E5DD;border-radius:10px;padding:9px 12px;font:600 10px Montserrat;color:#27483A}
+.pro-kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}.pro-kpi{background:#fff;border:1px solid #E1ECE6;border-radius:16px;padding:15px;box-shadow:0 5px 18px rgba(17,54,36,.045);position:relative;overflow:hidden}.pro-kpi:after{content:"";position:absolute;right:-18px;bottom:-22px;width:74px;height:74px;border-radius:50%;background:var(--tint,#E8F7F0)}.pro-kpi-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.pro-kpi-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--tint,#E8F7F0);font-size:16px}.pro-kpi-value{font-size:23px;font-weight:800;letter-spacing:-.6px;color:var(--accent,#087A50);margin-top:10px}.pro-kpi-label{font-size:9.5px;font-weight:700;color:#41594F;margin-top:2px}.pro-kpi-sub{font-size:8.5px;color:#819087;margin-top:5px}.pro-kpi-sub strong{color:var(--accent,#087A50)}
+.pro-dashboard-grid{display:grid;grid-template-columns:1.3fr .9fr .9fr;gap:12px;margin-bottom:18px}.pro-panel{background:#fff;border:1px solid #E1ECE6;border-radius:16px;padding:16px;box-shadow:0 5px 18px rgba(17,54,36,.04)}.pro-panel-title{font-size:12px;font-weight:800;color:#18392A;margin-bottom:3px}.pro-panel-sub{font-size:8.5px;color:#84938B;margin-bottom:14px}.pro-ring-wrap{display:flex;align-items:center;gap:18px}.pro-ring{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ring,#00A868) calc(var(--pct)*1%),#EAF0ED 0);position:relative}.pro-ring:after{content:"";position:absolute;width:78px;height:78px;background:#fff;border-radius:50%}.pro-ring strong,.pro-ring span{position:relative;z-index:1}.pro-ring strong{font-size:22px;color:#14392A}.pro-ring span{font-size:8px;color:#7C8C84;display:block;text-align:center}.pro-cat-list{flex:1;display:grid;gap:10px}.pro-cat-row{display:grid;grid-template-columns:78px 1fr 38px;gap:8px;align-items:center;font-size:9px}.pro-cat-row b{font-size:9px}.pro-track{height:7px;background:#EDF2EF;border-radius:99px;overflow:hidden}.pro-track i{display:block;height:100%;border-radius:99px;background:var(--bar,#00A868)}
+.pro-region-row{display:grid;grid-template-columns:100px 1fr 36px;gap:8px;align-items:center;margin:9px 0;font-size:9px}.pro-region-row .pro-track{height:8px}.pro-alert{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #EEF3F0}.pro-alert:last-child{border:0}.pro-alert-dot{width:8px;height:8px;border-radius:50%;background:var(--dot,#00A868);margin-top:3px;flex:none}.pro-alert b{font-size:9px;display:block;color:#29483A}.pro-alert span{font-size:8px;color:#84938B}
+.pro-section-head{display:flex;justify-content:space-between;align-items:end;margin:4px 2px 10px}.pro-section-head h3{margin:0;color:#173A2A;font-size:14px}.pro-section-head p{margin:3px 0 0;color:#819087;font-size:9px}
+.home-trainer-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.home-tcard{border:1px solid #E2ECE7;border-radius:16px;box-shadow:0 5px 18px rgba(17,54,36,.04);padding:14px}.home-tcard:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(17,54,36,.09)}.home-btn-detail{background:#E9F7F1;color:#087A50;border-radius:9px;padding:8px}.home-btn-detail:hover{background:#087A50;color:#fff}.home-kpibar{height:6px}
+@media(max-width:1200px){.pro-kpi-grid{grid-template-columns:repeat(3,1fr)}.pro-dashboard-grid{grid-template-columns:1fr 1fr}.pro-dashboard-grid .pro-panel:first-child{grid-column:1/-1}}
+@media(max-width:700px){.pro-hero{padding:20px;align-items:flex-start;flex-direction:column}.pro-hero h2{font-size:22px}.pro-kpi-grid{grid-template-columns:repeat(2,1fr)}.pro-dashboard-grid{grid-template-columns:1fr}.pro-dashboard-grid .pro-panel:first-child{grid-column:auto}.pro-ring-wrap{flex-direction:column;align-items:stretch}.pro-ring{margin:auto}}
+
 </style>
 </head>
 <body>
@@ -629,24 +649,24 @@
   </div>
 
   <div class="main-content">
-  <!-- ============ 0. HOME ============ -->
+  <!-- ============ 0. HOME / EXECUTIVE DASHBOARD ============ -->
   <section id="tab-home" class="maintab active">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
+    <div class="pro-hero">
       <div>
-        <h2 class="section-title" id="homeTitleH2">Danh sách Trainer</h2>
-        <p class="section-desc" id="homeSubDesc">Tiến độ KPI — cập nhật theo tháng đang xem.</p>
+        <div class="pro-eyebrow">OPPO TRAINER HUB · MIỀN TRUNG</div>
+        <h2 id="homeTitleH2">Tổng quan hoạt động</h2>
+        <p id="homeSubDesc">Dữ liệu vận hành và tiến độ KPI theo tháng đang xem.</p>
       </div>
-      <div class="scope-filters" style="margin:0;">
+      <div class="pro-hero-actions">
         <select id="homeRegionFilter"><option value="">Tất cả khu vực</option></select>
         <select id="homeSortSelect">
-          <option value="total">Sắp xếp: Tổng tiến độ</option>
-          <option value="name">Sắp xếp: Tên A-Z</option>
-          <option value="noibo">Sắp xếp: Nội bộ</option>
-          <option value="doitac">Sắp xếp: Đối tác</option>
-          <option value="truyenthong">Sắp xếp: Truyền thông</option>
+          <option value="total">Sắp xếp: Tổng tiến độ</option><option value="name">Sắp xếp: Tên A-Z</option>
+          <option value="noibo">Sắp xếp: Nội bộ</option><option value="doitac">Sắp xếp: Đối tác</option><option value="truyenthong">Sắp xếp: Truyền thông</option>
         </select>
       </div>
     </div>
+    <div id="homeExecutiveSummary"></div>
+    <div class="pro-section-head"><div><h3>Hiệu suất 13 Trainer</h3><p>So sánh nhanh tiến độ KPI theo phạm vi đang xem.</p></div></div>
     <div id="homeTrainerGrid" class="home-trainer-grid"></div>
   </section>
   <!-- ============ 1. TỔNG QUAN ============ -->
@@ -11540,60 +11560,51 @@ let homeRegionFilter_ = '', homeSortMode_ = 'total';
 let homeProgressCache_ = {};
 async function renderHomeTab_(){
   const grid = document.getElementById('homeTrainerGrid');
-  if(!grid) return;
-  // Chủ động đồng bộ lại pg01Actual/pgMoiActual/pgMoiTarget TRƯỚC khi tính % — các giá trị này được
-  // TÍNH LẠI ĐỘNG dựa theo dữ liệu PG/khảo sát thật (không phải số tĩnh), bình thường chỉ tự làm mới
-  // khi Admin/Trainer vào đúng trang "Tiến độ KPI ▸ Nội bộ ▸ PGs Dev". Nếu vào thẳng tab Home mà chưa
-  // từng ghé trang đó trong phiên này, số liệu có thể đang là bản cũ — gọi lại ở đây để luôn đúng.
-  syncAllPgMoiTargets();
-  syncAllPg01Actuals();
-  syncAllPgMoiActuals();
-  const regionSel = document.getElementById('homeRegionFilter');
-  if(regionSel && regionSel.options.length<=1){
-    const regions = visibleRegions();
-    regionSel.innerHTML = '<option value="">Tất cả khu vực</option>' + regions.map(r=>`<option value="${r}">${r}</option>`).join('');
-  }
-  document.getElementById('homeSubDesc').textContent = `Tiến độ KPI ${monthLabel(currentMonth)} — cập nhật theo tháng đang xem.`;
-
-  let tList = visibleTrainers();
-  if(homeRegionFilter_) tList = tList.filter(t=>t.region===homeRegionFilter_);
-  if(tList.length===0){ grid.innerHTML = '<div class="empty">Chưa có Trainer nào trong phạm vi đang xem.</div>'; return; }
-
-  grid.innerHTML = '<div class="empty">⏳ Đang tính tiến độ...</div>';
-  const progresses = {};
-  await Promise.all(tList.map(async t=>{ progresses[t.id] = await computeTrainerCategoryProgress_(t.id); }));
-  homeProgressCache_ = progresses;
-
-  let sorted = [...tList];
-  if(homeSortMode_==='name') sorted.sort((a,b)=>a.name.localeCompare(b.name,'vi'));
-  else if(homeSortMode_==='total') sorted.sort((a,b)=>(progresses[b.id].total||0)-(progresses[a.id].total||0));
-  else sorted.sort((a,b)=>(progresses[b.id][homeSortMode_].pct||0)-(progresses[a.id][homeSortMode_].pct||0));
-
-  grid.innerHTML = sorted.map(t=>{
-    const p = progresses[t.id];
-    const rows = ['noibo','doitac','truyenthong'].map(key=>{
-      const label = key==='noibo'?'Nội bộ':(key==='doitac'?'Đối tác':'Truyền thông');
-      const val = p[key].pct;
-      const color = homePctColor_(val);
-      return `<div class="home-kpirow">
-        <div class="home-kpilabel"><span>${label}</span><span style="color:${color};">${val===null?'—':val+'%'}</span></div>
-        <div class="home-kpibar"><div class="home-kpifill" style="width:${val||0}%;background:${color};"></div></div>
-      </div>`;
-    }).join('');
-    return `<div class="home-tcard" data-home-detail="${t.id}" style="cursor:pointer;">
-      <div class="home-tcard-head">
-        ${trainerAvatarSvg_(t.id, 44)}
-        <div><div class="home-tcard-name">${t.name}</div><div class="home-tcard-region">${t.region||'—'}</div></div>
-      </div>
-      ${rows}
-      <button class="home-btn-detail" data-home-detail="${t.id}" type="button">Xem chi tiết</button>
+  const summary = document.getElementById('homeExecutiveSummary');
+  if(!grid || !summary) return;
+  syncAllPgMoiTargets(); syncAllPg01Actuals(); syncAllPgMoiActuals();
+  const regionSel=document.getElementById('homeRegionFilter');
+  if(regionSel && regionSel.options.length<=1){ regionSel.innerHTML='<option value="">Tất cả khu vực</option>'+visibleRegions().map(r=>`<option value="${r}">${r}</option>`).join(''); }
+  const scopeName=homeRegionFilter_||'Miền Trung';
+  document.getElementById('homeSubDesc').textContent=`${scopeName} · ${monthLabel(currentMonth)} · Dữ liệu cập nhật theo tháng đang xem.`;
+  let tList=visibleTrainers(); if(homeRegionFilter_) tList=tList.filter(t=>t.region===homeRegionFilter_);
+  if(!tList.length){ summary.innerHTML=''; grid.innerHTML='<div class="empty">Chưa có Trainer nào trong phạm vi đang xem.</div>'; return; }
+  grid.innerHTML='<div class="empty">⏳ Đang tổng hợp dữ liệu...</div>';
+  const progresses={}; await Promise.all(tList.map(async t=>{ progresses[t.id]=await computeTrainerCategoryProgress_(t.id); })); homeProgressCache_=progresses;
+  const ids=new Set(tList.map(t=>t.id));
+  const active=pgs.filter(p=>p.brand==='OPPO'&&p.status==='Đang làm'&&ids.has(p.trainerId));
+  const over2=active.filter(p=>Number(p.star)>=2).length, over2Pct=active.length?Math.round(over2/active.length*100):0;
+  const monthPrefix=currentMonth+'-';
+  const onCount=(onoffRoster||[]).filter(r=>ids.has(r.trainerId)&&String(r.joinedAt||'').startsWith(monthPrefix)).length;
+  const offCount=(onoffRoster||[]).filter(r=>ids.has(r.trainerId)&&String(r.offDate||'').startsWith(monthPrefix)).length;
+  const avg=(key)=>{const a=tList.map(t=>key==='total'?progresses[t.id].total:progresses[t.id][key].pct).filter(v=>v!==null&&v!==undefined&&!isNaN(v));return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0};
+  const totalPct=avg('total'), noiboPct=avg('noibo'), doitacPct=avg('doitac'), ttPct=avg('truyenthong');
+  const kpis=[
+    ['👥',tList.length,'Trainer hoạt động',scopeName,'#087A50','#E8F7F0'],
+    ['🧑‍💼',active.length,'PGs đang làm',`${over2Pct}% từ 2★ trở lên`,'#2477F3','#EAF2FF'],
+    ['↗',onCount,'PG On tháng này',monthLabel(currentMonth),'#7655E8','#F0ECFF'],
+    ['↘',offCount,'PG Off tháng này',monthLabel(currentMonth),'#E44D5E','#FDECEF'],
+    ['🏆',totalPct+'%','Hoàn thành KPI','TB toàn bộ hạng mục','#F29A2E','#FFF3E4'],
+    ['⭐',over2Pct+'%','PGs đạt ≥ 2★',`${over2}/${active.length||0} PG đang làm`,'#0B8B61','#E8F7F0']
+  ];
+  const regionMap={}; tList.forEach(t=>{ if(!regionMap[t.region])regionMap[t.region]=[];regionMap[t.region].push(progresses[t.id].total||0); });
+  const regions=Object.entries(regionMap).map(([name,a])=>({name,pct:Math.round(a.reduce((x,y)=>x+y,0)/a.length)})).sort((a,b)=>b.pct-a.pct);
+  const alerts=[]; if(offCount) alerts.push(['#E44D5E',`${offCount} PG Off trong tháng`,'Theo dõi biến động nhân sự và kế hoạch bù.']);
+  const below=tList.filter(t=>(progresses[t.id].total||0)<80).length; if(below) alerts.push(['#F29A2E',`${below} Trainer dưới 80% KPI`,'Ưu tiên coaching và bám tiến độ.']);
+  if(over2Pct<80) alerts.push(['#7655E8',`PG ≥2★ đang ở ${over2Pct}%`,'Theo dõi chất lượng PGs và coaching.']);
+  if(!alerts.length) alerts.push(['#00A868','Các chỉ số chính đang ổn định','Tiếp tục theo dõi tiến độ trong tháng.']);
+  summary.innerHTML=`
+    <div class="pro-kpi-grid">${kpis.map(k=>`<div class="pro-kpi" style="--accent:${k[4]};--tint:${k[5]}"><div class="pro-kpi-top"><div class="pro-kpi-icon">${k[0]}</div></div><div class="pro-kpi-value">${k[1]}</div><div class="pro-kpi-label">${k[2]}</div><div class="pro-kpi-sub">${k[3]}</div></div>`).join('')}</div>
+    <div class="pro-dashboard-grid">
+      <div class="pro-panel"><div class="pro-panel-title">Tiến độ KPI tổng quan</div><div class="pro-panel-sub">Trung bình tiến độ của Trainer trong phạm vi đang xem</div><div class="pro-ring-wrap"><div class="pro-ring" style="--pct:${Math.min(totalPct,100)}"><div style="text-align:center"><strong>${totalPct}%</strong><span>Hoàn thành</span></div></div><div class="pro-cat-list">${[['Nội bộ',noiboPct,'#00A868'],['Đối tác',doitacPct,'#2477F3'],['Truyền thông',ttPct,'#F29A2E']].map(x=>`<div class="pro-cat-row"><span>${x[0]}</span><div class="pro-track"><i style="width:${Math.min(x[1],100)}%;--bar:${x[2]}"></i></div><b style="color:${x[2]}">${x[1]}%</b></div>`).join('')}</div></div></div>
+      <div class="pro-panel"><div class="pro-panel-title">Hiệu suất theo khu vực</div><div class="pro-panel-sub">KPI tổng hợp của Trainer</div>${regions.slice(0,6).map(r=>`<div class="pro-region-row"><span>${r.name||'Chưa xác định'}</span><div class="pro-track"><i style="width:${Math.min(r.pct,100)}%;--bar:${homePctColor_(r.pct)}"></i></div><b style="color:${homePctColor_(r.pct)}">${r.pct}%</b></div>`).join('')}</div>
+      <div class="pro-panel"><div class="pro-panel-title">Cần chú ý</div><div class="pro-panel-sub">Các tín hiệu cần ưu tiên xử lý</div>${alerts.map(a=>`<div class="pro-alert"><i class="pro-alert-dot" style="--dot:${a[0]}"></i><div><b>${a[1]}</b><span>${a[2]}</span></div></div>`).join('')}</div>
     </div>`;
-  }).join('');
-
-  grid.querySelectorAll('[data-home-detail]').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{ e.stopPropagation(); openHomeDetailPopup_(btn.getAttribute('data-home-detail')); });
-  });
+  let sorted=[...tList]; if(homeSortMode_==='name')sorted.sort((a,b)=>a.name.localeCompare(b.name,'vi')); else if(homeSortMode_==='total')sorted.sort((a,b)=>(progresses[b.id].total||0)-(progresses[a.id].total||0)); else sorted.sort((a,b)=>(progresses[b.id][homeSortMode_].pct||0)-(progresses[a.id][homeSortMode_].pct||0));
+  grid.innerHTML=sorted.map(t=>{const p=progresses[t.id];const rows=['noibo','doitac','truyenthong'].map(key=>{const label=key==='noibo'?'Nội bộ':key==='doitac'?'Đối tác':'Truyền thông',val=p[key].pct,color=homePctColor_(val);return `<div class="home-kpirow"><div class="home-kpilabel"><span>${label}</span><span style="color:${color}">${val===null?'—':val+'%'}</span></div><div class="home-kpibar"><div class="home-kpifill" style="width:${Math.min(val||0,100)}%;background:${color}"></div></div></div>`}).join('');return `<div class="home-tcard" data-home-detail="${t.id}" style="cursor:pointer"><div class="home-tcard-head">${trainerAvatarSvg_(t.id,44)}<div style="flex:1"><div class="home-tcard-name">${t.name}</div><div class="home-tcard-region">${t.region||'—'}</div></div><div style="font-size:17px;font-weight:800;color:${homePctColor_(p.total)}">${p.total===null?'—':p.total+'%'}</div></div>${rows}<button class="home-btn-detail" data-home-detail="${t.id}" type="button">Xem chi tiết →</button></div>`}).join('');
+  grid.querySelectorAll('[data-home-detail]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();openHomeDetailPopup_(btn.getAttribute('data-home-detail'));}));
 }
+
 function homeCatIconSvg_(key){
   if(key==='noibo') return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0B5E36" stroke-width="2.2"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>`;
   if(key==='doitac') return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3A8C63" stroke-width="2.2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1M9 21v-4h6v4"/></svg>`;
