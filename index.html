@@ -9135,6 +9135,7 @@ async function processCoachingHistoryWorkbook_(wb){
     const trainerNameRaw = normTrName_(row[3]);
     let trainerObj = config.trainers.find(t=>(t.username||'').trim().toLowerCase()===trainerUsername && trainerUsername);
     if(!trainerObj) trainerObj = config.trainers.find(t=>normTrName_(t.name)===trainerNameRaw);
+    if(!trainerObj){ const _lr=normTrNameLoose_(trainerNameRaw); if(_lr) trainerObj = config.trainers.find(t=> normTrNameLoose_(t.name)===_lr || (t.username||'').trim().toLowerCase()===_lr); } // bắt tên viết liền không dấu
 
     if(isNew){
       surveyResponsesNew.push({
@@ -9264,6 +9265,7 @@ async function processSurvey01Workbook_(wb){
     const trainerNameRaw = normTrName_(row[3]);
     let trainerObj = config.trainers.find(t=>(t.username||'').trim().toLowerCase()===trainerUsername && trainerUsername);
     if(!trainerObj) trainerObj = config.trainers.find(t=>normTrName_(t.name)===trainerNameRaw);
+    if(!trainerObj){ const _lr=normTrNameLoose_(trainerNameRaw); if(_lr) trainerObj = config.trainers.find(t=> normTrNameLoose_(t.name)===_lr || (t.username||'').trim().toLowerCase()===_lr); } // bắt tên viết liền không dấu
 
     surveyResponses.push({
       id: uid('sv'),
@@ -9707,6 +9709,7 @@ async function processSurveyNewWorkbook_(wb){
     const trainerNameRaw = normTrName_(row[3]);
     let trainerObj = config.trainers.find(t=>(t.username||'').trim().toLowerCase()===trainerUsername && trainerUsername);
     if(!trainerObj) trainerObj = config.trainers.find(t=>normTrName_(t.name)===trainerNameRaw);
+    if(!trainerObj){ const _lr=normTrNameLoose_(trainerNameRaw); if(_lr) trainerObj = config.trainers.find(t=> normTrNameLoose_(t.name)===_lr || (t.username||'').trim().toLowerCase()===_lr); } // bắt tên viết liền không dấu
 
     surveyResponsesNew.push({
       id: uid('svn'),
@@ -11379,6 +11382,7 @@ document.getElementById('cancelEditTrainerBtn').addEventListener('click', resetT
    HỆT NHAU nhưng so sánh bằng === luôn ra false nếu không ép về cùng 1 dạng trước — gây lỗi
    "Khớp đúng Trainer: 0" dù tên đúng 100% khi nhìn bằng mắt. */
 function normTrName_(s){ return String(s||'').trim().toUpperCase().normalize('NFC'); }
+function normTrNameLoose_(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[Đđ]/g,'d').toLowerCase().replace(/[^a-z0-9]/g,''); } // bỏ dấu + viết liền: 'Trần Phong Độ' -> 'tranphongdo'
 function toUsernameSlug_(name){
   let s = String(name||'').trim().toLowerCase();
   s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
