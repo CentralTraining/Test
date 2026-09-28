@@ -9064,6 +9064,11 @@ async function processCoachingLogSheet_(wb){
   const newWs=XLSX.utils.aoa_to_sheet(out); const newWb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(newWb,newWs,'Lich_su_Coaching');
 
   window.__coachingLogMergeInfo_={merged:mergedCount, kept:kept.length};
+  // COACHING_LOG luôn là DANH SÁCH ĐẦY ĐỦ của tháng -> XÓA SẠCH data khảo sát Coaching của tháng đang
+  // xem trước khi nạp lại, tránh cộng dồn (bấm cập nhật nhiều lần sẽ nhân đôi số liệu). Chỉ áp dụng cho
+  // MIEN TRUNG vì nguồn này chỉ chứa MIEN TRUNG; Admin là người duy nhất bấm nút này.
+  surveyResponses = [];
+  surveyResponsesNew = [];
   await processCoachingHistoryWorkbook_(newWb);
   // Bổ sung dòng thông tin gộp trùng vào cuối thông báo.
   const msg=document.getElementById('coachingImportMsg');
