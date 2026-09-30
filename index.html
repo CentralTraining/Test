@@ -7765,6 +7765,18 @@ function otrMonthRange_(month){
   return {start:`${start.getFullYear()}-${pad(start.getMonth()+1)}-${pad(start.getDate())}`,
           end:`${end.getFullYear()}-${pad(end.getMonth()+1)}-${pad(end.getDate())}`};
 }
+// Gọi otraining chung cho cả 2 loại. type: 'test' | 'ai'.
+async function fetchOtrainingRows_(campaignId, month, type){
+  const {start,end}=otrMonthRange_(month);
+  const res=await fetch(OTRAINING_FN_URL_,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},
+    body:JSON.stringify({campaignId, startDate:start, endDate:end, type})
+  });
+  const out=await res.json();
+  if(!res.ok || out.error){ throw new Error((out.error||('HTTP '+res.status))+(out.detail?(' · '+out.detail):'')); }
+  return Array.isArray(out.data)?out.data:[];
+}
 async function updateTestOnlineFromOtraining_(camp){
   const msg=document.getElementById('testOnlineImportMsg');
   const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
@@ -7772,24 +7784,35 @@ async function updateTestOnlineFromOtraining_(camp){
   const idInput=document.getElementById('otrCampaignId');
   const campaignId=(idInput&&idInput.value||'').trim();
   if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
-  const {start,end}=otrMonthRange_(camp&&camp.month);
   show('⏳ Đang lấy Test Online từ otraining (ID '+campaignId+')...');
   try{
-    const res=await fetch(OTRAINING_FN_URL_,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},
-      body:JSON.stringify({campaignId, startDate:start, endDate:end})
-    });
-    const out=await res.json();
-    if(!res.ok || out.error){ throw new Error(out.error||('HTTP '+res.status)+(out.detail?(' · '+out.detail):'')); }
-    const arr=Array.isArray(out.data)?out.data:[];
+    const arr=await fetchOtrainingRows_(campaignId, camp&&camp.month, 'test');
     if(!arr.length){ show('otraining trả về 0 dòng. Kiểm tra lại ID chiến dịch hoặc khoảng ngày.','var(--red)'); return; }
-    // Chuyển mảng JSON -> workbook để dùng lại processTestOnlineWorkbook_ (không đổi logic tính tiến độ).
     const ws=XLSX.utils.json_to_sheet(arr);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'TestOnline');
-    // Lưu lại ID để lần sau tự điền.
     if(camp){ camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
-    await processTestOnlineWorkbook_(wb,camp); // hàm này tự cập nhật thông báo kết quả
+    await processTestOnlineWorkbook_(wb,camp);
+  }catch(err){
+    show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
+  }
+}
+async function updateAiCheckFromOtraining_(camp){
+  const msg=document.getElementById('aiCheckImportMsg');
+  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  if(!isAdmin()){ show('Chỉ Admin được cập nhật.','var(--red)'); return; }
+  const idInput=document.getElementById('otrAiCampaignId');
+  const campaignId=(idInput&&idInput.value||'').trim();
+  if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
+  show('⏳ Đang lấy Tư vấn AI từ otraining (ID '+campaignId+')...');
+  try{
+    const arr=await fetchOtrainingRows_(campaignId, camp&&camp.month, 'ai');
+    if(!arr.length){ show('otraining trả về 0 dòng. Kiểm tra lại ID chiến dịch hoặc khoảng ngày.','var(--red)'); return; }
+    // Dung sai tên cột: nếu otraining không có 'Kết quả Check', thêm cột rỗng để không bị chặn.
+    arr.forEach(r=>{ if(!('Kết quả Check' in r)) r['Kết quả Check']=''; });
+    const ws=XLSX.utils.json_to_sheet(arr);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'TuVanAI');
+    if(camp){ camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
+    await processAiCheckWorkbook_(wb,camp);
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
   }
@@ -7910,6 +7933,8 @@ function bindAiCheckImportControls_(camp){
   attachGoogleSheetButton_('aiCheckSheetLinkBtn','aiCheckImportMsg',null,async wb=>{
     await processAiCheckWorkbook_(wb,camp);
   });
+  const otrAiBtn=document.getElementById('otrAiCheckBtn');
+  if(otrAiBtn) otrAiBtn.onclick=()=>updateAiCheckFromOtraining_(camp);
   const dl=document.getElementById('downloadAiCheckTemplateBtn');
   if(dl) dl.onclick=()=>{
     const headers=['Top','Họ Tên','Mã NV','Miền','Khu vực','Kênh','Sale quản lý','Lần Làm (Test)','TGTB','Điểm Tích Luỹ','Kết quả Luyện TV','Ngày check','Người Check','Kết quả Check','Trạng Thái Check','Trạng Thái NV'];
@@ -8246,11 +8271,19 @@ async function renderFrequencyNoiboBody_(subtype){
   html+=`<h3 class="kpi-section-title">Danh sách PGs — Tư vấn AI & Check shop</h3>
     <p class="section-desc">Tư vấn AI lấy từ cột <strong>Kết quả Luyện TV</strong> (ví dụ 3/7 → 3 lần đạt). PG đạt khi ≥ ${aiThreshold}. Check shop lấy từ cột <strong>Kết quả Check</strong>; giá trị <strong>Pass</strong> được tính Đạt.</p>`;
   if(isAdmin()){
-    html+=`<div class="form-card" style="max-width:none;margin:0 0 14px;"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <input type="file" id="aiCheckImportInput" accept=".xlsx,.xls" style="display:none;">
-      <button class="primary" id="aiCheckImportBtn" type="button">📥 Import data Tư vấn AI & Check shop</button><button class="secondary admin-only-gsheet" id="aiCheckSheetLinkBtn" type="button">🔗 Cập nhật từ Google Sheet</button>
-      <button class="secondary" id="downloadAiCheckTemplateBtn" type="button">⬇ Tải data mẫu</button>
-      <span class="save-msg" id="aiCheckImportMsg" style="display:none;"></span></div></div>`;
+    html+=`<div class="form-card" style="max-width:none;margin:0 0 14px;">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <input type="number" id="otrAiCampaignId" placeholder="ID chiến dịch (VD 18)" style="width:180px;" value="${escapeHtml(String((camp&&camp.otrId)||''))}">
+        <button class="primary" id="otrAiCheckBtn" type="button">↻ Cập nhật Tư vấn AI từ hệ thống</button>
+        <span class="save-msg" id="aiCheckImportMsg" style="display:none;"></span>
+      </div>
+      <div class="section-desc" style="margin-bottom:8px;">Lấy trực tiếp từ otraining. Mỗi tháng có <strong>ID chiến dịch</strong> khác nhau — xem trong URL báo cáo otraining (<code>campaigns/<b>&lt;ID&gt;</b>/employee-status</code>), nhập vào ô rồi bấm nút.</div>
+      <details><summary style="cursor:pointer;font-size:var(--cap);color:var(--muted);">Nhập thủ công (file / Google Sheet) — chỉ dùng khi cần</summary>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;">
+        <input type="file" id="aiCheckImportInput" accept=".xlsx,.xls" style="display:none;">
+        <button class="secondary" id="aiCheckImportBtn" type="button">📥 Import file Excel</button><button class="secondary admin-only-gsheet" id="aiCheckSheetLinkBtn" type="button">🔗 Cập nhật Google Sheet</button>
+        <button class="secondary" id="downloadAiCheckTemplateBtn" type="button">⬇ Tải data mẫu</button>
+      </div></details></div>`;
   }
   html+=`<div id="aiCheckListBox"></div><div id="saleAiBox"></div>`;
   container.innerHTML=html;
