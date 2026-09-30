@@ -7817,6 +7817,25 @@ async function updateAiCheckFromOtraining_(camp){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
   }
 }
+async function updateWorkshopFromOtraining_(camp){
+  const msg=document.getElementById('workshopActualImportMsg');
+  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  if(!isAdmin()){ show('Chỉ Admin được cập nhật.','var(--red)'); return; }
+  const idInput=document.getElementById('otrWsCampaignId');
+  const campaignId=(idInput&&idInput.value||'').trim();
+  if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
+  show('⏳ Đang lấy Workshop từ otraining (ID '+campaignId+')...');
+  try{
+    const arr=await fetchOtrainingRows_(campaignId, camp&&camp.month, 'workshop');
+    if(!arr.length){ show('otraining trả về 0 dòng. Kiểm tra lại ID chiến dịch hoặc khoảng ngày.','var(--red)'); return; }
+    const ws=XLSX.utils.json_to_sheet(arr);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Data');
+    if(camp){ camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
+    await processWorkshopActualWorkbook_(wb,camp);
+  }catch(err){
+    show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
+  }
+}
 
 function normalizeAiCheckCode_(v){
   return String(v??'').trim().replace(/\.0$/,'').toUpperCase();
@@ -10895,12 +10914,18 @@ function renderWorkshopActualImportBox_(){
   }
   box.innerHTML=`<div class="form-card" style="max-width:none;margin-bottom:16px;">
     <p class="section-desc" style="margin-bottom:10px;">File kết quả dùng cùng cấu trúc với file Target Workshop. <strong>Trạng thái = Done</strong> được tính là hoàn thành 1 buổi Workshop; <strong>HV thực tế</strong> của các dòng Done được cộng vào tiến độ Số học viên. Dòng còn <strong>Plan</strong> chưa tính hoàn thành.</p>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+      <input type="number" id="otrWsCampaignId" placeholder="ID chiến dịch (VD 21)" style="width:180px;" value="${escapeHtml(String((camp&&camp.otrId)||''))}">
+      <button class="primary" id="otrWorkshopBtn" type="button">↻ Cập nhật Workshop từ hệ thống</button>
+      <span class="save-msg" id="workshopActualImportMsg" style="display:none;"></span>
+    </div>
+    <div class="section-desc" style="margin-bottom:8px;">Lấy trực tiếp từ otraining. Xem <strong>ID chiến dịch</strong> trong URL báo cáo (<code>campaigns/<b>&lt;ID&gt;</b>/training-classes</code>), nhập vào ô rồi bấm nút.</div>
+    <details><summary style="cursor:pointer;font-size:var(--cap);color:var(--muted);">Nhập thủ công (file / Google Sheet) — chỉ dùng khi cần</summary>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;">
       <input type="file" id="workshopActualImportInput" accept=".xlsx,.xls">
       <button class="secondary admin-only-gsheet" id="workshopActualSheetLinkBtn" type="button">🔗 Cập nhật từ Google Sheet</button>
       <button class="secondary" id="downloadWorkshopActualTemplateBtn" type="button">⬇ Tải data mẫu</button>
-      <span class="save-msg" id="workshopActualImportMsg" style="display:none;"></span>
-    </div>
+    </div></details>
   </div>`;
 
   const input=document.getElementById('workshopActualImportInput');
@@ -10922,6 +10947,8 @@ function renderWorkshopActualImportBox_(){
   attachGoogleSheetButton_('workshopActualSheetLinkBtn','workshopActualImportMsg',['Data'],async(wb)=>{
     await processWorkshopActualWorkbook_(wb,camp);
   });
+  const otrWsBtn=document.getElementById('otrWorkshopBtn');
+  if(otrWsBtn) otrWsBtn.onclick=()=>updateWorkshopFromOtraining_(camp);
 
   const dl=document.getElementById('downloadWorkshopActualTemplateBtn');
   if(dl) dl.addEventListener('click',()=>{
