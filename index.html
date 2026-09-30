@@ -7749,6 +7749,50 @@ function bindTestOnlineImportControls_(camp){
   attachGoogleSheetButton_('testOnlineSheetLinkBtn','testOnlineImportMsg',null,async wb=>{
     await processTestOnlineWorkbook_(wb,camp);
   });
+  // Nút gọi thẳng từ otraining (qua Supabase Edge Function).
+  const otrBtn=document.getElementById('otrTestOnlineBtn');
+  if(otrBtn) otrBtn.onclick=()=>updateTestOnlineFromOtraining_(camp);
+}
+
+/* ==== Gọi otraining qua Edge Function -> chuyển JSON thành workbook -> tái dùng logic import ==== */
+const OTRAINING_FN_URL_='https://qruxqlsbhyhwiqjdkyyc.supabase.co/functions/v1/otraining-testonline';
+const OTRAINING_ANON_KEY_='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFydXhxbHNiaHlod2lxamRreXljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODc0ODYsImV4cCI6MjEwNTQ2MzQ4Nn0.ii1MU0E9CPx3t_DhaPdCqczBgoPtSZUsQ7pYTjB6aSI';
+function otrMonthRange_(month){
+  // month = 'YYYY-MM' -> khoảng ngày rộng để phủ chiến dịch (đầu tháng trước -> cuối tháng sau).
+  const [y,m]=String(month||currentMonth).split('-').map(Number);
+  const pad=n=>String(n).padStart(2,'0');
+  const start=new Date(y,m-2,1), end=new Date(y,m+1,0);
+  return {start:`${start.getFullYear()}-${pad(start.getMonth()+1)}-${pad(start.getDate())}`,
+          end:`${end.getFullYear()}-${pad(end.getMonth()+1)}-${pad(end.getDate())}`};
+}
+async function updateTestOnlineFromOtraining_(camp){
+  const msg=document.getElementById('testOnlineImportMsg');
+  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  if(!isAdmin()){ show('Chỉ Admin được cập nhật.','var(--red)'); return; }
+  const idInput=document.getElementById('otrCampaignId');
+  const campaignId=(idInput&&idInput.value||'').trim();
+  if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
+  const {start,end}=otrMonthRange_(camp&&camp.month);
+  show('⏳ Đang lấy Test Online từ otraining (ID '+campaignId+')...');
+  try{
+    const res=await fetch(OTRAINING_FN_URL_,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},
+      body:JSON.stringify({campaignId, startDate:start, endDate:end})
+    });
+    const out=await res.json();
+    if(!res.ok || out.error){ throw new Error(out.error||('HTTP '+res.status)+(out.detail?(' · '+out.detail):'')); }
+    const arr=Array.isArray(out.data)?out.data:[];
+    if(!arr.length){ show('otraining trả về 0 dòng. Kiểm tra lại ID chiến dịch hoặc khoảng ngày.','var(--red)'); return; }
+    // Chuyển mảng JSON -> workbook để dùng lại processTestOnlineWorkbook_ (không đổi logic tính tiến độ).
+    const ws=XLSX.utils.json_to_sheet(arr);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'TestOnline');
+    // Lưu lại ID để lần sau tự điền.
+    if(camp){ camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
+    await processTestOnlineWorkbook_(wb,camp); // hàm này tự cập nhật thông báo kết quả
+  }catch(err){
+    show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
+  }
 }
 
 function normalizeAiCheckCode_(v){
@@ -8079,11 +8123,19 @@ async function renderFrequencyNoiboBody_(subtype){
     const activePgs=pgs.filter(p=>p.brand==='OPPO'&&p.status==='Đang làm'&&(!isTrainer()||(trainerOf(p.trainerId)&&trainerOf(p.trainerId).region===session.region)));
     html+=`<h3 class="kpi-section-title">Danh sách PGs chưa hoàn thành Test Online</h3><p class="section-desc">Chỉ hiển thị PG có <strong>Lần đạt điểm max &lt; ${x}</strong>. Dữ liệu lấy theo <strong>Mã NV</strong>; khi đạt ≥ ${x} lần, PG tự chuyển trạng thái Đạt.</p>`;
     if(isAdmin()){
-      html+=`<div class="form-card" style="max-width:none;margin:0 0 14px;"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <input type="file" id="testOnlineImportInput" accept=".xlsx,.xls" style="display:none;">
-        <button class="primary" id="testOnlineImportBtn" type="button">📥 Import data Test Online</button><button class="secondary admin-only-gsheet" id="testOnlineSheetLinkBtn" type="button">🔗 Cập nhật data Google Sheet</button>
-        <span class="save-msg" id="testOnlineImportMsg" style="display:none;"></span></div>
-        <div class="section-desc" style="margin-top:8px;">Hệ thống đọc cột <strong>Mã NV</strong> và <strong>Lần đạt điểm max</strong>.</div></div>`;
+      html+=`<div class="form-card" style="max-width:none;margin:0 0 14px;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+          <input type="number" id="otrCampaignId" placeholder="ID chiến dịch (VD 31)" style="width:180px;" value="${escapeHtml(String((camp&&camp.otrId)||''))}">
+          <button class="primary" id="otrTestOnlineBtn" type="button">↻ Cập nhật Test Online từ hệ thống</button>
+          <span class="save-msg" id="testOnlineImportMsg" style="display:none;"></span>
+        </div>
+        <div class="section-desc" style="margin-bottom:8px;">Lấy trực tiếp từ otraining. Mỗi tháng có <strong>ID chiến dịch</strong> khác nhau — xem trong URL báo cáo otraining (<code>test-results/<b>&lt;ID&gt;</b>/download</code>), nhập vào ô rồi bấm nút.</div>
+        <details><summary style="cursor:pointer;font-size:var(--cap);color:var(--muted);">Nhập thủ công (file / Google Sheet) — chỉ dùng khi cần</summary>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;">
+          <input type="file" id="testOnlineImportInput" accept=".xlsx,.xls" style="display:none;">
+          <button class="secondary" id="testOnlineImportBtn" type="button">📥 Import file Excel</button><button class="secondary admin-only-gsheet" id="testOnlineSheetLinkBtn" type="button">🔗 Cập nhật Google Sheet</button>
+        </div>
+        <div class="section-desc" style="margin-top:8px;">Hệ thống đọc cột <strong>Mã NV</strong> và <strong>Lần đạt điểm max</strong>.</div></details></div>`;
     }
     html+=`<div id="testOnlineIncompleteListBox"></div>`;
     html+=`<div id="saleTestOnlineBox"></div>`;
