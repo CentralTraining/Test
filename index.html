@@ -90,14 +90,19 @@
     .sidebar-brand-text,.sidebar-scope .scope-label,.sidebar-scope .scope-value,.sidebar-scope .scope-sub,
     nav.tabs .nav-group-label,nav.tabs button .nav-label{ opacity:1 !important; pointer-events:auto !important; }
     .sidebar-brand,.sidebar-scope{flex:1 1 200px;}
-    nav.tabs{flex-direction:row;flex-wrap:wrap;width:100%;gap:6px;}
-    /* display:contents: bỏ nav-group ra khỏi cây flex, để TẤT CẢ nút nav là item ngang hàng của
-       nav.tabs — tránh vỡ thành từng cụm lệch nhau do 2 tầng flex-wrap lồng nhau trước đây. */
+    /* MENU ICON 1 HÀNG NGANG — 7 mục chia đều, KHÔNG xuống dòng, KHÔNG cuộn. Mỗi nút: icon trên, nhãn
+       ngắn bên dưới. Dùng flex:1 + min-width:0 để 7 nút tự co vừa khít bề ngang màn hình. */
+    nav.tabs{flex-direction:row;flex-wrap:nowrap;width:100%;gap:3px;}
     nav.tabs .nav-group{display:contents;}
     nav.tabs .nav-group-label{display:none;}
-    nav.tabs button{flex:1 1 auto;text-align:center;justify-content:center;border-bottom:3px solid transparent;}
-    nav.tabs button.active{border-bottom-color:var(--green);}
+    nav.tabs button{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding:7px 2px;border-radius:9px;border-bottom:none;}
+    nav.tabs button .nav-ic{font-size:17px;width:auto;opacity:1;}
+    nav.tabs button .nav-label{display:none;}          /* ẩn nhãn dài */
+    nav.tabs button .nav-short{display:block;font-size:8.5px;font-weight:700;line-height:1.1;text-transform:none;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+    nav.tabs button.active{background:var(--green);color:#fff;}
+    nav.tabs button.active .nav-ic{opacity:1;}
   }
+  nav.tabs button .nav-short{display:none;}           /* mặc định (desktop) ẩn nhãn ngắn */
 
   /* ===== CHUẨN HOÁ RESPONSIVE: TABLET (≤900px) ===== */
   @media (max-width:900px){
@@ -136,6 +141,28 @@
     .login-box{padding:24px 18px;}
     .cylinder-row,.star-cyl-row{gap:12px;}
     .table-scroll table{min-width:640px;}
+    /* ===== TỐI ƯU THÊM CHO ĐIỆN THOẠI ===== */
+    .home-trainer-grid{grid-template-columns:1fr;gap:12px;}   /* thẻ Trainer xếp DỌC 1 cột */
+    .sidebar-brand{flex:1 1 100%;padding:8px 10px;}           /* logo chiếm trọn 1 hàng */
+    .sidebar-scope{display:none;}                              /* ẩn khối avatar/tên trùng (đã có ở header) */
+    header.top{position:sticky;top:0;z-index:40;}             /* header dính trên khi cuộn */
+    /* nút & ô nhập trong form import: xếp dọc, full chiều ngang, dễ bấm 1 tay */
+    .form-card{padding:12px;}
+    .form-card>div[style*="display:flex"]{flex-direction:column;align-items:stretch !important;}
+    .form-card input[type="number"],.form-card input[type="text"]{width:100% !important;}
+    .form-card button{width:100%;justify-content:center;}
+    /* biểu đồ không tràn */
+    canvas{max-width:100% !important;height:auto !important;}
+    /* cuộn ngang mượt + gợi ý vuốt cho bảng rộng */
+    .table-scroll{position:relative;}
+    .table-scroll::-webkit-scrollbar{height:6px;}
+    .table-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+  }
+  /* Màn hình rất nhỏ (≤380px): menu icon vẫn 1 hàng, thu nhãn nhỏ hơn chút để không vỡ */
+  @media (max-width:380px){
+    nav.tabs button .nav-short{font-size:7.5px;}
+    nav.tabs button{padding:6px 1px;}
+    nav.tabs button .nav-ic{font-size:16px;}
   }
 
   /* Bảng nhiều cột (FTF, Coaching...) luôn cuộn ngang bên trong khung riêng — áp dụng MỌI kích thước màn hình,
@@ -158,11 +185,14 @@
   html.ui-force-mobile .sidebar-brand-text,html.ui-force-mobile .sidebar-scope .scope-label,html.ui-force-mobile .sidebar-scope .scope-value,
   html.ui-force-mobile .sidebar-scope .scope-sub,html.ui-force-mobile nav.tabs .nav-group-label,html.ui-force-mobile nav.tabs button .nav-label{ opacity:1 !important; pointer-events:auto !important; }
   html.ui-force-mobile .sidebar-brand,html.ui-force-mobile .sidebar-scope{flex:1 1 200px;}
-  html.ui-force-mobile nav.tabs{flex-direction:row;flex-wrap:wrap;width:100%;gap:6px;}
+  html.ui-force-mobile nav.tabs{flex-direction:row;flex-wrap:nowrap;width:100%;gap:3px;}
   html.ui-force-mobile nav.tabs .nav-group{display:contents;}
   html.ui-force-mobile nav.tabs .nav-group-label{display:none;}
-  html.ui-force-mobile nav.tabs button{flex:1 1 auto;text-align:center;justify-content:center;border-bottom:3px solid transparent;}
-  html.ui-force-mobile nav.tabs button.active{border-bottom-color:var(--green);}
+  html.ui-force-mobile nav.tabs button{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding:7px 2px;border-radius:9px;border-bottom:none;}
+  html.ui-force-mobile nav.tabs button .nav-ic{font-size:17px;width:auto;opacity:1;}
+  html.ui-force-mobile nav.tabs button .nav-label{display:none;}
+  html.ui-force-mobile nav.tabs button .nav-short{display:block;font-size:8.5px;font-weight:700;line-height:1.1;text-transform:none;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+  html.ui-force-mobile nav.tabs button.active{background:var(--green);color:#fff;border-bottom:none !important;}
   html.ui-force-mobile .app{padding:14px 12px 50px;}
   html.ui-force-mobile .kpi-row{grid-template-columns:repeat(2,1fr);}
   html.ui-force-mobile .kpi-row.cols-6{grid-template-columns:repeat(3,1fr);}
@@ -197,9 +227,12 @@
   html.ui-force-desktop .app-body{flex-direction:row !important;}
   html.ui-force-desktop .sidebar-col{flex-direction:column !important;width:auto !important;flex-basis:190px !important;position:sticky !important;}
   html.ui-force-desktop .sidebar-inner{flex-direction:column !important;}
-  html.ui-force-desktop nav.tabs{flex-direction:column !important;}
-  html.ui-force-desktop nav.tabs .nav-group{flex-direction:column !important;}
-  html.ui-force-desktop nav.tabs button{text-align:left !important;justify-content:flex-start !important;border-bottom:none !important;}
+  html.ui-force-desktop nav.tabs{flex-direction:column !important;flex-wrap:nowrap !important;}
+  html.ui-force-desktop nav.tabs .nav-group{flex-direction:column !important;display:flex !important;}
+  html.ui-force-desktop nav.tabs button{flex-direction:row !important;text-align:left !important;justify-content:flex-start !important;border-bottom:none !important;}
+  html.ui-force-desktop nav.tabs button .nav-label{display:inline !important;}
+  html.ui-force-desktop nav.tabs button .nav-short{display:none !important;}
+  html.ui-force-desktop nav.tabs button .nav-ic{font-size:12px !important;}
   html.ui-force-desktop,html.ui-force-desktop body{font-size:10pt !important;}
   html.ui-force-desktop .kpi-row,html.ui-force-desktop .kpi-row.cols-2{grid-template-columns:repeat(4,1fr) !important;gap:14px !important;}
   html.ui-force-desktop .kpi-row.cols-6{grid-template-columns:repeat(6,1fr) !important;}
@@ -608,15 +641,15 @@
     </div>
   <nav class="tabs">
     <div class="nav-group">
-      <button data-tab="home" data-title="Home" class="active"><span class="nav-ic">🏠</span><span class="nav-label">Home</span></button>
-      <button data-tab="overview" data-title="TỔNG QUAN HR"><span class="nav-ic">▦</span><span class="nav-label">Tổng quan HR</span></button>
-      <button data-tab="kpi" data-title="Tiến độ KPI"><span class="nav-ic">▤</span><span class="nav-label">Tiến độ KPI</span></button>
-      <button data-tab="so" data-title="DATA S.O" id="navSoBtn"><span class="nav-ic">📊</span><span class="nav-label">DATA S.O</span></button>
+      <button data-tab="home" data-title="Home" class="active"><span class="nav-ic">🏠</span><span class="nav-label">Home</span><span class="nav-short">Home</span></button>
+      <button data-tab="overview" data-title="TỔNG QUAN HR"><span class="nav-ic">▦</span><span class="nav-label">Tổng quan HR</span><span class="nav-short">HR</span></button>
+      <button data-tab="kpi" data-title="Tiến độ KPI"><span class="nav-ic">▤</span><span class="nav-label">Tiến độ KPI</span><span class="nav-short">KPI</span></button>
+      <button data-tab="so" data-title="DATA S.O" id="navSoBtn"><span class="nav-ic">📊</span><span class="nav-label">DATA S.O</span><span class="nav-short">S.O</span></button>
     </div>
     <div class="nav-group">
-      <button data-tab="settings" data-title="Cài đặt" id="navSettingsBtn"><span class="nav-ic">⚙</span><span class="nav-label">Cài đặt</span></button>
-      <button data-tab="data" data-title="DATA" id="navDataBtn"><span class="nav-ic">🗄</span><span class="nav-label">DATA</span></button>
-      <button data-tab="account" data-title="Tài khoản"><span class="nav-ic">👤</span><span class="nav-label">Tài khoản</span></button>
+      <button data-tab="settings" data-title="Cài đặt" id="navSettingsBtn"><span class="nav-ic">⚙</span><span class="nav-label">Cài đặt</span><span class="nav-short">Cài đặt</span></button>
+      <button data-tab="data" data-title="DATA" id="navDataBtn"><span class="nav-ic">🗄</span><span class="nav-label">DATA</span><span class="nav-short">DATA</span></button>
+      <button data-tab="account" data-title="Tài khoản"><span class="nav-ic">👤</span><span class="nav-label">Tài khoản</span><span class="nav-short">T.Khoản</span></button>
     </div>
   </nav>
     <div class="sidebar-scope">
