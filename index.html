@@ -4486,6 +4486,10 @@ function ftfChannelStats_(shops, trainerIds){
       out[mk]['MWG'].t += Math.round(mwg)||0;
     });
   });
+  // Target KHẢO SÁT là SỐ ĐỘNG = số HR thực tế được Training (không lấy target từ file). Mỗi khi số HR
+  // Training thực tế thay đổi, target Khảo sát cũng đổi theo. VD: HR Training MWG = 159 -> target Khảo sát MWG = 159.
+  out.ftfKhaoSat['K.A'].t = out.ftfHr['K.A'].a;
+  out.ftfKhaoSat['MWG'].t = out.ftfHr['MWG'].a;
   return out;
 }
 /* Thanh tiến độ ngang với MÀU CỐ ĐỊNH theo Kênh (không theo mức độ hoàn thành) — MWG vàng, K.A đỏ sậm */
