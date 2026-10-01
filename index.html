@@ -198,6 +198,14 @@
     .form-card{border-radius:14px;box-shadow:0 2px 10px rgba(8,51,31,.06);}
     /* Tag active trong nav: thêm bóng xanh glow cho nổi */
     nav.tabs button.active{box-shadow:0 3px 10px rgba(29,158,117,.45);}
+    /* ===== ÉP NỘI DUNG FULL CHIỀU NGANG — KHÔNG THỤT QUA 1 BÊN Ở MỌI TAB ===== */
+    .app-body{display:block;}                 /* bỏ flex: sidebar + nội dung xếp dọc, mỗi khối full width */
+    .sidebar-col{display:block;width:100%;margin-bottom:12px;}
+    .main-content{display:block;width:100%;flex:none;min-width:0;}
+    .main-content>section,.main-content>div{max-width:100%;}
+    /* Mọi card/khối trong nội dung: full chiều ngang, căn giữa cân đối */
+    .card,.panel,.form-card,.kpi-row,.table-scroll,.chart-card,.section{max-width:100% !important;margin-left:0;margin-right:0;}
+    .form-card{max-width:100% !important;}
   }
 
   /* Bảng nhiều cột (FTF, Coaching...) luôn cuộn ngang bên trong khung riêng — áp dụng MỌI kích thước màn hình,
@@ -214,8 +222,10 @@
 
   /* ÉP XEM MOBILE (kể cả trên máy tính) — lặp lại đúng nội dung 3 khối @media ở trên dưới dạng class,
      để luôn có tác dụng bất kể chiều rộng cửa sổ thật. */
-  html.ui-force-mobile .app-body{flex-direction:column;}
-  html.ui-force-mobile .sidebar-col{flex-direction:row;flex-wrap:wrap;width:100%;flex-basis:auto;position:static;}
+  html.ui-force-mobile .app-body{display:block;}
+  html.ui-force-mobile .main-content{display:block;width:100%;flex:none;min-width:0;}
+  html.ui-force-mobile .card,html.ui-force-mobile .panel,html.ui-force-mobile .form-card,html.ui-force-mobile .kpi-row,html.ui-force-mobile .table-scroll,html.ui-force-mobile .section{max-width:100% !important;margin-left:0;margin-right:0;}
+  html.ui-force-mobile .sidebar-col{display:block;flex-direction:row;flex-wrap:wrap;width:100%;flex-basis:auto;position:static;margin-bottom:12px;}
   html.ui-force-mobile .sidebar-inner{width:100% !important;position:static !important;box-shadow:none !important;flex-direction:row;flex-wrap:wrap;}
   html.ui-force-mobile .sidebar-brand-text,html.ui-force-mobile .sidebar-scope .scope-label,html.ui-force-mobile .sidebar-scope .scope-value,
   html.ui-force-mobile .sidebar-scope .scope-sub,html.ui-force-mobile nav.tabs .nav-group-label,html.ui-force-mobile nav.tabs button .nav-label{ opacity:1 !important; pointer-events:auto !important; }
