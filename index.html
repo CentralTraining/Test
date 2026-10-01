@@ -3571,9 +3571,15 @@ function renderBarBlock(containerId, dataMap, totalOverride){
 }
 
 function channelGroup(channel){
-  const c = String(channel||'').trim().toUpperCase();
-  if(c==='TGDĐ' || c==='TGDD' || c==='ĐMX' || c==='DMX') return 'MWG';
-  if(['VIETTEL','FPT','ĐIỆN MÁY CHỢ LỚN','DIEN MAY CHO LON','CELLPHONES','HOÀNG HÀ','HOANG HA'].includes(c)) return 'K.A';
+  // Chuẩn hoá mạnh: bỏ dấu, bỏ ký tự đặc biệt, viết liền -> nhận diện được nhiều cách ghi Kênh.
+  const raw = String(channel||'').trim().toUpperCase();
+  const k = raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[Đ]/g,'D').replace(/[^A-Z0-9]/g,'');
+  // MWG: TGDĐ, ĐMX, và các cách viết gộp/đầy đủ.
+  if(/^(TGDD|DMX|MWG|TGDDDMX|DMXTGDD)$/.test(k)) return 'MWG';
+  if(k.includes('THEGIOIDIDONG') || k.includes('DIENMAYXANH')) return 'MWG';
+  // K.A: FPT, Viettel, Điện máy Chợ Lớn, CellphoneS, Hoàng Hà.
+  if(/^(FPT|VIETTEL|CELLPHONES?|CPS)$/.test(k)) return 'K.A';
+  if(k.includes('DIENMAYCHOLON') || k.includes('CHOLON') || k.includes('HOANGHA') || k.includes('CELLPHONE')) return 'K.A';
   return 'IND';
 }
 
