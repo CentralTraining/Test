@@ -4880,7 +4880,14 @@ function renderFtfImportBox(){
       // Phân nhóm kênh
       const grp={};
       (ftfShopList||[]).forEach(s=>{ const g=channelGroup(s.channel); grp[g]=(grp[g]||0)+1; });
-      txt+='Phân nhóm Kênh: '+JSON.stringify(grp)+'\n\n';
+      txt+='Phân nhóm Kênh: '+JSON.stringify(grp)+'\n';
+      // So trainerId shop vs config.trainers
+      const cfgIds=new Set((config.trainers||[]).map(t=>t.id));
+      const shopTrIds=[...new Set((ftfShopList||[]).map(s=>s.trainerId).filter(Boolean))];
+      const matchCfg=shopTrIds.filter(id=>cfgIds.has(id)).length;
+      txt+='TrainerId shop khớp config: '+matchCfg+'/'+shopTrIds.length+'\n';
+      txt+='config trainer ids (3 đầu): '+[...cfgIds].slice(0,3).join(', ')+'\n';
+      txt+='shop trainer ids (3 đầu): '+shopTrIds.slice(0,3).join(', ')+'\n\n';
       txt+='SHOP MẪU:\n'+JSON.stringify({code:s0.shopCode,trainerId:s0.trainerId,channel:s0.channel,channelGroup:channelGroup(s0.channel),status:s0.status,hrActual:s0.hrActual,testPass:s0.testPass,surveyDone:s0.surveyDone},null,1);
     } else { txt+='Danh sách rỗng — data chưa vào.'; }
     alert(txt);
