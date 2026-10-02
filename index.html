@@ -4193,7 +4193,7 @@ async function processFtfWorkbook_(wb){
     const rec = trainerRecord(t.id);
     const shopsOfTrainer = ftfShopList.filter(s=>s.trainerId===t.id);
     rec.ftfShopTarget = shopsOfTrainer.length;
-    rec.ftfShopActual = shopsOfTrainer.filter(s=>s.status==='DONE').length;
+    rec.ftfShopActual = shopsOfTrainer.filter(s=>s.status==='DONE'||s.status==='COMPLETED'||(Number(s.hrActual)||0)>0).length;
     rec.ftfHrTarget = shopsOfTrainer.reduce((sum,s)=>sum+s.hrTarget,0);
     rec.ftfHrActual = shopsOfTrainer.reduce((sum,s)=>sum+s.hrActual,0);
     rec.ftfBaiTestTarget = shopsOfTrainer.reduce((sum,s)=>sum+s.testTotal,0);
