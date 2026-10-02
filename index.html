@@ -8818,11 +8818,6 @@ async function updateWsDoitacFromOtraining_(camp){
     delete wsDoitacCache_[camp.id];
     await processPartnerTrainingActualWorkbook_(wb,camp);
     await renderWsDoitacParticipants_(camp);
-    // Tạm: hiện tên cột gốc để kiểm tra map (bỏ sau khi xong).
-    const sc=(window.__wsDoitacSrcCols&&window.__wsDoitacSrcCols.sum)||[];
-    const dc=(window.__wsDoitacSrcCols&&window.__wsDoitacSrcCols.detail)||[];
-    const extra=document.getElementById('partnerTrainingActualImportMsg-workshop');
-    if(extra && (sc.length||dc.length)){ extra.style.display='block'; extra.style.color='var(--muted)'; extra.innerHTML+=`<br><small>Cột tổng hợp: ${sc.join(', ')}<br>Cột chi tiết: ${dc.join(', ')}</small>`; }
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
   }
