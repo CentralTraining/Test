@@ -8061,6 +8061,7 @@ async function fetchFtfRows_(campaignId, month){
     throw new Error(`0 dòng MT [${d.kind}] · tổng ${d.totalSum}, chi tiết ${d.totalDetail} · Cột: ${(d.columns||[]).slice(0,12).join(', ')||'(không)'} · otraining nói: ${String(d.raw||'').slice(0,160)}`);
   }
   window.__ftfSrcCols={ sum: out.srcSumCols||[], detail: out.srcDetailCols||[] };
+  window.__ftfSampleDetail=out.sampleDetailRaw||null;
   return { data:Array.isArray(out.data)?out.data:[], detail:Array.isArray(out.detail)?out.detail:[] };
 }
 async function updateFtfFromOtraining_(){
@@ -8088,10 +8089,12 @@ async function updateFtfFromOtraining_(){
     const camp=campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf');
     if(camp){ camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
     await processFtfWorkbook_(wb);
-    // Tạm: hiện tên cột chi tiết để map Bài Test / Tư vấn AI / Khảo sát.
-    const dc=(window.__ftfSrcCols&&window.__ftfSrcCols.detail)||[];
-    const msg2=document.getElementById('ftfImportMsg');
-    if(msg2 && dc.length){ msg2.style.display='block'; msg2.innerHTML+=`<br><small style="color:var(--muted)">Cột chi tiết: ${dc.join(', ')}</small>`; }
+    // Tạm: hiện 1 dòng chi tiết mẫu để map Bài Test / Tư vấn AI / Khảo sát (dùng alert để chắc chắn thấy).
+    if(window.__ftfSampleDetail){
+      try{ alert('DÒNG CHI TIẾT MẪU (gửi cho Claude):\n\n'+JSON.stringify(window.__ftfSampleDetail,null,2).slice(0,1500)); }catch(e){}
+    } else {
+      alert('Chi tiết rỗng. Cột chi tiết: '+((window.__ftfSrcCols&&window.__ftfSrcCols.detail)||[]).join(', '));
+    }
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
   }
