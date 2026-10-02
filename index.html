@@ -8043,8 +8043,9 @@ async function fetchFtfRows_(campaignId, month){
   if(!res.ok || out.error){ throw new Error((out.error||('HTTP '+res.status))+(out.sample?(' · '+out.sample):'')); }
   if(out.diag && !(out.data||[]).length && !(out.detail||[]).length){
     const d=out.diag;
-    throw new Error(`0 dòng MT [${d.kind}] · tổng ${d.totalSum}, chi tiết ${d.totalDetail} · Cột: ${(d.columns||[]).slice(0,10).join(', ')||'(không)'} · otraining nói: ${String(d.raw||'').slice(0,160)}`);
+    throw new Error(`0 dòng MT [${d.kind}] · tổng ${d.totalSum}, chi tiết ${d.totalDetail} · Cột: ${(d.columns||[]).slice(0,12).join(', ')||'(không)'} · otraining nói: ${String(d.raw||'').slice(0,160)}`);
   }
+  window.__ftfSrcCols={ sum: out.srcSumCols||[], detail: out.srcDetailCols||[] };
   return { data:Array.isArray(out.data)?out.data:[], detail:Array.isArray(out.detail)?out.detail:[] };
 }
 async function updateFtfFromOtraining_(){
@@ -8057,7 +8058,13 @@ async function updateFtfFromOtraining_(){
   show('⏳ Đang lấy FTF từ otraining (ID '+campaignId+')...');
   try{
     const {data:arr, detail}=await fetchFtfRows_(campaignId, currentMonth);
-    if(!arr.length && !detail.length){ show('otraining trả về 0 dòng Miền Trung. Kiểm tra lại ID chiến dịch.','var(--red)'); return; }
+    if(!arr.length){
+      // KHÔNG ghi đè data cũ khi tổng hợp rỗng. Hiện tên cột JSON để map.
+      const sc=(window.__ftfSrcCols&&window.__ftfSrcCols.sum)||[];
+      const dc=(window.__ftfSrcCols&&window.__ftfSrcCols.detail)||[];
+      show('otraining trả 0 dòng tổng hợp (không ghi đè data cũ). Cột tổng hợp: '+(sc.join(', ')||'(không)')+' | Cột chi tiết: '+(dc.join(', ')||'(không)'),'var(--red)');
+      return;
+    }
     // Dựng workbook 2 sheet đúng tên để processFtfWorkbook_ đọc.
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(arr), 'Tong Hop F2F');
