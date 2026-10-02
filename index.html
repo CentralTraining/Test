@@ -2083,7 +2083,7 @@ function googleSheetUpdateModules_(){
       const selected=campaigns.find(c=>c.id===document.getElementById('targetCampaignSelect')?.value);
       const camp=(selected && isPartnerTrainingTargetCampaign_(selected)) ? selected : null;
       if(!camp) return {status:'skip', message:'Hãy chọn chiến dịch Đối tác - Hub hoặc Workshop ở Cài đặt → Target trước khi UPDATE tổng'};
-      return runGoogleSheetWorkbookUpdate_('partnerTrainingTargetSheetLinkBtn',['Sheet1'], async wb=>processPartnerTrainingTargetWorkbook_(wb,camp));
+      return runGoogleSheetWorkbookUpdate_('partnerTrainingTargetSheetLinkBtn',null, async wb=>processPartnerTrainingTargetWorkbook_(wb,camp));
     }},
     {key:'workshopActualSheetLinkBtn', label:'Kết quả Nội bộ - Workshop', prepare:()=>{ try{ kpiSubtype.noibo='workshop'; renderKpiCategory('noibo'); }catch(e){} }, run:async()=>{
       const camp=campaigns.find(c=>c.month===currentMonth && c.group==='noibo' && campaignSubtype(c)==='workshop');
@@ -8032,7 +8032,12 @@ async function fetchWsDoitacRows_(campaignId, month){
     body:JSON.stringify({campaignId, startDate:start, endDate:end, type:'wsdoitac'})
   });
   const out=await res.json();
-  if(!res.ok || out.error){ throw new Error((out.error||('HTTP '+res.status))); }
+  if(!res.ok || out.error){ throw new Error((out.error||('HTTP '+res.status))+(out.sample?(' · '+out.sample):'')); }
+  // Nếu 0 dòng kèm chẩn đoán -> ném lỗi chi tiết để biết nguyên nhân.
+  if(out.diag && !(out.data||[]).length && !(out.detail||[]).length){
+    const d=out.diag;
+    throw new Error(`0 dòng MT. otraining trả [${d.kind}] · tổng ${d.totalSum} dòng tổng, ${d.totalDetail} dòng chi tiết · Cột: ${(d.columns||[]).slice(0,12).join(', ')} · Vùng gặp: ${(d.regionsSeen||[]).join(' | ')}`);
+  }
   return { data:Array.isArray(out.data)?out.data:[], detail:Array.isArray(out.detail)?out.detail:[] };
 }
 async function updateTestOnlineFromOtraining_(camp){
@@ -8643,9 +8648,14 @@ function partnerTrainingDone_(v){
 }
 async function processPartnerTrainingActualWorkbook_(wb,camp){
   if(!camp || camp.group!=='doitac' || !['workshop','hub'].includes(campaignSubtype(camp))) throw new Error('Chiến dịch hiện tại không phải Workshop / Hub Đối tác.');
-  const ws=wb.Sheets[wb.SheetNames[0]];
-  if(!ws) throw new Error('Không tìm thấy sheet dữ liệu.');
-  const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+  // Tự tìm sheet có cột status (file gồm nhiều tab: Tong Hop Workshop, Chi Tiet Hoc Vien).
+  const hasStatusCol = r => { const k=Object.keys(r||{}); return k.includes('status')||k.includes('Trạng thái')||k.includes('Trang thai'); };
+  let rows=null;
+  for(const name of wb.SheetNames){
+    const r=XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:''});
+    if(r.length && hasStatusCol(r[0])){ rows=r; break; }
+  }
+  if(!rows){ const first=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}); rows=first; }
   if(!rows.length) throw new Error('File không có dữ liệu.');
   const agg={}; let doneRows=0, skippedRows=0, unmatched=0;
   const unmatchedNames=new Set();
@@ -11044,13 +11054,18 @@ async function loadPartnerTrainingTargets_(camp){
 async function processPartnerTrainingTargetWorkbook_(wb,camp){
   const msg=document.getElementById('partnerTrainingTargetImportMsg');
   if(!camp || !isPartnerTrainingTargetCampaign_(camp)) throw new Error('Chiến dịch hiện tại không phải Hub / Workshop Đối tác.');
-  const ws=wb.Sheets[wb.SheetNames[0]];
-  if(!ws) throw new Error('Không tìm thấy Sheet dữ liệu.');
-  const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-  if(!rows.length) throw new Error('File không có dữ liệu.');
-  const headers=Object.keys(rows[0]||{});
-  if(!headers.includes('target_students') && !headers.includes('Số học viên') && !headers.includes('HV dự kiến')){
-    throw new Error('Không tìm thấy cột target_students (Số học viên target).');
+  // Tự tìm sheet có cột target_students (file có thể gồm nhiều tab: Tong Hop Workshop, Chi Tiet...).
+  const hasTargetCol = r => { const k=Object.keys(r||{}); return k.includes('target_students')||k.includes('Số học viên')||k.includes('HV dự kiến'); };
+  let rows=null;
+  for(const name of wb.SheetNames){
+    const r=XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:''});
+    if(r.length && hasTargetCol(r[0])){ rows=r; break; }
+  }
+  if(!rows){
+    // fallback: sheet đầu tiên có dữ liệu
+    const first=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+    if(!first.length) throw new Error('File không có dữ liệu.');
+    throw new Error('Không tìm thấy cột target_students trong các sheet. Cột hiện có: '+Object.keys(first[0]||{}).join(', '));
   }
   const totals={}; let matched=0, unmatched=0, totalSessions=0, totalStudents=0;
   const unmatchedNames=new Set();
@@ -11115,7 +11130,7 @@ function renderPartnerTrainingTargetSection_(camp){
   });
   const dl=document.getElementById('downloadPartnerTrainingTargetTemplateBtn');
   if(dl) dl.addEventListener('click',downloadPartnerTrainingTargetSample_);
-  attachGoogleSheetButton_('partnerTrainingTargetSheetLinkBtn','partnerTrainingTargetImportMsg',['Sheet1'],async wb=>processPartnerTrainingTargetWorkbook_(wb,camp));
+  attachGoogleSheetButton_('partnerTrainingTargetSheetLinkBtn','partnerTrainingTargetImportMsg',null,async wb=>processPartnerTrainingTargetWorkbook_(wb,camp));
 }
 
 let workshopTargetRows=[];
