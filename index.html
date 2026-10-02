@@ -4172,7 +4172,9 @@ async function processFtfWorkbook_(wb){
     let tgt=null;
     for(const code of altCodes){ if(targetByStoreId_.has(code)){ tgt=targetByStoreId_.get(code); break; } }
     if(!tgt && s.shopName && targetByStoreName_.has(normShopName_(s.shopName))) tgt=targetByStoreName_.get(normShopName_(s.shopName));
-    if(tgt){ tgtMatched++; if(tgt.region) s.region = tgt.region; if(tgt.trainerId) tgtHadTrainer++; }
+    if(tgt){ tgtMatched++; if(tgt.region) s.region = tgt.region; if(tgt.trainerId) tgtHadTrainer++;
+      if(tgt.channel) s.channel = tgt.channel; // LẤY KÊNH TỪ TARGET FTF (chính xác) thay vì kênh rỗng/suy từ tên
+    }
     // trainerId: ưu tiên của Target (gán theo Shop); nếu Target khớp Shop nhưng không có trainerId -> suy từ Khu vực.
     if(tgt && tgt.trainerId){ s.trainerId = tgt.trainerId; }
     else { s.trainerId = trainerIdByRegion_(s.region); if(s.trainerId) usedRegionFallback++; }
