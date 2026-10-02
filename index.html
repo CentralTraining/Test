@@ -8062,6 +8062,7 @@ async function fetchFtfRows_(campaignId, month){
   }
   window.__ftfSrcCols={ sum: out.srcSumCols||[], detail: out.srcDetailCols||[] };
   window.__ftfSampleDetail=out.sampleDetailRaw||null;
+  window.__ftfSampleSum=out.sampleSumRaw||null;
   return { data:Array.isArray(out.data)?out.data:[], detail:Array.isArray(out.detail)?out.detail:[] };
 }
 async function updateFtfFromOtraining_(){
@@ -8089,12 +8090,12 @@ async function updateFtfFromOtraining_(){
     const camp=campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf');
     if(camp){ camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
     await processFtfWorkbook_(wb);
-    // Tạm: hiện 1 dòng chi tiết mẫu để map Bài Test / Tư vấn AI / Khảo sát (dùng alert để chắc chắn thấy).
-    if(window.__ftfSampleDetail){
-      try{ alert('DÒNG CHI TIẾT MẪU (gửi cho Claude):\n\n'+JSON.stringify(window.__ftfSampleDetail,null,2).slice(0,1500)); }catch(e){}
-    } else {
-      alert('Chi tiết rỗng. Cột chi tiết: '+((window.__ftfSrcCols&&window.__ftfSrcCols.detail)||[]).join(', '));
-    }
+    // Tạm: chi tiết rỗng -> hiện 1 DÒNG TỔNG HỢP mẫu để map Bài Test / Tư vấn AI / Khảo sát.
+    try{
+      const s=window.__ftfSampleSum;
+      if(s) alert('DÒNG TỔNG HỢP MẪU (gửi cho Claude):\n\n'+JSON.stringify(s,null,2).slice(0,1800));
+      else alert('Không có dòng mẫu.');
+    }catch(e){}
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
   }
