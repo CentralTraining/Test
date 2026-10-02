@@ -8036,7 +8036,7 @@ async function fetchWsDoitacRows_(campaignId, month){
   // Nếu 0 dòng kèm chẩn đoán -> ném lỗi chi tiết để biết nguyên nhân.
   if(out.diag && !(out.data||[]).length && !(out.detail||[]).length){
     const d=out.diag;
-    throw new Error(`0 dòng MT. otraining trả [${d.kind}] · tổng ${d.totalSum} dòng tổng, ${d.totalDetail} dòng chi tiết · Cột: ${(d.columns||[]).slice(0,12).join(', ')} · Vùng gặp: ${(d.regionsSeen||[]).join(' | ')}`);
+    throw new Error(`0 dòng MT [${d.kind}] · tổng ${d.totalSum}, chi tiết ${d.totalDetail} · Cột: ${(d.columns||[]).slice(0,10).join(', ')||'(không)'} · Vùng: ${(d.regionsSeen||[]).join(' | ')||'(không)'} · otraining nói: ${String(d.raw||'').slice(0,160)}`);
   }
   return { data:Array.isArray(out.data)?out.data:[], detail:Array.isArray(out.detail)?out.detail:[] };
 }
