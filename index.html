@@ -4831,7 +4831,6 @@ function renderFtfImportBox(){
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
       <input type="number" id="otrFtfCampaignId" placeholder="ID chiến dịch (VD 21)" style="width:180px;" ${canEdit?'':'disabled'} value="${escapeHtml(String((campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf')||{}).otrId||''))}">
       <button class="primary" id="otrFtfBtn" type="button" ${canEdit?'':'disabled'}>↻ Cập nhật FTF từ hệ thống</button>
-      <button class="secondary" id="ftfDiagBtn" type="button">🔎 Kiểm tra data</button>
       <span class="save-msg" id="ftfImportMsg" style="display:none;"></span>
     </div>
     <div class="section-desc" style="margin-bottom:8px;">Lấy trực tiếp từ otraining. Xem <strong>ID chiến dịch</strong> trong URL báo cáo (<code>doitac_f2f.html?id=<b>&lt;ID&gt;</b></code>). <strong>Cần import Target FTF trước</strong> để khớp Shop với Trainer.</div>
