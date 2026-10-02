@@ -8038,6 +8038,7 @@ async function fetchWsDoitacRows_(campaignId, month){
     const d=out.diag;
     throw new Error(`0 dòng MT [${d.kind}] · tổng ${d.totalSum}, chi tiết ${d.totalDetail} · Cột: ${(d.columns||[]).slice(0,10).join(', ')||'(không)'} · Vùng: ${(d.regionsSeen||[]).join(' | ')||'(không)'} · otraining nói: ${String(d.raw||'').slice(0,160)}`);
   }
+  window.__wsDoitacSrcCols={ sum: out.srcSumCols||[], detail: out.srcDetailCols||[] };
   return { data:Array.isArray(out.data)?out.data:[], detail:Array.isArray(out.detail)?out.detail:[] };
 }
 async function updateTestOnlineFromOtraining_(camp){
@@ -8724,17 +8725,34 @@ async function renderPartnerTrainingRegionProgress_(subtype){
     return {region,targetSessions:Number(t.sessions||0),targetStudents:Number(t.students||0),sessions:Number(a.sessions||0),students:Number(a.students||0),surveyAvg:(a.surveyAvg===null||a.surveyAvg===undefined)?null:Number(a.surveyAvg),updated:a.updatedAt?new Date(a.updatedAt):null,note:nKey?String(notes[nKey]||''):String(notes[region]||'')};
   });
   const pctSafe=(a,t)=>t>0?Math.round((a/t)*1000)/10:0;
+  // Số lượng khảo sát (đã làm) theo khu vực — lấy từ danh sách học viên chi tiết (wsDoitacParticipants).
+  const surveyDoneByRegion={};
+  if(subtype==='workshop'){
+    let parts=wsDoitacCache_[camp.id];
+    if(!parts){ try{ parts=(await dbGet('wsDoitacParticipants:'+camp.id))||[]; wsDoitacCache_[camp.id]=parts; }catch(e){ parts=[]; } }
+    (parts||[]).forEach(p=>{
+      const reg=configuredRegionFromLoose_(p['Khu vực']||p['Khu Vực']||'')||'';
+      if(!reg) return;
+      if(wsDoitacSurveyDone_(p['Khảo sát']||p['Khao sat']||'')){ surveyDoneByRegion[reg]=(surveyDoneByRegion[reg]||0)+1; }
+    });
+  }
+  const surveyDoneOf=(region)=>{ const k=Object.keys(surveyDoneByRegion).find(x=>normalizeRegionLoose_(x)===normalizeRegionLoose_(region)); return k?surveyDoneByRegion[k]:0; };
   let html=`<div class="campaign-context">Chiến dịch: <strong>${camp.name}</strong> — ${monthLabel(currentMonth)} · Hiển thị theo Khu vực</div>`;
-  html+=`<div class="table-scroll"><table><thead><tr><th>Khu vực</th><th>Số buổi / Target</th><th>Số học viên / Target</th><th>TB Khảo sát / Target</th><th>Cập nhật</th><th style="min-width:210px;">Note</th></tr></thead><tbody>`;
-  if(!rows.length) html+=`<tr><td colspan="6" class="empty">Chưa có dữ liệu Khu vực để hiển thị.</td></tr>`;
+  html+=`<div class="table-scroll"><table><thead><tr><th>Khu vực</th><th>Số buổi / Target</th><th>Số học viên / Target</th><th>Số lượng khảo sát / Target</th><th>TB Khảo sát / Target</th><th>Cập nhật</th><th style="min-width:210px;">Note</th></tr></thead><tbody>`;
+  if(!rows.length) html+=`<tr><td colspan="7" class="empty">Chưa có dữ liệu Khu vực để hiển thị.</td></tr>`;
   rows.forEach(r=>{
     const p1=pctSafe(r.sessions,r.targetSessions), p2=pctSafe(r.students,r.targetStudents);
     const surveyText=r.surveyAvg===null?'—':(Math.round(r.surveyAvg*100)/100).toLocaleString('vi-VN');
     const p3=(r.surveyAvg!==null&&surveyTarget>0)?pctSafe(r.surveyAvg,surveyTarget):0;
     const upd=r.updated&&!Number.isNaN(r.updated.getTime())?r.updated.toLocaleDateString('vi-VN'):'—';
+    // Số lượng khảo sát: đã làm / Target(80% HV thực tế).
+    const sDone=surveyDoneOf(r.region);
+    const sTarget=Math.round(r.students*0.8);
+    const p4=pctSafe(sDone,sTarget);
     html+=`<tr><td><strong>${r.region}</strong></td>
       <td style="min-width:190px;">${progressBarHtml_(`${Math.round(r.sessions)} / ${Math.round(r.targetSessions)} · ${p1}%`,p1)}</td>
       <td style="min-width:190px;">${progressBarHtml_(`${Math.round(r.students)} / ${Math.round(r.targetStudents)} · ${p2}%`,p2)}</td>
+      <td style="min-width:190px;">${progressBarHtml_(`${sDone} / ${sTarget} · ${p4}%`,p4)}</td>
       <td style="min-width:180px;">${progressBarHtml_(`${surveyText} / ${surveyTarget||0}${r.surveyAvg!==null&&surveyTarget>0?` · ${p3}%`:''}`,p3)}</td>
       <td>${upd}</td>
       <td><textarea class="partner-training-note" data-region="${r.region.replace(/"/g,'&quot;')}" rows="2" placeholder="Note khi có vấn đề..." style="width:100%;min-width:190px;resize:vertical;">${String(r.note||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea></td></tr>`;
@@ -8800,6 +8818,11 @@ async function updateWsDoitacFromOtraining_(camp){
     delete wsDoitacCache_[camp.id];
     await processPartnerTrainingActualWorkbook_(wb,camp);
     await renderWsDoitacParticipants_(camp);
+    // Tạm: hiện tên cột gốc để kiểm tra map (bỏ sau khi xong).
+    const sc=(window.__wsDoitacSrcCols&&window.__wsDoitacSrcCols.sum)||[];
+    const dc=(window.__wsDoitacSrcCols&&window.__wsDoitacSrcCols.detail)||[];
+    const extra=document.getElementById('partnerTrainingActualImportMsg-workshop');
+    if(extra && (sc.length||dc.length)){ extra.style.display='block'; extra.style.color='var(--muted)'; extra.innerHTML+=`<br><small>Cột tổng hợp: ${sc.join(', ')}<br>Cột chi tiết: ${dc.join(', ')}</small>`; }
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
   }
