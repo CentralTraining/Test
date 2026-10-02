@@ -4801,12 +4801,18 @@ function renderFtfImportBox(){
   let html = `<div class="form-card" style="max-width:none;">
     <h3 style="font-size:var(--body);margin:0 0 10px;color:var(--green-dark);">Import dữ liệu Training F2F Đối tác — ${monthLabel(currentMonth)}</h3>
     <p class="section-desc" style="margin-bottom:10px;">Import file tổng hợp F2F (đúng mẫu — gồm 2 sheet "Tong Hop F2F" và "Chi Tiet Check-in"). <strong>Cần import Target FTF (Cài đặt ▸ Target) trước</strong> — hệ thống xác định mỗi Shop thuộc Trainer/Khu vực nào theo đúng Mã Shop đã gán ở Target FTF, KHÔNG dựa vào cột "Người Train" (cột này có thể là Sale/PG, không phải Trainer). Hệ thống tự tính SL Shop, SL HR, SL Bài Test, Tư vấn AI, SL Khảo sát theo từng Trainer, đồng thời tự tạo danh sách Shop bên dưới. Import lại sẽ <strong>ghi đè toàn bộ</strong> dữ liệu F2F của ${monthLabel(currentMonth)}. Chỉ Admin được import.</p>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+      <input type="number" id="otrFtfCampaignId" placeholder="ID chiến dịch (VD 21)" style="width:180px;" ${canEdit?'':'disabled'} value="${escapeHtml(String((campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf')||{}).otrId||''))}">
+      <button class="primary" id="otrFtfBtn" type="button" ${canEdit?'':'disabled'}>↻ Cập nhật FTF từ hệ thống</button>
+      <span class="save-msg" id="ftfImportMsg" style="display:none;"></span>
+    </div>
+    <div class="section-desc" style="margin-bottom:8px;">Lấy trực tiếp từ otraining. Xem <strong>ID chiến dịch</strong> trong URL báo cáo (<code>doitac_f2f.html?id=<b>&lt;ID&gt;</b></code>). <strong>Cần import Target FTF trước</strong> để khớp Shop với Trainer.</div>
+    <details><summary style="cursor:pointer;font-size:var(--cap);color:var(--muted);">Nhập thủ công (file / Google Sheet) — chỉ dùng khi cần</summary>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;">
       <input type="file" id="ftfImportInput" accept=".xlsx,.xls" ${canEdit?'':'disabled'}>
       <button class="secondary" id="downloadFtfTemplateBtn" type="button">⬇ Tải file mẫu</button>
       <button class="secondary admin-only-gsheet" id="ftfSheetLinkBtn" type="button" ${canEdit?'':'disabled'}>🔗 Cập nhật từ Google Sheet</button>
-      <span class="save-msg" id="ftfImportMsg" style="display:none;"></span>
-    </div>
+    </div></details>
   </div>`;
   box.innerHTML = html;
 
@@ -4828,6 +4834,8 @@ function renderFtfImportBox(){
     e.target.value='';
   });
   attachGoogleSheetButton_('ftfSheetLinkBtn','ftfImportMsg', ['Tong Hop F2F','Chi Tiet Check-in'], processFtfWorkbook_);
+  const otrFtfBtn=document.getElementById('otrFtfBtn');
+  if(otrFtfBtn) otrFtfBtn.onclick=()=>updateFtfFromOtraining_();
 
   const templateBtn = document.getElementById('downloadFtfTemplateBtn');
   if(templateBtn) templateBtn.addEventListener('click', ()=>{
@@ -8022,6 +8030,45 @@ async function fetchOtrainingRows_(campaignId, month, type){
   const out=await res.json();
   if(!res.ok || out.error){ throw new Error((out.error||('HTTP '+res.status))+(out.detail?(' · '+out.detail):'')); }
   return Array.isArray(out.data)?out.data:[];
+}
+// FTF: trả {data (tổng hợp F2F), detail (chi tiết check-in)}.
+async function fetchFtfRows_(campaignId, month){
+  const {start,end}=otrMonthRange_(month);
+  const res=await fetch(OTRAINING_FN_URL_,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},
+    body:JSON.stringify({campaignId, startDate:start, endDate:end, type:'ftf'})
+  });
+  const out=await res.json();
+  if(!res.ok || out.error){ throw new Error((out.error||('HTTP '+res.status))+(out.sample?(' · '+out.sample):'')); }
+  if(out.diag && !(out.data||[]).length && !(out.detail||[]).length){
+    const d=out.diag;
+    throw new Error(`0 dòng MT [${d.kind}] · tổng ${d.totalSum}, chi tiết ${d.totalDetail} · Cột: ${(d.columns||[]).slice(0,10).join(', ')||'(không)'} · otraining nói: ${String(d.raw||'').slice(0,160)}`);
+  }
+  return { data:Array.isArray(out.data)?out.data:[], detail:Array.isArray(out.detail)?out.detail:[] };
+}
+async function updateFtfFromOtraining_(){
+  const msg=document.getElementById('ftfImportMsg');
+  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  if(!isAdmin()){ show('Chỉ Admin được cập nhật.','var(--red)'); return; }
+  const idInput=document.getElementById('otrFtfCampaignId');
+  const campaignId=(idInput&&idInput.value||'').trim();
+  if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
+  show('⏳ Đang lấy FTF từ otraining (ID '+campaignId+')...');
+  try{
+    const {data:arr, detail}=await fetchFtfRows_(campaignId, currentMonth);
+    if(!arr.length && !detail.length){ show('otraining trả về 0 dòng Miền Trung. Kiểm tra lại ID chiến dịch.','var(--red)'); return; }
+    // Dựng workbook 2 sheet đúng tên để processFtfWorkbook_ đọc.
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(arr), 'Tong Hop F2F');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detail.length?detail:[{}]), 'Chi Tiet Check-in');
+    // Lưu ID chiến dịch.
+    const camp=campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf');
+    if(camp){ camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
+    await processFtfWorkbook_(wb);
+  }catch(err){
+    show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
+  }
 }
 // Riêng Workshop Đối tác: trả {data (tổng hợp), detail (học viên)}.
 async function fetchWsDoitacRows_(campaignId, month){
