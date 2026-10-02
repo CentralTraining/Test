@@ -206,6 +206,95 @@
     /* Mọi card/khối trong nội dung: full chiều ngang, căn giữa cân đối */
     .card,.panel,.form-card,.kpi-row,.table-scroll,.chart-card,.section{max-width:100% !important;margin-left:0;margin-right:0;}
     .form-card{max-width:100% !important;}
+
+    /* ===== THU NHỎ FONT + CÂN ĐỐI FORM/CARD CHO ĐIỆN THOẠI ===== */
+    html,body{font-size:11pt;}
+    /* Tiêu đề tab nhỏ lại */
+    .tab-section>h2,.main-content h2{font-size:17px;margin:6px 0 4px;}
+    .section-desc{font-size:11px;line-height:1.45;}
+    /* TẤT CẢ KPI row về 2 cột (kể cả cols-4) — chữ không bị dồn */
+    .kpi-row,.kpi-row.cols-2,.kpi-row.cols-4,.kpi-row.cols-6{grid-template-columns:repeat(2,1fr) !important;gap:8px !important;}
+    .kpi-card{padding:9px 11px !important;}
+    .kpi-card .label{font-size:9px !important;line-height:1.25;letter-spacing:.2px;}
+    .kpi-card .value{font-size:19px !important;}
+    .kpi-card .frac,.kpi-card .sub{font-size:9px !important;}
+    /* Nút lọc dạng pill (Nhân sự / On-Off / Các hãng) nhỏ gọn */
+    .subnav button,.pill-tab,.seg-btn{font-size:11px;padding:6px 12px;}
+    /* Form thêm/sửa: ô nhập nhỏ gọn, 2 cột, nhãn nhỏ */
+    .form-grid-4,.form-grid-6{grid-template-columns:repeat(2,1fr) !important;gap:8px !important;}
+    /* mỗi field: nhãn nằm TRÊN ô (xếp dọc), không để nhãn cạnh ô gây lệch */
+    .form-grid-4>div,.form-grid-6>div,.form-card .field{display:flex;flex-direction:column;}
+    .form-grid-4 label,.form-grid-6 label,.form-card label{font-size:10px;margin-bottom:3px;display:block;}
+    .form-card input,.form-card select,.form-card textarea,
+    .scope-filters select,.scope-filters input,select,input[type="text"],input[type="number"]{
+      font-size:12px;padding:7px 8px;height:auto;min-height:34px;border-radius:8px;
+    }
+    .form-card .primary,.form-card button{font-size:12px;padding:9px 12px;}
+    /* Bộ lọc "Xem theo" / "Tìm nhanh": mỗi ô 1 hàng, full width, nhãn nhỏ */
+    .scope-filters{gap:7px;}
+    .scope-filters label{font-size:10px;}
+    /* Bảng danh sách: chữ nhỏ để nhiều cột vẫn đọc được khi vuốt ngang */
+    .table-scroll table{font-size:10.5px;}
+    .table-scroll th{font-size:9.5px;padding:6px 7px;}
+    .table-scroll td{padding:6px 7px;}
+    /* Phân trang nhỏ gọn */
+    .pagination-bar button,.page-btn{font-size:11px;padding:5px 9px;min-width:30px;}
+    .pagination-info{font-size:10px;}
+
+    /* ===== CHỐNG CHỒNG CHỮ TOÀN BỘ CÁC TAB ===== */
+    /* Chữ dài luôn tự xuống dòng, không tràn/đè */
+    .kpi-card .label,.kpi-section-title,.section-title,.cfg-card,.region-card,
+    .home-tcard-name,.modal-text,.campaign-context,.coaching-table td,.pg-table td{
+      overflow-wrap:break-word;word-break:break-word;}
+    /* Tiêu đề mục trong KPI nhỏ lại */
+    .kpi-section-title,.section-title{font-size:13px;line-height:1.35;margin:10px 0 6px;}
+    /* Thanh sub-nav (Nội bộ/Đối tác/Truyền thông, Nhân sự/On-Off…): cuộn ngang, không vỡ dòng */
+    .subnav{display:flex;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:5px;padding-bottom:3px;}
+    .subnav::-webkit-scrollbar{height:0;}
+    .subnav button{flex:0 0 auto;font-size:11px;padding:6px 12px;white-space:nowrap;}
+    /* Thanh maintab (nếu có) cũng cuộn ngang */
+    .maintab{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:5px;}
+    .maintab button{flex:0 0 auto;white-space:nowrap;font-size:11px;}
+    /* Cấu hình (Cài đặt): cfg-grid 1 cột, cfg-card gọn */
+    .cfg-grid{grid-template-columns:1fr !important;gap:10px;}
+    .cfg-card{padding:12px !important;font-size:11px;}
+    .cfg-card h3,.cfg-card h4{font-size:13px;}
+    /* Thẻ khu vực */
+    .region-card{padding:10px !important;font-size:11px;}
+    /* Thanh trạng thái chiến dịch: cho xuống dòng, chữ nhỏ */
+    .campaign-context{font-size:11px;line-height:1.5;}
+    /* Hàng metric (tên | thanh | %): căn gọn, chữ nhỏ, không đè */
+    .metric-row{grid-template-columns:92px 1fr 42px !important;gap:6px;align-items:center;}
+    .metric-row .m-name{font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .compact-metric-cell{font-size:9px;}
+    /* Thanh tiến độ: chữ bên trong nhỏ để không tràn */
+    .bar-label,.progress-text{font-size:9px;}
+    /* Popup / Modal: full gần hết màn, chữ nhỏ gọn, nút xuống dòng */
+    .modal-overlay{padding:10px;}
+    .modal-box{width:100% !important;max-width:100% !important;max-height:88vh;overflow-y:auto;padding:16px !important;border-radius:16px;}
+    .modal-box h2,.modal-box h3{font-size:15px;}
+    .modal-text{font-size:12px;line-height:1.5;}
+    .modal-actions{flex-wrap:wrap;gap:8px;}
+    .modal-actions button{flex:1 1 auto;font-size:12px;padding:9px 10px;}
+    .home-popup-card{width:100% !important;max-width:100% !important;border-radius:18px;}
+    .home-popup-header{font-size:14px;}
+    /* Ô nhập ID chiến dịch otraining + nút: xếp dọc full width đã có ở .form-card flex column */
+    .save-msg{font-size:10.5px;display:block;margin-top:4px;}
+
+    /* ===== THU GỌN MỌI BẢNG Ở MỌI TAB cho vừa màn điện thoại ===== */
+    .table-scroll table,.main-content table{font-size:8px !important;table-layout:auto !important;}
+    .table-scroll th,.main-content table th{font-size:7.5px !important;padding:3px 4px !important;white-space:normal;word-break:break-word;}
+    .table-scroll td,.main-content table td{padding:3px 4px !important;white-space:normal;word-break:break-word;line-height:1.3;}
+    /* Bỏ mọi width cố định (table-layout:fixed) để cột tự co vừa bề ngang */
+    .table-scroll table th,.table-scroll table td,.main-content table th,.main-content table td{width:auto !important;}
+    /* Cột đầu (STT) hẹp ở các bảng danh sách có đánh số */
+    .coaching-table td:first-child,.coaching-table th:first-child,
+    .pgmoi-table td:first-child,.pgmoi-table th:first-child,
+    .pg-table td:first-child,.pg-table th:first-child{width:18px !important;text-align:center;padding-left:2px !important;padding-right:2px !important;}
+    /* Cột Code/Mã NV KHÔNG xuống hàng (cột 2 ở các bảng danh sách PGs) */
+    .coaching-table td:nth-child(2),.coaching-table th:nth-child(2),
+    .pgmoi-table td:nth-child(2),.pgmoi-table th:nth-child(2),
+    .pg-table td:nth-child(2),.pg-table th:nth-child(2){white-space:nowrap;}
   }
 
   /* Bảng nhiều cột (FTF, Coaching...) luôn cuộn ngang bên trong khung riêng — áp dụng MỌI kích thước màn hình,
@@ -253,11 +342,29 @@
   html.ui-force-mobile header.top select{flex:1 1 auto;min-width:0;}
   html.ui-force-mobile .sidebar-col{gap:8px;}
   html.ui-force-mobile .sidebar-brand,html.ui-force-mobile .sidebar-scope{padding:10px 12px;}
-  html.ui-force-mobile .kpi-row,html.ui-force-mobile .kpi-row.cols-2,html.ui-force-mobile .kpi-row.cols-6{grid-template-columns:repeat(2,1fr);gap:8px;}
-  html.ui-force-mobile .kpi-card{padding:10px 12px;}
-  html.ui-force-mobile .kpi-card .value{font-size:18px;}
-  html.ui-force-mobile .form-grid-4{grid-template-columns:1fr;}
-  html.ui-force-mobile .form-grid-6{grid-template-columns:repeat(2,1fr);}
+  html.ui-force-mobile .kpi-row,html.ui-force-mobile .kpi-row.cols-2,html.ui-force-mobile .kpi-row.cols-4,html.ui-force-mobile .kpi-row.cols-6{grid-template-columns:repeat(2,1fr) !important;gap:8px !important;}
+  html.ui-force-mobile .kpi-card{padding:9px 11px !important;}
+  html.ui-force-mobile .kpi-card .label{font-size:9px !important;line-height:1.25;}
+  html.ui-force-mobile .kpi-card .value{font-size:19px !important;}
+  html.ui-force-mobile .kpi-card .frac,html.ui-force-mobile .kpi-card .sub{font-size:9px !important;}
+  html.ui-force-mobile .section-desc{font-size:11px;}
+  html.ui-force-mobile .form-grid-4,html.ui-force-mobile .form-grid-6{grid-template-columns:repeat(2,1fr) !important;gap:8px !important;}
+  html.ui-force-mobile .form-card label,html.ui-force-mobile .form-grid-4 label,html.ui-force-mobile .form-grid-6 label{font-size:10px;}
+  html.ui-force-mobile .form-card input,html.ui-force-mobile .form-card select,html.ui-force-mobile .form-card textarea,
+  html.ui-force-mobile .scope-filters select,html.ui-force-mobile .scope-filters input,html.ui-force-mobile select,html.ui-force-mobile input[type="text"],html.ui-force-mobile input[type="number"]{font-size:12px;padding:7px 8px;min-height:34px;border-radius:8px;}
+  html.ui-force-mobile .table-scroll table{font-size:10.5px;}
+  html.ui-force-mobile .table-scroll th{font-size:9.5px;padding:6px 7px;}
+  html.ui-force-mobile .table-scroll td{padding:6px 7px;}
+  html.ui-force-mobile .kpi-card .label,html.ui-force-mobile .kpi-section-title,html.ui-force-mobile .section-title,html.ui-force-mobile .cfg-card,html.ui-force-mobile .region-card,html.ui-force-mobile .home-tcard-name,html.ui-force-mobile .modal-text,html.ui-force-mobile .campaign-context{overflow-wrap:break-word;word-break:break-word;}
+  html.ui-force-mobile .kpi-section-title,html.ui-force-mobile .section-title{font-size:13px;line-height:1.35;}
+  html.ui-force-mobile .subnav{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:5px;}
+  html.ui-force-mobile .subnav button{flex:0 0 auto;font-size:11px;padding:6px 12px;white-space:nowrap;}
+  html.ui-force-mobile .cfg-grid{grid-template-columns:1fr !important;}
+  html.ui-force-mobile .cfg-card{padding:12px !important;font-size:11px;}
+  html.ui-force-mobile .modal-box{width:100% !important;max-width:100% !important;max-height:88vh;overflow-y:auto;padding:16px !important;}
+  html.ui-force-mobile .modal-actions{flex-wrap:wrap;gap:8px;}
+  html.ui-force-mobile .modal-actions button{flex:1 1 auto;}
+  html.ui-force-mobile .form-grid-4>div,html.ui-force-mobile .form-grid-6>div{display:flex;flex-direction:column;}
   html.ui-force-mobile .subnav{gap:4px;}
   html.ui-force-mobile .subnav button{padding:6px 10px;font-size:8pt;}
   html.ui-force-mobile .scope-filters{flex-direction:column;align-items:stretch;}
@@ -12925,5 +13032,61 @@ new MutationObserver(muts=>{
     </div>
   </div>
 </div>
+<script>
+/* ===== RÚT GỌN TÊN SHOP trong các bảng danh sách (giữ đầy đủ ở tooltip khi chạm/di chuột) =====
+   VD: "TGDĐ - 379 - TGD_BT H_TPH - 233 Thống Nhất" -> "TGDĐ_233 Thống Nhất".
+   Quy tắc: lấy KÊNH (đoạn đầu) + ĐOẠN CUỐI (số + tên shop), nối bằng "_". Chỉ rút khi tên có >=3 đoạn.
+   Chạy lại sau mỗi lần render nhờ MutationObserver. Chỉ đổi phần HIỂN THỊ, không đổi dữ liệu gốc. */
+(function(){
+  function shortenShop(s){
+    s=String(s==null?'':s).trim(); if(!s) return s;
+    var parts=s.split(/\s*[-–—]\s*/).map(function(x){return x.trim();}).filter(Boolean);
+    if(parts.length<3) return s;                 // tên ngắn -> giữ nguyên
+    return parts[0]+'_'+parts[parts.length-1];   // KÊNH + đoạn cuối (số + tên)
+  }
+  // Viết tắt khu vực — CHỈ hiển thị trên màn (mobile). Xuất Excel vẫn giữ tên đầy đủ (đọc từ data gốc).
+  var AREA_ABBR={'VUNG TAU':'VT','DA NANG':'DN','NHA TRANG':'NT','TAY NGUYEN':'TN','BINH DINH':'BD','HUE':'Huế'};
+  function abbrArea(s){
+    var raw=String(s==null?'':s).trim();
+    var k=raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[Đđ]/g,'D').toUpperCase().replace(/\s+/g,' ').trim();
+    return AREA_ABBR[k]!==undefined ? AREA_ABBR[k].replace('BD','BĐ').replace('DN','ĐN') : raw;
+  }
+  function colIndexesByHead(tb,names){
+    var idx=[]; [].forEach.call(tb.querySelectorAll('thead th'),function(th,i){
+      var h=th.textContent.trim().toLowerCase();
+      if(names.indexOf(h)>=0) idx.push(i);
+    }); return idx;
+  }
+  var isMobile=function(){ return window.matchMedia('(max-width:860px)').matches || document.documentElement.classList.contains('ui-force-mobile'); };
+  function processTables(){
+    var mob=isMobile();
+    document.querySelectorAll('table').forEach(function(tb){
+      var shopCols=colIndexesByHead(tb,['shop','cửa hàng','cua hang']);
+      var areaCols=colIndexesByHead(tb,['khu vực','khu vuc','kv']);
+      tb.querySelectorAll('tbody tr').forEach(function(tr){
+        shopCols.forEach(function(ci){
+          var td=tr.children[ci]; if(!td || td.dataset.shopShort) return;
+          var full=td.textContent.trim(); var short=shortenShop(full);
+          if(short!==full){ td.dataset.shopShort='1'; td.dataset.shopFull=full; td.title=full; td.textContent=short; }
+          else { td.dataset.shopShort='1'; }
+        });
+        if(mob) areaCols.forEach(function(ci){
+          var td=tr.children[ci]; if(!td || td.dataset.areaAbbr) return;
+          var full=td.textContent.trim(); var ab=abbrArea(full);
+          if(ab!==full){ td.dataset.areaAbbr='1'; td.dataset.areaFull=full; td.title=full; td.textContent=ab;
+            td.style.fontWeight='700'; td.style.textAlign='center'; }
+          else { td.dataset.areaAbbr='1'; }
+        });
+      });
+    });
+  }
+  var t=null;
+  var obs=new MutationObserver(function(){ clearTimeout(t); t=setTimeout(processTables,120); });
+  window.addEventListener('load',function(){
+    processTables();
+    obs.observe(document.body,{childList:true,subtree:true});
+  });
+})();
+</script>
 </body>
 </html>
