@@ -4172,7 +4172,9 @@ async function processFtfWorkbook_(wb){
   // AN TOÀN: nếu không tạo được Shop nào (data không khớp/sai cột), KHÔNG ghi đè danh sách cũ.
   if(!shopArr.length){
     const m=document.getElementById('ftfImportMsg');
-    if(m){ m.style.display='block'; m.style.color='var(--red)'; m.textContent='Không khớp được Shop nào từ nguồn (có thể sai cột hoặc chưa import Target FTF) — GIỮ NGUYÊN data cũ, không ghi đè.'; }
+    const cols1=rows1[0]?Object.keys(rows1[0]):[];
+    const sampleShop=rows1[0]?(rows1[0]['Mã Shop']||rows1[0]['Tên Shop']||'(trống)'):'(không có dòng)';
+    if(m){ m.style.display='block'; m.style.color='var(--red)'; m.innerHTML='Không khớp được Shop nào — GIỮ NGUYÊN data cũ.<br><small>Đọc '+rows1.length+' dòng tổng hợp. Cột: '+cols1.join(', ')+'<br>Mã Shop dòng đầu: '+escapeHtml(String(sampleShop))+'</small>'; }
     return;
   }
   let skippedOtherRegion = 0;
