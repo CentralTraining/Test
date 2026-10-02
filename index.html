@@ -4087,6 +4087,13 @@ async function processFtfWorkbook_(wb){
   const ws2 = wb.Sheets[sheet2Name];
   const rows1 = XLSX.utils.sheet_to_json(ws1, { defval:'' });
   const rows2 = ws2 ? XLSX.utils.sheet_to_json(ws2, { defval:'' }) : [];
+  // AN TOÀN: nếu không có dòng dữ liệu hợp lệ nào (không có Mã Shop/Tên Shop), KHÔNG ghi đè data cũ.
+  const hasRealData_ = rows1.some(r=>{ const v=Object.values(r).map(x=>String(x||'').trim()).filter(Boolean); return v.length>0; });
+  if(!rows1.length || !hasRealData_){
+    const m=document.getElementById('ftfImportMsg');
+    if(m){ m.style.display='block'; m.style.color='var(--red)'; m.textContent='File/nguồn không có dữ liệu — giữ nguyên data cũ, không ghi đè.'; }
+    return;
+  }
   // Chuẩn hoá tên cột để so khớp "mờ" — bỏ dấu, viết thường, gộp khoảng trắng — để dù tên cột thật
   // trên Google Sheet có khác 1 chút so với tên chuẩn (thừa dấu cách, viết hoa/thường khác, thiếu/
   // thừa dấu gạch) vẫn khớp đúng.
@@ -4162,6 +4169,12 @@ async function processFtfWorkbook_(wb){
     if(tgt && tgt.trainerId) matchedShop++; else { unmatchedShop++; unmatchedCodes.add(s.shopCode||s.shopName||'(không tên)'); }
   });
 
+  // AN TOÀN: nếu không tạo được Shop nào (data không khớp/sai cột), KHÔNG ghi đè danh sách cũ.
+  if(!shopArr.length){
+    const m=document.getElementById('ftfImportMsg');
+    if(m){ m.style.display='block'; m.style.color='var(--red)'; m.textContent='Không khớp được Shop nào từ nguồn (có thể sai cột hoặc chưa import Target FTF) — GIỮ NGUYÊN data cũ, không ghi đè.'; }
+    return;
+  }
   let skippedOtherRegion = 0;
   if(isTrainer()){
     const totalBefore = shopArr.length;
