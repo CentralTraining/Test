@@ -4161,13 +4161,19 @@ async function processFtfWorkbook_(wb){
   let shopArr = Object.values(shopMap);
   let matchedShop=0, unmatchedShop=0;
   const unmatchedCodes = new Set();
+  // Map Khu vực -> Trainer (phương án dự phòng khi Target khớp Shop nhưng trainerId của Target rỗng).
+  const trainerIdByRegion_ = r => { const t=(config.trainers||[]).find(t=>normalizeRegionLoose_(t.region)===normalizeRegionLoose_(r)); return t?t.id:''; };
+  let tgtMatched=0, tgtHadTrainer=0, usedRegionFallback=0;
   shopArr.forEach(s=>{
     const tgt = lookupTarget_(s.shopCode, s.shopName);
-    s.trainerId = tgt ? tgt.trainerId : '';
-    if(tgt && tgt.region) s.region = tgt.region; // ưu tiên Khu vực đã gán ở Target FTF (đáng tin hơn cột Khu vực gõ tay trong Tong Hop F2F)
+    if(tgt){ tgtMatched++; if(tgt.region) s.region = tgt.region; if(tgt.trainerId) tgtHadTrainer++; }
+    // trainerId: ưu tiên của Target (gán theo Shop); nếu Target khớp Shop nhưng không có trainerId -> suy từ Khu vực.
+    if(tgt && tgt.trainerId){ s.trainerId = tgt.trainerId; }
+    else { s.trainerId = trainerIdByRegion_(s.region); if(s.trainerId) usedRegionFallback++; }
     s.id = uid('ftf');
-    if(tgt && tgt.trainerId) matchedShop++; else { unmatchedShop++; unmatchedCodes.add(s.shopCode||s.shopName||'(không tên)'); }
+    if(s.trainerId) matchedShop++; else { unmatchedShop++; unmatchedCodes.add(s.shopCode||s.shopName||'(không tên)'); }
   });
+  window.__ftfMatchDiag={ shops:shopArr.length, tgtMatched, tgtHadTrainer, usedRegionFallback, targetRows:targetRowsForMonth.length };
 
   // AN TOÀN: nếu không tạo được Shop nào (data không khớp/sai cột), KHÔNG ghi đè danh sách cũ.
   if(!shopArr.length){
@@ -4856,7 +4862,9 @@ function renderFtfImportBox(){
   if(ftfDiagBtn) ftfDiagBtn.onclick=()=>{
     const n=(ftfShopList||[]).length;
     const s0=ftfShopList&&ftfShopList[0]?ftfShopList[0]:null;
-    let txt='Tổng shop trong danh sách: '+n+'\n\n';
+    let txt='Tổng shop trong danh sách: '+n+'\n';
+    if(window.__ftfMatchDiag){ const d=window.__ftfMatchDiag; txt+='Target rows: '+d.targetRows+' | Shop khớp Target: '+d.tgtMatched+' | Target có trainer: '+d.tgtHadTrainer+' | Suy từ khu vực: '+d.usedRegionFallback+'\n'; }
+    txt+='\n';
     if(s0){
       const withTrainer=(ftfShopList||[]).filter(s=>s.trainerId).length;
       const withHr=(ftfShopList||[]).filter(s=>Number(s.hrActual)>0).length;
