@@ -1404,6 +1404,13 @@ const dailyOlieMessages_ = ["Chúc bạn một ngày làm việc tràn đầy n�
 #pgsmProgressTable .pgsm-col-shop{max-width:190px;overflow-wrap:anywhere;}
 #pgsmProgressTable .pgsm-col-person{min-width:145px;}
 #pgsmProgressTable .pgsm-col-trainer{min-width:120px;}
+#pgsmProgressTable .pgsm-col-change{min-width:190px;max-width:280px;white-space:normal;overflow-wrap:anywhere;}
+.pgsm-change-label{display:block;font-weight:800;}
+.pgsm-change-reason{display:block;margin-top:4px;font-size:12px;white-space:pre-wrap;}
+#pgsmProgressTable tbody tr.pgsm-change-add>td{background:#e8f5e9;}
+#pgsmProgressTable tbody tr.pgsm-change-remove>td{background:#ffebee;}
+#pgsmProgressTable tbody tr.pgsm-change-add .pgsm-person-name,#pgsmProgressTable tbody tr.pgsm-change-add .pgsm-change-label{color:#166534;}
+#pgsmProgressTable tbody tr.pgsm-change-remove .pgsm-person-name,#pgsmProgressTable tbody tr.pgsm-change-remove .pgsm-change-label{color:#b91c1c;}
 #pgsmProgressTable .pgsm-col-step{min-width:105px;}
 </style>
 </head>
@@ -15935,7 +15942,7 @@ async function pgsmSubmitChange_(camp,action,pg,reason=''){
  if(!code||!pgsmCanSeeRegion_(region))return alert('PGs không thuộc khu vực được phân quyền.'),false;
  if(action==='add'&&(!String(pg.name||'').trim()||!String(pg.shop||pg.shopName||'').trim()||!String(pg.channel||'').trim()||!String(pg.trainerId||'').trim()))return alert('Cần nhập đầy đủ mã, tên PGs, shop, kênh và Trainer.'),false;
  if(action==='remove'&&String(pg.trainerId||'')!==String(session?.trainerId||''))return alert('Bạn chỉ được yêu cầu loại PGs do chính mình phụ trách.'),false;
- if(action==='remove'&&!String(reason||'').trim())return alert('Hãy nhập lý do loại bỏ PGs.'),false;
+ if(!String(reason||'').trim())return alert(action==='remove'?'Hãy nhập lý do loại bỏ PGs.':'Hãy nhập lý do thêm PGs.'),false;
  if(action==='remove'){const snap=await pgsmData_(camp,true);const inTarget=(snap.registered||[]).find(x=>pgsmCode_(x)===code);if(!inTarget||String(inTarget.trainerId||'')!==String(session?.trainerId||''))return alert('PGs hiện không thuộc danh sách Master do bạn phụ trách.'),false;}
  const selectedTrainer=(config.trainers||[]).find(t=>String(t.id)===String(pg.trainerId));
  if(action==='add'&&(!selectedTrainer||!pgsmCanSeeRegion_(selectedTrainer.region)))return alert('Trainer phụ trách không thuộc khu vực được quản lý.'),false;
@@ -16563,11 +16570,101 @@ async function renderPgsMasterProgress_(){
  el.innerHTML=`<div class="scope-filters"><b>Chiến dịch PGs Master:</b> <select id="pgsmProgressCampaign">${camps.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join('')}</select></div><div id="pgsmProgressContent"></div>`;
  const sel=el.querySelector('#pgsmProgressCampaign');sel.addEventListener('change',()=>pgsmDrawProgress_(camps.find(c=>c.id===sel.value)));await pgsmDrawProgress_(camps[0]);
 }
+async function pgsmProgressChanges_(camp){
+ if(!isAdmin()&&!isTrainer())return [];
+ const ids=[...new Set((config.trainers||[]).filter(t=>isAdmin()||pgsmCanSeeRegion_(t.region)).map(t=>String(t.id||'')).filter(Boolean))];
+ if(isTrainer()&&session?.trainerId&&!ids.includes(String(session.trainerId)))ids.push(String(session.trainerId));
+ const keys=[...(isAdmin()?[pgsmRequestKey_(camp)]:[]),...ids.map(id=>pgsmRequestKey_(camp,id))];
+ if(!keys.length)return [];
+ const bundle=await dbGetMulti(keys);
+ if(!keys.every(key=>Object.prototype.hasOwnProperty.call(bundle||{},key)))throw Error('request_history_unavailable');
+ return keys.flatMap(key=>Array.isArray(bundle[key])?bundle[key]:[]).filter(r=>r&&pgsmCanSeeRegion_(r.pg?.region||r.requester?.region||''));
+}
+function pgsmProgressRows_(d,requests){
+ const key=r=>pgsmCode_(r)+'|'+pgsmNorm_(r.region);
+ const rows=new Map();
+ const record=(r,inTarget,change=null)=>({...r,code:pgsmCode_(r),channel:pgsmRecordChannel_(r),_pgsmInTarget:inTarget,_pgsmChange:change});
+ (d.registered||[]).filter(r=>pgsmCanSeeRegion_(r.region)).forEach(r=>rows.set(key(r),record(r,true)));
+ const approved=new Set(d.approvedRequestIds||[]),removed=new Set((d.manualRemove||[]).map(code=>pgsmCode_({code})));
+ const history=(requests||[]).filter(r=>{
+   const code=pgsmCode_({code:r.code||r.pg?.code}),region=String(r.pg?.region||r.requester?.region||'').trim();
+   return code&&region&&r.pg&&(!r.pg.code||pgsmCode_(r.pg)===code)&&['add','remove'].includes(r.action)
+     &&(!r.requester?.role||r.requester.role==='trainer')
+     &&(!r.requester?.region||pgsmNorm_(r.requester.region)===pgsmNorm_(region))
+     &&pgsmCanSeeRegion_(region)&&(r.status==='approved'||r.status==='pending'||approved.has(r.id));
+ }).sort((a,b)=>(Date.parse(a.reviewedAt||a.requestedAt)||0)-(Date.parse(b.reviewedAt||b.requestedAt)||0));
+ for(const request of history){
+   const pg={...request.pg,code:pgsmCode_({code:request.code||request.pg.code}),region:request.pg.region||request.requester.region};
+   const id=key(pg),existing=rows.get(id),inTarget=existing?existing._pgsmInTarget:false;
+   const pending=request.status!=='approved'&&!approved.has(request.id);
+   if(request.action==='add'&&((pending&&inTarget)||(!pending&&!inTarget)))continue;
+   if(request.action==='remove'&&((pending&&!inTarget)||(!pending&&(inTarget||!removed.has(pg.code)))))continue;
+   const change={action:request.action,pending,reason:String(request.reason||request.note||'').trim()||'Trainer chưa ghi lý do'};
+   rows.set(id,record(existing||pg,inTarget,change));
+ }
+ // Giữ PGs đã loại trong báo cáo, ngay cả khi lịch sử cũ không còn thông tin đầy đủ.
+ for(const code of removed){
+   const raw=d.manualPgRecords?.[code]||(pgs||[]).find(p=>pgsmCode_(p)===code&&String(p.brand||'').toUpperCase()==='OPPO');
+   if(!raw)continue;
+   const pg=pgsmPgRecord_(raw);
+   if(pg.region&&pgsmCanSeeRegion_(pg.region)&&!rows.has(key(pg)))rows.set(key(pg),record(pg,false,{action:'remove',pending:false,reason:'Chưa có lý do của Trainer trong lịch sử'}));
+ }
+ return [...rows.values()];
+}
+function pgsmChangeLabel_(row){
+ const change=row._pgsmChange;
+ return change?(change.action==='remove'?'Loại':'Thêm')+(change.pending?' · Chờ duyệt':''):'Trong danh sách';
+}
+let pgsmExcelJsPromise_;
+function pgsmLoadExcelJs_(){
+ if(window.ExcelJS?.Workbook)return Promise.resolve(window.ExcelJS);
+ if(!pgsmExcelJsPromise_)pgsmExcelJsPromise_=new Promise((resolve,reject)=>{
+   // ExcelJS 4.4.0 (MIT): chỉ tải khi xuất file có màu, không thay thư viện XLSX của các mục khác.
+   const script=document.createElement('script');
+   const fail=()=>{clearTimeout(timer);script.remove();reject(Error('Không tải được thư viện Excel có màu. Hãy kiểm tra kết nối và thử lại.'));};
+   const timer=setTimeout(fail,20000);
+   script.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';script.referrerPolicy='no-referrer';
+   script.onerror=fail;script.onload=()=>{clearTimeout(timer);if(window.ExcelJS?.Workbook)resolve(window.ExcelJS);else fail();};
+   document.head.appendChild(script);
+ }).catch(error=>{pgsmExcelJsPromise_=null;throw error;});
+ return pgsmExcelJsPromise_;
+}
+async function pgsmWriteProgressExcel_(records,sourceRows,filename){
+ const excel=await pgsmLoadExcelJs_();
+ const canExport=()=>sourceRows.every(r=>pgsmCanSeeRegion_(r.region));
+ if(!canExport())throw Error('Quyền truy cập đã thay đổi. Hãy tải lại danh sách và xuất lại.');
+ const workbook=new excel.Workbook(),sheet=workbook.addWorksheet('Tiến độ PGs Master');
+ sheet.columns=Object.keys(records[0]).map(header=>({header,key:header,width:header==='Trạng thái'?48:header==='Họ tên'||header==='Tên shop'?26:header.includes('Kết quả')?28:header==='STT'?7:18}));
+ records.forEach((data,index)=>{
+   const row=sheet.addRow(data),change=sourceRows[index]._pgsmChange;
+   row.alignment={vertical:'middle',wrapText:true};
+   if(change){
+     const color=change.action==='remove'?{fill:'FFFFEBEE',font:'FFB91C1C'}:{fill:'FFE8F5E9',font:'FF166534'};
+     row.eachCell({includeEmpty:true},cell=>{cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:color.fill}};});
+     ['Mã PGs','Họ tên','Trạng thái'].forEach(key=>{row.getCell(key).font={bold:true,color:{argb:color.font}};});
+     row.height=60;
+   }
+ });
+ sheet.getRow(1).height=40;
+ sheet.getRow(1).eachCell(cell=>{cell.font={bold:true,color:{argb:'FFFFFFFF'}};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF166534'}};cell.alignment={vertical:'middle',wrapText:true};});
+ sheet.views=[{state:'frozen',ySplit:1}];
+ sheet.autoFilter={from:{row:1,column:1},to:{row:sheet.rowCount,column:sheet.columnCount}};
+ const bytes=await workbook.xlsx.writeBuffer();
+ if(!canExport())throw Error('Quyền truy cập đã thay đổi. Hãy tải lại danh sách và xuất lại.');
+ const url=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+ const link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
 async function pgsmDrawProgress_(camp){
  const el=document.getElementById('pgsmProgressContent');if(!el||!camp)return;
  const d=await pgsmData_(camp,true);
  if(!d.locked){el.innerHTML='<div class="form-card">⏳ Chưa chốt đăng ký. Sau khi chốt Target, danh sách sẽ xuất hiện tại đây.</div><div id="pgsmTrainerChanges"></div>';await pgsmRenderTrainerChangePanel_(camp,d);return;}
- const rows=(d.registered||[]).filter(r=>pgsmCanSeeRegion_(r.region)).map(r=>({...r,channel:pgsmRecordChannel_(r)}));
+ let changes;
+ try{changes=await pgsmProgressChanges_(camp);}catch{
+   el.innerHTML='<div class="form-card" role="alert">Không tải được lịch sử Thêm/Loại PGs. Hãy thử lại trước khi xuất Excel để tránh thiếu trạng thái hoặc lý do. <button type="button" id="pgsmRetryHistory">Thử lại</button></div>';
+   el.querySelector('#pgsmRetryHistory').addEventListener('click',()=>pgsmDrawProgress_(camp));return;
+ }
+ const rows=pgsmProgressRows_(d,changes);
  // Tiến độ chỉ đọc các cờ m*_done từ OTraining, không có bộ nhớ nháp nhập tay.
  const stageStatus=(r,m)=>pgsmStageStatus_(r.code,m.id,d.systemMeta,null,d.thresholds);
  const achieved=r=>PGSM_STAGES_.filter(m=>stageStatus(r,m).done).length;
@@ -16600,7 +16697,8 @@ async function pgsmDrawProgress_(camp){
   <label>ID / tên shop<input id="pgsmProgressShop" placeholder="Tìm shop"></label>
   <button type="button" class="secondary" id="pgsmExportProgress">⬇ Xuất Excel tiến độ PGs</button>
  </div>
- <div class="table-scroll" id="pgsmProgressTableWrap"><table id="pgsmProgressTable"><thead><tr><th>STT</th><th>Code PGs</th><th class="pgsm-col-person">Họ tên</th><th>ID shop</th><th>Shop</th><th>Khu vực</th><th>Trainer</th><th>Kênh</th>${PGSM_STAGES_.map(m=>`<th>${escapeHtml(m.label)}<small style="display:block">Target: ${Number(d.thresholds[m.id]||0)}</small></th>`).join('')}<th>Kết quả</th>${isTrainer()?'<th>Thao tác</th>':''}</tr></thead><tbody id="pgsmProgressRows"></tbody></table></div>
+ <p class="section-desc">Thêm: màu xanh · Loại: màu đỏ, kèm lý do Trainer. Yêu cầu chờ duyệt được ghi rõ; tổng tiến độ chỉ tính danh sách chính thức.</p>
+ <div class="table-scroll" id="pgsmProgressTableWrap"><table id="pgsmProgressTable"><thead><tr><th>STT</th><th>Code PGs</th><th class="pgsm-col-person">Họ tên</th><th>ID shop</th><th>Shop</th><th>Khu vực</th><th>Trainer</th><th>Kênh</th><th class="pgsm-col-change">Trạng thái</th>${PGSM_STAGES_.map(m=>`<th>${escapeHtml(m.label)}<small style="display:block">Target: ${Number(d.thresholds[m.id]||0)}</small></th>`).join('')}<th>Kết quả</th>${isTrainer()?'<th>Thao tác</th>':''}</tr></thead><tbody id="pgsmProgressRows"></tbody></table></div>
  <div id="pgsmProgressPagination"></div>
  </div><div id="pgsmTrainerChanges"></div>`;
  const $=id=>el.querySelector('#'+id);
@@ -16611,7 +16709,7 @@ async function pgsmDrawProgress_(camp){
  const pageSize=6;let page=1;
  function summary(){
    const grouped=new Map();
-   for(const r of rows){
+   for(const r of rows.filter(r=>r._pgsmInTarget)){
      const id=groupBy.value==='region'?regionOf(r):String(r.trainerId||'');
      const label=groupBy.value==='region'?regionOf(r):(r.trainerName||trainerOf(r.trainerId)?.name||'Chưa gán Trainer');
      const key=id||'__none__';
@@ -16658,15 +16756,15 @@ async function pgsmDrawProgress_(camp){
    const start=(page-1)*pageSize;
    $('pgsmProgressRows').innerHTML=subset.slice(start,start+pageSize).map((r,i)=>{
      const n=achieved(r);
-     return `<tr><td>${start+i+1}</td><td>${escapeHtml(r.code)}</td><td class="pgsm-person-name pgsm-col-person">${escapeHtml(r.name)}</td><td>${escapeHtml(r.shopId||'—')}</td><td class="pgsm-col-shop" title="${escapeHtml(r.shop)}">${escapeHtml(r.shop)}</td><td>${escapeHtml(r.region)}</td><td class="pgsm-col-trainer">${escapeHtml(r.trainerName)}</td><td>${escapeHtml(r.channel||'—')}</td>${PGSM_STAGES_.map(m=>{
+     return `<tr class="${r._pgsmChange?'pgsm-change-'+r._pgsmChange.action:''}"><td>${start+i+1}</td><td>${escapeHtml(r.code)}</td><td class="pgsm-person-name pgsm-col-person">${escapeHtml(r.name)}</td><td>${escapeHtml(r.shopId||'—')}</td><td class="pgsm-col-shop" title="${escapeHtml(r.shop)}">${escapeHtml(r.shop)}</td><td>${escapeHtml(r.region)}</td><td class="pgsm-col-trainer">${escapeHtml(r.trainerName)}</td><td>${escapeHtml(r.channel||'—')}</td><td class="pgsm-col-change"><span class="pgsm-change-label">${escapeHtml(pgsmChangeLabel_(r))}</span>${r._pgsmChange?`<span class="pgsm-change-reason">Lý do: ${escapeHtml(r._pgsmChange.reason)}</span>`:''}</td>${PGSM_STAGES_.map(m=>{
        const st=stageStatus(r,m);
        if(!st.fromSystem){
          return '<td class="pgsm-score-cell"><span class="pgsm-fm-status pgsm-fm-unknown">Chưa có dữ liệu</span></td>';
        }
        const stars=st.stars===null?'—':String(st.stars);
        return `<td class="pgsm-score-cell"><div class="pgsm-fm-stage"><span class="pgsm-fm-stars" title="Số sao từ OTraining">★ ${escapeHtml(stars)}</span><span class="pgsm-fm-status ${st.done?'pgsm-fm-pass':st.known?'pgsm-fm-fail':'pgsm-fm-unknown'}">${st.done?'✓ Đạt':st.known?'Chưa đạt':'Chưa có kết quả'}</span></div></td>`;
-     }).join('')}<td><span class="pgsm-result-badge ${n===5?'pgsm-result-done':''}">${n===5?'🏆 Đạt Master':`${n}/5 mốc`}</span></td>${isTrainer()?`<td>${String(r.trainerId||'')===String(session?.trainerId||'')?`<button type="button" class="secondary" data-pgsm-progress-remove="${escapeHtml(r.code)}">Loại PGs</button>`:'—'}</td>`:''}</tr>`;
-   }).join('')||`<tr><td colspan="${isTrainer()?15:14}">Không có PGs phù hợp bộ lọc</td></tr>`;
+     }).join('')}<td><span class="pgsm-result-badge ${n===5?'pgsm-result-done':''}">${n===5?'🏆 Đạt Master':`${n}/5 mốc`}</span></td>${isTrainer()?`<td>${r._pgsmInTarget&&String(r.trainerId||'')===String(session?.trainerId||'')?`<button type="button" class="secondary" data-pgsm-progress-remove="${escapeHtml(r.code)}">Loại PGs</button>`:'—'}</td>`:''}</tr>`;
+   }).join('')||`<tr><td colspan="${isTrainer()?16:15}">Không có PGs phù hợp bộ lọc</td></tr>`;
    pager.innerHTML=pgsmPager_(subset.length,page,pageSize,'data-pgsm-progress-page','PGs');
    summary();
  }
@@ -16681,11 +16779,12 @@ async function pgsmDrawProgress_(camp){
    const pg=rows.find(r=>r.code===btn.dataset.pgsmProgressRemove);
    if(pg)pgsmOpenRemoveRequest_(camp,pg);
  });
- $('pgsmExportProgress').addEventListener('click',()=>{
-   if(typeof XLSX==='undefined')return alert('Không tải được thư viện Excel.');
+ $('pgsmExportProgress').addEventListener('click',async()=>{
    // Xuất toàn bộ PGs trong bộ lọc, kể cả 0 mốc; kiểm tra lại quyền tại lúc tải file.
-   const exportRows=filtered().filter(r=>pgsmCanSeeRegion_(r.region)).map((r,i)=>{
-     const record={'STT':i+1,'Mã PGs':r.code,'Họ tên':r.name,'ID Shop':r.shopId||'','Tên shop':r.shop,'Khu vực':r.region,'Trainer':r.trainerName,'Kênh':r.channel||''};
+   const sourceRows=filtered().filter(r=>pgsmCanSeeRegion_(r.region));
+   const exportRows=sourceRows.map((r,i)=>{
+     const record={'STT':i+1,'Mã PGs':r.code,'Họ tên':r.name,'ID Shop':r.shopId||'','Tên shop':r.shop,'Khu vực':r.region,'Trainer':r.trainerName,'Kênh':r.channel||'',
+       'Trạng thái':pgsmChangeLabel_(r)+(r._pgsmChange?'\nLý do: '+r._pgsmChange.reason:'')};
      PGSM_STAGES_.forEach(m=>{
        const st=stageStatus(r,m);
        record[m.label+' - Sao FM']=st.fromSystem?(st.stars??''):'';
@@ -16696,7 +16795,10 @@ async function pgsmDrawProgress_(camp){
      record['Số mốc đạt']=achieved(r);record['Danh hiệu']=achieved(r)===5?'Đạt PGs Master':'Chưa đạt PGs Master';return record;
    });
    if(!exportRows.length)return alert('Không có PGs nào trong bộ lọc được phân quyền.');
-   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(exportRows),'Tiến độ PGs Master');XLSX.writeFile(wb,'PGs_Master_Tien_Do_'+String(camp.month||currentMonth)+'.xlsx');
+   const button=$('pgsmExportProgress');button.disabled=true;
+   try{await pgsmWriteProgressExcel_(exportRows,sourceRows,'PGs_Master_Tien_Do_'+String(camp.month||currentMonth)+'.xlsx');}
+   catch(error){alert(error.message||'Không thể xuất Excel. Vui lòng thử lại.');}
+   finally{button.disabled=false;}
  });
 
  // Campaign ID lưu một lần: ẩn Lưu, hiện Sửa; cập nhật báo cáo không can thiệp trạng thái nhập.
@@ -16823,8 +16925,8 @@ async function pgsmRenderTrainerChangePanel_(camp,d){
       </div>
 
       <div class="pgsm-field pgsm-field--12">
-        <label class="pgsm-label">Ghi chú thêm (không bắt buộc)</label>
-        <div class="pgsm-input-wrap"><textarea id="pgsmAddNote" rows="4" placeholder="Bổ sung thông tin để Admin nắm rõ hơn, ví dụ: lý do đăng ký, tình trạng nhân sự, lưu ý về shop..."></textarea></div>
+        <label class="pgsm-label">Lý do thêm PGs <span class="req">*</span></label>
+        <div class="pgsm-input-wrap"><textarea id="pgsmAddNote" rows="4" placeholder="Nhập lý do thêm PGs để hiển thị trong danh sách và file Excel..." required></textarea></div>
       </div>
     </div>
 
@@ -16891,6 +16993,7 @@ async function pgsmRenderTrainerChangePanel_(camp,d){
    if(existing&&pgsmNorm_(name)!==pgsmNorm_(existing.name))return alert('Tên PGs nhập vào khác với DATA. Bấm Kiểm tra mã PGs để đối chiếu trước khi gửi.');
    const record={code,name,region,area:region,province,shop,shopId,channel,trainerId,trainerName:trainer.name};
    const reason=String($('pgsmAddNote').value||'').trim();
+   if(!reason)return alert('Hãy nhập lý do thêm PGs.');
    if(!confirm('Gửi đăng ký THÊM PGs '+code+' – '+name+' đến Admin duyệt?'))return;
    const btn=$('pgsmSubmitAdd');btn.disabled=true;
    try{if(await pgsmSubmitChange_(camp,'add',record,reason))await pgsmRenderTrainerChangePanel_(camp,d);}finally{btn.disabled=false;}
