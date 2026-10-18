@@ -16591,14 +16591,14 @@ async function pgsmDrawProgress_(camp){
    <div class="pgsm-system-message" id="pgsmSystemMsg" aria-live="polite">${d.systemUpdatedAt?'Lần cập nhật gần nhất: '+escapeHtml(new Date(d.systemUpdatedAt).toLocaleString('vi-VN')):'Chưa cập nhật từ hệ thống.'}</div>
    <div class="section-desc" style="margin-top:6px">Kết quả M1–M5 được cập nhật duy nhất từ OTraining. Không hỗ trợ nhập hoặc lưu tiến độ thủ công.</div>
  </section>
- <h3 class="pgsm-section-title" style="margin-top:22px">Danh sách PGs Master đạt mốc</h3>
+ <h3 class="pgsm-section-title" style="margin-top:22px">Danh sách PGs Master và tiến độ từng mốc</h3>
  <div class="pgsm-filter-grid">
   <label>Khu vực<select id="pgsmProgressRegion"><option value="">Tất cả khu vực</option>${regions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}</select></label>
   <label>Trainer<select id="pgsmProgressTrainer"><option value="">Tất cả Trainer</option>${trainerIds.map(id=>`<option value="${escapeHtml(id)}">${escapeHtml(trainerOf(id)?.name||rows.find(r=>String(r.trainerId)===id)?.trainerName||id)}</option>`).join('')}</select></label>
   <label>Kênh<select id="pgsmProgressChannel"><option value="">Tất cả kênh</option></select></label>
   <label>Tên / Code PGs<input id="pgsmProgressPgSearch" placeholder="Tìm mã hoặc tên PGs"></label>
   <label>ID / tên shop<input id="pgsmProgressShop" placeholder="Tìm shop"></label>
-  <button type="button" class="secondary" id="pgsmExportAchieved">⬇ Xuất Excel PGs đạt mốc</button>
+  <button type="button" class="secondary" id="pgsmExportProgress">⬇ Xuất Excel tiến độ PGs</button>
  </div>
  <div class="table-scroll" id="pgsmProgressTableWrap"><table id="pgsmProgressTable"><thead><tr><th>STT</th><th>Code PGs</th><th class="pgsm-col-person">Họ tên</th><th>ID shop</th><th>Shop</th><th>Khu vực</th><th>Trainer</th><th>Kênh</th>${PGSM_STAGES_.map(m=>`<th>${escapeHtml(m.label)}<small style="display:block">Target: ${Number(d.thresholds[m.id]||0)}</small></th>`).join('')}<th>Kết quả</th>${isTrainer()?'<th>Thao tác</th>':''}</tr></thead><tbody id="pgsmProgressRows"></tbody></table></div>
  <div id="pgsmProgressPagination"></div>
@@ -16681,9 +16681,10 @@ async function pgsmDrawProgress_(camp){
    const pg=rows.find(r=>r.code===btn.dataset.pgsmProgressRemove);
    if(pg)pgsmOpenRemoveRequest_(camp,pg);
  });
- $('pgsmExportAchieved').addEventListener('click',()=>{
+ $('pgsmExportProgress').addEventListener('click',()=>{
    if(typeof XLSX==='undefined')return alert('Không tải được thư viện Excel.');
-   const exportRows=filtered().filter(r=>pgsmCanSeeRegion_(r.region)&&achieved(r)>0).map((r,i)=>{
+   // Xuất toàn bộ PGs trong bộ lọc, kể cả 0 mốc; kiểm tra lại quyền tại lúc tải file.
+   const exportRows=filtered().filter(r=>pgsmCanSeeRegion_(r.region)).map((r,i)=>{
      const record={'STT':i+1,'Mã PGs':r.code,'Họ tên':r.name,'ID Shop':r.shopId||'','Tên shop':r.shop,'Khu vực':r.region,'Trainer':r.trainerName,'Kênh':r.channel||''};
      PGSM_STAGES_.forEach(m=>{
        const st=stageStatus(r,m);
@@ -16694,8 +16695,8 @@ async function pgsmDrawProgress_(camp){
      });
      record['Số mốc đạt']=achieved(r);record['Danh hiệu']=achieved(r)===5?'Đạt PGs Master':'Chưa đạt PGs Master';return record;
    });
-   if(!exportRows.length)return alert('Không có PGs đạt mốc nào trong bộ lọc.');
-   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(exportRows),'PGs dat moc');XLSX.writeFile(wb,'PGs_Master_Dat_Moc_'+String(camp.month||currentMonth)+'.xlsx');
+   if(!exportRows.length)return alert('Không có PGs nào trong bộ lọc được phân quyền.');
+   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(exportRows),'Tiến độ PGs Master');XLSX.writeFile(wb,'PGs_Master_Tien_Do_'+String(camp.month||currentMonth)+'.xlsx');
  });
 
  // Campaign ID lưu một lần: ẩn Lưu, hiện Sửa; cập nhật báo cáo không can thiệp trạng thái nhập.
