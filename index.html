@@ -1153,6 +1153,15 @@
 .pgsm-fm-pass{background:#e0f3e7;color:#087843}
 .pgsm-fm-fail{background:#f2f4f2;color:#64776c}
 .pgsm-fm-unknown{background:#fff3dc;color:#866020}
+
+  /* OFF tenure filter stays usable with the compact mobile scope-filter layout. */
+  #panel-ov-onoff .onoff-tenure-filters{flex-wrap:wrap!important;overflow:visible;}
+  #panel-ov-onoff .onoff-tenure-filters select{flex:0 1 220px!important;width:220px!important;min-width:180px!important;max-width:100%;}
+  #panel-ov-onoff .onoff-tenure-filters>span{flex:1 1 260px;}
+  @media(max-width:600px){
+    #panel-ov-onoff .onoff-tenure-filters select{flex:1 1 100%!important;width:100%!important;min-width:0!important;}
+    #panel-ov-onoff .onoff-tenure-filters>span{flex:1 1 100%;}
+  }
 </style>
 <style id="olie-theme">
 :root{--bg:#f4f8f6;--green:#07864a;--green-dark:#075d37;--line:#e3ece6;--radius:16px}
@@ -1723,11 +1732,21 @@ const dailyOlieMessages_ = ["Chúc bạn một ngày làm việc tràn đầy n�
     <div id="panel-ov-onoff" class="panel">
       <div class="kpi-row cols-2" style="margin-bottom:16px;">
         <div class="kpi-card"><div class="label">On (tuyển mới) — <span id="onoffSummaryMonthLabel1"></span></div><div class="value" style="color:#016C38;" id="onoffSummaryOnCount">0</div><div class="frac" id="onoffSummaryOnFrac"></div></div>
-        <div class="kpi-card"><div class="label">Off (nghỉ việc) — <span id="onoffSummaryMonthLabel2"></span></div><div class="value" style="color:#B23A32;" id="onoffSummaryOffCount">0</div><div class="frac" id="onoffSummaryOffFrac"></div></div>
+        <div class="kpi-card"><div class="label">Off (nghỉ việc) — <span id="onoffSummaryMonthLabel2"></span><span id="onoffSummaryOffTenureLabel"></span></div><div class="value" style="color:#B23A32;" id="onoffSummaryOffCount">0</div><div class="frac" id="onoffSummaryOffFrac"></div></div>
       </div>
 
       <div class="region-card">
-        <div class="region-head"><h3>Biến động nhân sự ON/OFF</h3><span class="count" id="onoffTrendRange"></span></div>
+        <div class="region-head" style="flex-wrap:wrap;gap:12px;"><h3>Nhân sự OFF theo thâm niên</h3><span class="count" id="onoffTrendRange"></span></div>
+        <div class="scope-filters onoff-tenure-filters" style="margin-bottom:12px;">
+          <label class="scope-label" for="onoffOffTenureFilter">Thâm niên tại ngày nghỉ:</label>
+          <select id="onoffOffTenureFilter" aria-label="Lọc OFF theo thâm niên" title="Số tháng tròn tại ngày nghỉ: dưới 3; từ 3 đến dưới 6; từ 6 đến dưới 12; từ 12 đến dưới 36; từ đủ 36 tháng.">
+            <option value="">Tất cả thâm niên</option>
+            <option value="lt3">&lt;3T</option><option value="3to6">3T–6T</option>
+            <option value="6to12">6T–1N</option><option value="12to36">1N–3N</option>
+            <option value="gte36">&gt;3N</option><option value="unknown">Chưa xác định thâm niên</option>
+          </select>
+          <span style="font-size:var(--cap);color:var(--muted);">Áp dụng cho OFF: thẻ số liệu, biểu đồ, danh sách và Excel.</span>
+        </div>
         <div class="chart-wrap" style="height:340px;"><canvas id="chartRecruitAttrition"></canvas></div>
         <div id="onoffAttritionNote" style="font-size:var(--cap);color:var(--muted);margin-top:8px;"></div>
       </div>
@@ -8105,94 +8124,176 @@ function monthsDiff(d1,d2){
   if(!d1||!d2) return 0;
   return Math.max(0,(d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth()));
 }
-function onoffRosterMatchesScope(rec){
-  const trainerVal = document.getElementById('ovFilterTrainer').value;
-  const regionVal = document.getElementById('ovFilterRegion').value;
-  if(trainerVal) return rec.trainerId===trainerVal;
-  if(regionVal){ return rec.area===regionVal; }
+const ONOFF_TENURE_GROUPS_ = [
+  {value:'lt3', label:'<3T', color:'#E9A23B'},
+  {value:'3to6', label:'3T–6T', color:'#E67F32'},
+  {value:'6to12', label:'6T–1N', color:'#D4574E'},
+  {value:'12to36', label:'1N–3N', color:'#A84668'},
+  {value:'gte36', label:'>3N', color:'#6C4B8C'},
+  {value:'unknown', label:'Chưa xác định', color:'#87938D'},
+];
+let onoffTenureFilter_ = '';
+// Date-only values are calendar dates in Vietnam; instants are converted to Vietnam first.
+function onoffDateParts_(value){
+  if(value===null || value===undefined || value==='') return null;
+  let instant;
+  if(value instanceof Date){
+    if(!Number.isFinite(value.getTime())) return null;
+    instant = value;
+  } else {
+    const str = String(value).trim();
+    const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(Z|[+-]\d{2}:?\d{2})?)?$/i);
+    const vn = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if(!iso && !vn) return null;
+    const year = Number(iso ? iso[1] : vn[3]);
+    const month = Number(iso ? iso[2] : vn[2]);
+    const day = Number(iso ? iso[3] : vn[1]);
+    const time = iso || vn;
+    const hour = Number(time[4]||0), minute = Number(time[5]||0), second = Number(time[6]||0);
+    const leap = year%4===0 && (year%100!==0 || year%400===0);
+    const days = [31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+    if(year<1000 || month<1 || month>12 || day<1 || day>days[month-1] || hour>23 || minute>59 || second>59) return null;
+    if(!iso || !iso[7]) return {year,month,day};
+    instant = new Date(str);
+    if(!Number.isFinite(instant.getTime())) return null;
+  }
+  const parts = new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(instant);
+  const part = type=>Number(parts.find(p=>p.type===type)?.value);
+  return {year:part('year'),month:part('month'),day:part('day')};
+}
+function onoffEventMonth_(value){
+  const p=onoffDateParts_(value);
+  return p ? `${p.year}-${pad(p.month)}` : '';
+}
+function onoffDateLabel_(value){
+  const p=onoffDateParts_(value);
+  return p ? `${pad(p.day)}/${pad(p.month)}/${p.year}` : '';
+}
+function onoffOffTenureMonths_(r){
+  const start=onoffDateParts_(r.joinedAt), end=onoffDateParts_(r.offDate);
+  if(!start || !end) return null;
+  const key=p=>p.year*10000+p.month*100+p.day;
+  if(key(end)<key(start)) return null;
+  let months=(end.year-start.year)*12+end.month-start.month;
+  // Clamp anniversaries to month-end (Jan 31 → Apr 30 is three full months).
+  const endMonthDays=new Date(Date.UTC(end.year,end.month,0)).getUTCDate();
+  if(end.day<Math.min(start.day,endMonthDays)) months--;
+  return months;
+}
+function onoffTenureBucket_(r){
+  const m=onoffOffTenureMonths_(r);
+  return m===null ? 'unknown' : m<3 ? 'lt3' : m<6 ? '3to6' : m<12 ? '6to12' : m<36 ? '12to36' : 'gte36';
+}
+function onoffMatchesTenure_(r,filter=onoffTenureFilter_){
+  return !filter || onoffTenureBucket_(r)===filter;
+}
+function onoffTenureLabel_(){
+  return ONOFF_TENURE_GROUPS_.find(g=>g.value===onoffTenureFilter_)?.label || 'Tất cả thâm niên';
+}
+function onoffScope_(cards=false){
+  const selected=cards ? topCardScopeVals_() : {
+    trainerVal:document.getElementById('ovFilterTrainer')?.value||'',
+    regionVal:document.getElementById('ovFilterRegion')?.value||'',
+  };
+  const saleVal=document.getElementById('ovFilterSale')?.value||'';
+  const {trainerVal,regionVal}=selected;
+  const regionLabel=regionVal || (isTrainer() ? session.region : '') || 'Toàn Miền Trung';
+  const label=(trainerVal ? (trainerOf(trainerVal)?.name||'Trainer đang chọn') : regionLabel) + (saleVal ? ` · Sale: ${saleVal}` : '');
+  return {trainerVal,regionVal,saleVal,label};
+}
+function onoffMatchesScope_(rec,scope,personnel=false){
+  const tr=trainerOf(rec.trainerId);
+  const region=normalizeAreaVN(personnel ? (tr?.region||rec.area) : (rec.area||tr?.region));
+  if(isTrainer()){
+    if(session.region){
+      if(region!==normalizeAreaVN(session.region)) return false;
+    } else if(!session.trainerId || rec.trainerId!==session.trainerId) return false;
+  }
+  if(scope.trainerVal && rec.trainerId!==scope.trainerVal) return false;
+  if(scope.regionVal && region!==normalizeAreaVN(scope.regionVal)) return false;
+  if(scope.saleVal){
+    if(personnel) return String(rec.sale||'').trim()===scope.saleVal;
+    const code=normalizeCode_(rec.code);
+    if(!code) return false;
+    // Roster has no Sale: use a unique OPPO personnel match with the same event owner.
+    const matches=pgs.filter(p=>p.brand==='OPPO' && normalizeCode_(p.code)===code &&
+      (rec.trainerId ? p.trainerId===rec.trainerId : normalizeAreaVN(trainerOf(p.trainerId)?.region||p.area)===region));
+    if(matches.length!==1 || String(matches[0].sale||'').trim()!==scope.saleVal) return false;
+  }
   return true;
 }
+function onoffRosterMatchesScope(rec){
+  return onoffMatchesScope_(rec,onoffScope_());
+}
+function onoffActiveCount_(scope){
+  return pgs.filter(p=>p.brand==='OPPO' && p.status==='Đang làm' && onoffMatchesScope_(p,scope,true)).length;
+}
+function buildOnOffChartModel_(scope,tenure=onoffTenureFilter_,month=currentMonth){
+  const months=monthsFromJanTo(month);
+  const scoped=onoffRoster.filter(r=>onoffMatchesScope_(r,scope));
+  const offByMonth=months.map(m=>scoped.filter(r=>onoffEventMonth_(r.offDate)===m));
+  const offTotals=offByMonth.map(rows=>rows.length);
+  const groups=ONOFF_TENURE_GROUPS_.filter(g=>
+    (!tenure || g.value===tenure) && (g.value!=='unknown' || tenure==='unknown' || offByMonth.some(rows=>rows.some(r=>onoffTenureBucket_(r)==='unknown'))));
+  const datasets=groups.map(g=>{
+    const data=offByMonth.map(rows=>rows.filter(r=>onoffTenureBucket_(r)===g.value).length);
+    return {label:g.label,tenure:g.value,data,pctData:data.map((n,i)=>offTotals[i] ? Math.round(n/offTotals[i]*1000)/10 : 0),
+      backgroundColor:g.color,borderColor:'#FFFFFF',borderWidth:1,stack:'off',maxBarThickness:52};
+  });
+  return {months,activeCount:onoffActiveCount_(scope),
+    onCount:scoped.filter(r=>onoffEventMonth_(r.joinedAt)===month).length,
+    offCount:scoped.filter(r=>onoffEventMonth_(r.offDate)===month && onoffMatchesTenure_(r,tenure)).length,
+    offTotals,datasets};
+}
+document.getElementById('onoffOffTenureFilter').addEventListener('change',e=>{
+  onoffTenureFilter_=ONOFF_TENURE_GROUPS_.some(g=>g.value===e.target.value) ? e.target.value : '';
+  onoffDetailPage=1;
+  renderOnOff();
+});
 function renderRecruitAttritionChart(){
-  const months = monthsFromJanTo(currentMonth);
-  document.getElementById('onoffTrendRange').textContent = `${monthLabel(months[0])} → ${monthLabel(months[months.length-1])}`;
-
-  const scoped = onoffRoster.filter(onoffRosterMatchesScope);
-  const totalRoster = scoped.length;
-
-  const onData = months.map(m => scoped.filter(r=> monthKeyOf(r.joinedAt? new Date(r.joinedAt):null)===m).length);
-  const offData = months.map(m => scoped.filter(r=> monthKeyOf(r.offDate? new Date(r.offDate):null)===m).length);
-  const onPctData = onData.map(c=> totalRoster ? Math.round((c/totalRoster)*1000)/10 : 0);
-  const offPctData = offData.map(c=> totalRoster ? Math.round((c/totalRoster)*1000)/10 : 0);
-
-  const regionVal = document.getElementById('ovFilterRegion').value;
-  const trainerVal = document.getElementById('ovFilterTrainer').value;
-  const scopeLabel = trainerVal ? (trainerOf(trainerVal)?trainerOf(trainerVal).name:'Trainer đang chọn') : (regionVal || 'Toàn Miền Trung');
-
-  // Ghi chú 2 dòng: Tỉ lệ tuyển mới (ON) & Tỉ lệ nghỉ việc (OFF) của THÁNG ĐANG CHỌN (currentMonth), theo đúng phạm vi Khu vực/Trainer đang lọc
-  const onCountThisMonth = scoped.filter(r=> monthKeyOf(r.joinedAt? new Date(r.joinedAt):null)===currentMonth).length;
-  const offCountThisMonth = scoped.filter(r=> monthKeyOf(r.offDate? new Date(r.offDate):null)===currentMonth).length;
-  const onPctThisMonth = totalRoster ? Math.round((onCountThisMonth/totalRoster)*1000)/10 : 0;
-  const offPctThisMonth = totalRoster ? Math.round((offCountThisMonth/totalRoster)*1000)/10 : 0;
-  const noteEl = document.getElementById('onoffAttritionNote');
+  const scope=onoffScope_(), model=buildOnOffChartModel_(scope);
+  const {months,datasets}=model;
+  const pct=(n,total)=>total ? `${Math.round(n/total*1000)/10}%` : '—';
+  const tenureLabel=onoffTenureLabel_();
+  document.getElementById('onoffTrendRange').textContent=`${monthLabel(months[0])} → ${monthLabel(months[months.length-1])}`;
+  const noteEl=document.getElementById('onoffAttritionNote');
   if(noteEl){
-    noteEl.innerHTML = totalRoster
-      ? `Tỉ lệ tuyển mới (ON) — ${scopeLabel}, ${monthLabel(currentMonth)}: <strong>${onPctThisMonth}%</strong> (${onCountThisMonth}/${totalRoster} PGs)<br>
-         Tỉ lệ nghỉ việc (OFF) — ${scopeLabel}, ${monthLabel(currentMonth)}: <strong>${offPctThisMonth}%</strong> (${offCountThisMonth}/${totalRoster} PGs)`
-      : `Chưa có dữ liệu On/Off cho phạm vi "${scopeLabel}".`;
+    noteEl.textContent=`${monthLabel(currentMonth)} · ${scope.label} · ${tenureLabel}: ${model.offCount} OFF / ${model.activeCount} PGs OPPO đang làm` +
+      (model.activeCount ? ` = ${pct(model.offCount,model.activeCount)}.` : '. Chưa có PGs đang làm để tính tỷ lệ.') +
+      ' Cột thể hiện số PGs nghỉ từng tháng; thâm niên tính đến ngày nghỉ. Di chuột để xem tỷ trọng trong tổng OFF của tháng.';
   }
-  // 2 thẻ tổng quan số liệu On/Off của đúng tháng đang xem (currentMonth) — RIÊNG cho thẻ trên cùng,
-  // Trainer mặc định chỉ thấy của mình (topCardOnoffRoster), khác với ghi chú/biểu đồ dưới (luôn theo dropdown).
-  const cardScoped = topCardOnoffRoster();
-  const cardTotalRoster = cardScoped.length;
-  const cardOnCount = cardScoped.filter(r=> monthKeyOf(r.joinedAt? new Date(r.joinedAt):null)===currentMonth).length;
-  const cardOffCount = cardScoped.filter(r=> monthKeyOf(r.offDate? new Date(r.offDate):null)===currentMonth).length;
-  const cardOnPct = cardTotalRoster ? Math.round((cardOnCount/cardTotalRoster)*1000)/10 : 0;
-  const cardOffPct = cardTotalRoster ? Math.round((cardOffCount/cardTotalRoster)*1000)/10 : 0;
-  const cardScopeLabel = topCardScopeLabel_();
-  document.getElementById('onoffSummaryMonthLabel1').textContent = monthLabel(currentMonth);
-  document.getElementById('onoffSummaryMonthLabel2').textContent = monthLabel(currentMonth);
-  document.getElementById('onoffSummaryOnCount').textContent = cardOnCount;
-  document.getElementById('onoffSummaryOffCount').textContent = cardOffCount;
-  document.getElementById('onoffSummaryOnFrac').textContent = cardTotalRoster ? `${cardOnPct}% trên tổng ${cardTotalRoster} PGs (${cardScopeLabel})` : `Chưa có dữ liệu (${cardScopeLabel})`;
-  document.getElementById('onoffSummaryOffFrac').textContent = cardTotalRoster ? `${cardOffPct}% trên tổng ${cardTotalRoster} PGs (${cardScopeLabel})` : `Chưa có dữ liệu (${cardScopeLabel})`;
-
+  // Active OPPO personnel in the selected month are the denominator, never historical roster size.
+  const cardScope=onoffScope_(true), card=buildOnOffChartModel_(cardScope);
+  document.getElementById('onoffSummaryMonthLabel1').textContent=monthLabel(currentMonth);
+  document.getElementById('onoffSummaryMonthLabel2').textContent=monthLabel(currentMonth);
+  document.getElementById('onoffSummaryOffTenureLabel').textContent=onoffTenureFilter_ ? ` · ${tenureLabel}` : '';
+  document.getElementById('onoffSummaryOnCount').textContent=card.onCount;
+  document.getElementById('onoffSummaryOffCount').textContent=card.offCount;
+  const frac=n=>card.activeCount ? `${pct(n,card.activeCount)} trên tổng ${card.activeCount} PGs OPPO đang làm (${cardScope.label})` : `0 PGs OPPO đang làm — chưa tính tỷ lệ (${cardScope.label})`;
+  document.getElementById('onoffSummaryOnFrac').textContent=frac(card.onCount);
+  document.getElementById('onoffSummaryOffFrac').textContent=frac(card.offCount);
   if(chartRecruitAttritionInstance) chartRecruitAttritionInstance.destroy();
-  const ctx = document.getElementById('chartRecruitAttrition');
-  if(!onoffRoster.length) return;
-  chartRecruitAttritionInstance = new Chart(ctx, {
-    type:'line',
-    data:{
-      labels: months.map(m=>monthLabel(m)),
-      datasets:[
-        { label:'On (tuyển mới)', data:onData, pctData:onPctData, borderColor:'#016C38', backgroundColor:'#016C38', tension:0.25, fill:false, pointRadius:4,
-          datalabels:{ align:'bottom', offset:6 } },
-        { label:'Off (nghỉ việc)', data:offData, pctData:offPctData, borderColor:'#B23A32', backgroundColor:'#B23A32', tension:0.25, fill:false, pointRadius:4,
-          datalabels:{ align:'top', offset:6 } },
-      ]
-    },
+  chartRecruitAttritionInstance=new Chart(document.getElementById('chartRecruitAttrition'),{
+    type:'bar',
+    data:{labels:months.map(monthLabel),datasets},
     options:{
-      responsive:true, maintainAspectRatio:false, clip:false,
-      layout:{ padding:{ top:26, right:16, bottom:22 } },
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      layout:{padding:{top:12,right:8}},
       plugins:{
-        legend:{ position:'bottom', labels:{font:{size:9},boxWidth:12} },
-        datalabels:{
-          align:'top', offset:4, clamp:true, color:'#333', font:{size:9,weight:'bold'},
-          formatter:(v,ctx)=>{ const pct=ctx.dataset.pctData[ctx.dataIndex]; return pct>0 ? pct+'%' : ''; }
-        },
-        tooltip:{
-          callbacks:{
-            label:(ctx)=>{
-              const pct = ctx.dataset.pctData ? ctx.dataset.pctData[ctx.dataIndex] : 0;
-              return `${ctx.dataset.label}: ${ctx.parsed.y} PGs (${pct}%)`;
-            }
-          }
-        }
+        legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,padding:16}},
+        datalabels:{color:'#FFFFFF',font:{size:11,weight:'bold'},anchor:'center',align:'center',clamp:true,formatter:v=>v>0?v:''},
+        tooltip:{callbacks:{
+          label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y} PGs (${ctx.dataset.pctData[ctx.dataIndex]}% tổng OFF tháng)`,
+          footer:items=>items.length ? `Tổng OFF tháng: ${model.offTotals[items[0].dataIndex]} PGs` : '',
+        }},
       },
       scales:{
-        x:{ ticks:{font:{size:9}}, grid:{display:false} },
-        y:{ beginAtZero:true, suggestedMax: Math.ceil(Math.max(1, ...onData, ...offData)*1.3), ticks:{stepSize:1,font:{size:9}}, grid:{color:'#EDF1EF'} }
-      }
-    }
+        x:{stacked:true,ticks:{font:{size:10}},grid:{display:false}},
+        y:{stacked:true,beginAtZero:true,suggestedMax:Math.max(1,...months.map((_,i)=>datasets.reduce((sum,d)=>sum+d.data[i],0))),
+          title:{display:true,text:'Số PGs OFF'},ticks:{precision:0,font:{size:10}},grid:{color:'#EDF1EF'}},
+      },
+    },
   });
 }
 
@@ -8244,14 +8345,14 @@ document.getElementById('onoffDetailRegionFilter').addEventListener('change', (e
 });
 function visibleOnOffDetailList(){
   let scoped = onoffRoster.filter(onoffRosterMatchesScope);
-  if(onoffDetailRegion) scoped = scoped.filter(r=> (r.area||'').trim()===onoffDetailRegion);
+  if(onoffDetailRegion) scoped = scoped.filter(r=> normalizeAreaVN(r.area||trainerOf(r.trainerId)?.region)===normalizeAreaVN(onoffDetailRegion));
   let list;
   if(onoffViewMode==='On'){
-    list = scoped.filter(r=> !!r.joinedAt);
-    if(onoffDetailMonth) list = list.filter(r=> monthKeyOf(r.joinedAt?new Date(r.joinedAt):null)===onoffDetailMonth);
+    list = scoped.filter(r=> !!onoffEventMonth_(r.joinedAt));
+    if(onoffDetailMonth) list = list.filter(r=> onoffEventMonth_(r.joinedAt)===onoffDetailMonth);
   } else {
-    list = scoped.filter(r=> !!r.offDate);
-    if(onoffDetailMonth) list = list.filter(r=> monthKeyOf(r.offDate?new Date(r.offDate):null)===onoffDetailMonth);
+    list = scoped.filter(r=> !!onoffEventMonth_(r.offDate) && onoffMatchesTenure_(r));
+    if(onoffDetailMonth) list = list.filter(r=> onoffEventMonth_(r.offDate)===onoffDetailMonth);
   }
   return list;
 }
@@ -8278,14 +8379,14 @@ function renderOnOffDetailList(){
   // Tổng số On/Off của đúng tháng đang xem (ưu tiên tháng đang lọc, nếu "Tất cả các tháng" thì lấy tháng đang chọn ở đầu trang)
   const targetMonth = onoffDetailMonth || currentMonth;
   let scopedForSummary = onoffRoster.filter(onoffRosterMatchesScope);
-  if(onoffDetailRegion) scopedForSummary = scopedForSummary.filter(r=> (r.area||'').trim()===onoffDetailRegion);
-  const onCountMonth = scopedForSummary.filter(r=> r.joinedAt && monthKeyOf(new Date(r.joinedAt))===targetMonth).length;
-  const offCountMonth = scopedForSummary.filter(r=> r.offDate && monthKeyOf(new Date(r.offDate))===targetMonth).length;
+  if(onoffDetailRegion) scopedForSummary = scopedForSummary.filter(r=> normalizeAreaVN(r.area||trainerOf(r.trainerId)?.region)===normalizeAreaVN(onoffDetailRegion));
+  const onCountMonth = scopedForSummary.filter(r=> onoffEventMonth_(r.joinedAt)===targetMonth).length;
+  const offCountMonth = scopedForSummary.filter(r=> onoffEventMonth_(r.offDate)===targetMonth && onoffMatchesTenure_(r)).length;
   const summaryEl = document.getElementById('onoffDetailSummary');
   if(summaryEl){
     summaryEl.textContent = onoffViewMode==='On'
       ? `Tổng số ON ${monthLabel(targetMonth)}: ${onCountMonth}`
-      : `Tổng số OFF ${monthLabel(targetMonth)}: ${offCountMonth}`;
+      : `Tổng số OFF ${monthLabel(targetMonth)} · ${onoffTenureLabel_()}: ${offCountMonth}`;
   }
 
   const isOffMode = onoffViewMode==='Off';
@@ -8302,7 +8403,7 @@ function renderOnOffDetailList(){
   if(alertEl){
     if(isOffMode){
       // Chỉ tính số chưa note của ĐÚNG tháng đang xem — không cộng dồn các tháng trước
-      const missing = fullList.filter(r=> monthKeyOf(r.offDate?new Date(r.offDate):null)===targetMonth && !r.noteConfirmed);
+      const missing = fullList.filter(r=> onoffEventMonth_(r.offDate)===targetMonth && !r.noteConfirmed);
       if(missing.length>0){
         const trainerNames = Array.from(new Set(missing.map(r=>{
           const tr = trainerOf(r.trainerId);
@@ -8333,7 +8434,7 @@ function renderOnOffDetailList(){
   body.innerHTML = list.map(r=>{
     const joined = r.joinedAt ? new Date(r.joinedAt) : null;
     const off = r.offDate ? new Date(r.offDate) : null;
-    const seniority = onoffViewMode==='On' ? monthsDiff(joined, now) : monthsDiff(joined, off);
+    const seniority = onoffViewMode==='On' ? monthsDiff(joined, now) : onoffOffTenureMonths_(r);
 
     // Trainer/Kênh/Shop: với ON — tra trực tiếp từ data Nhân sự (pgs) hiện tại theo Code (luôn mới nhất);
     // với OFF — dùng đúng dữ liệu đã tham chiếu lúc import (bắt đầu từ tháng nhập liệu, tự lùi về tháng trước nếu cần).
@@ -8376,7 +8477,7 @@ function renderOnOffDetailList(){
       </td>`;
     }
     const delCell = isAdmin() ? `<td><button class="danger" data-oo-del="${r.id}">Xóa</button></td>` : '';
-    return `<tr><td>${r.code||'—'}</td><td><strong>${r.name}</strong></td><td>${r.area||'—'}</td><td>${trainerName}</td><td>${channelName}</td><td>${shopName}</td><td>${shopSizeName}</td><td>${seniority} tháng</td>${noteCell}${delCell}</tr>`;
+    return `<tr><td>${r.code||'—'}</td><td><strong>${r.name}</strong></td><td>${r.area||'—'}</td><td>${trainerName}</td><td>${channelName}</td><td>${shopName}</td><td>${shopSizeName}</td><td>${seniority===null ? 'Chưa xác định' : seniority+' tháng'}</td>${noteCell}${delCell}</tr>`;
   }).join('');
 
   body.querySelectorAll('.onoff-note-check').forEach(chk=>{
@@ -8435,14 +8536,14 @@ function renderOnOffDetailList(){
 document.getElementById('exportOnOffDetailBtn').addEventListener('click', ()=>{
   let list = visibleOnOffDetailList();
   if(isTrainer() && session.region){
-    list = list.filter(r=> r.area===session.region);
+    list = list.filter(r=> normalizeAreaVN(r.area||trainerOf(r.trainerId)?.region)===normalizeAreaVN(session.region));
   }
   if(list.length===0){ alert('Không có dữ liệu để export.'); return; }
   const now = new Date();
   const rows = list.map(r=>{
     const joined = r.joinedAt ? new Date(r.joinedAt) : null;
     const off = r.offDate ? new Date(r.offDate) : null;
-    const seniority = onoffViewMode==='On' ? monthsDiff(joined, now) : monthsDiff(joined, off);
+    const seniority = onoffViewMode==='On' ? monthsDiff(joined, now) : onoffOffTenureMonths_(r);
     let trainerName = '—', channelName = '', shopName = '', shopSizeName = '';
     if(onoffViewMode==='On'){
       const matchedPg = findPgByCode_(pgs, r.code);
@@ -8466,10 +8567,10 @@ document.getElementById('exportOnOffDetailBtn').addEventListener('click', ()=>{
       'Kênh': channelName,
       'Shop': shopName,
       'Size shop': shopSizeName,
-      'Thâm niên (tháng)': seniority,
+      'Thâm niên (tháng)': seniority===null ? '' : seniority,
       'Trạng thái': r.status||'',
-      'Ngày tuyển (Joined at)': joined ? joined.toLocaleDateString('vi-VN') : '',
-      'Ngày nghỉ (Off date)': off ? off.toLocaleDateString('vi-VN') : '',
+      'Ngày tuyển (Joined at)': onoffDateLabel_(r.joinedAt),
+      'Ngày nghỉ (Off date)': onoffDateLabel_(r.offDate),
       'Lý do nghỉ việc (Trainer note)': r.trainerNote||'',
       'Đã ghi nhận': r.noteConfirmed?'Có':'Chưa',
     };
