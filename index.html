@@ -1754,6 +1754,7 @@ const dailyOlieMessages_ = ["Chúc bạn một ngày làm việc tràn đầy n�
         </div>
         <div class="chart-wrap" style="height:340px;"><canvas id="chartRecruitAttrition"></canvas></div>
         <div id="onoffAttritionNote" style="font-size:var(--cap);color:var(--muted);margin-top:8px;"></div>
+        <div id="onoffRateStatus" aria-live="polite" style="font-size:var(--cap);color:var(--muted);margin-top:6px;" hidden></div>
       </div>
 
       <div class="banner-note" style="margin-bottom:18px;">Import danh sách On/Off đã được dời về tag <strong>DATA ▸ Nhân sự ▸ Nội bộ</strong> để gom import về 1 mối.</div>
@@ -8295,6 +8296,95 @@ document.getElementById('onoffOffTenureFilter').addEventListener('change',e=>{
   onoffDetailPage=1;
   renderOnOff();
 });
+// Historical headcount is read only when the tenure chart is opened. Keep aggregates,
+// not full personnel snapshots, and apply the current authorized scope on every render.
+const ONOFF_MONTHLY_PG_TTL_ = 60000;
+const onoffMonthlyPgCache_ = new Map();
+let onoffMonthlyPgTask_ = null;
+function onoffPgGroups_(rows){
+  const groups=new Map();
+  rows.forEach(p=>{
+    if(p.brand!=='OPPO' || p.status!=='Đang làm') return;
+    const trainerId=p.trainerId||'', area=normalizeAreaVN(trainerOf(trainerId)?.region||p.area)||'Chưa xác định';
+    const sale=String(p.sale||'').trim(), key=JSON.stringify([trainerId,area,sale]);
+    if(!groups.has(key)) groups.set(key,{trainerId,area,sale,count:0});
+    groups.get(key).count++;
+  });
+  return Array.from(groups.values());
+}
+function ensureOnOffMonthlyPgs_(months){
+  const now=Date.now();
+  const due=months.filter(month=>{
+    if(month===currentMonth) return false;
+    const cached=onoffMonthlyPgCache_.get(month);
+    return !cached || (!cached.pending && now-cached.fetchedAt>=ONOFF_MONTHLY_PG_TTL_);
+  });
+  if(!due.length) return onoffMonthlyPgTask_;
+  due.forEach(month=>{
+    const cached=onoffMonthlyPgCache_.get(month);
+    onoffMonthlyPgCache_.set(month,{status:cached?.status||'loading',groups:cached?.groups||[],fetchedAt:now,pending:true});
+  });
+  // dbGetMulti is read-only. Never use loadMonthlyData here: it creates missing months.
+  const task=Promise.resolve().then(()=>dbGetMulti(due.map(month=>'pgs:'+month))).then(values=>{
+    due.forEach(month=>{
+      const rows=values?.['pgs:'+month];
+      onoffMonthlyPgCache_.set(month,{
+        status:Array.isArray(rows) ? 'ready' : rows===null ? 'missing' : 'error',
+        groups:Array.isArray(rows) ? onoffPgGroups_(rows) : [],fetchedAt:Date.now(),pending:false,
+      });
+    });
+  }).catch(()=>{
+    due.forEach(month=>onoffMonthlyPgCache_.set(month,{status:'error',groups:[],fetchedAt:Date.now(),pending:false}));
+  }).finally(()=>{
+    if(onoffMonthlyPgTask_===task) onoffMonthlyPgTask_=null;
+    const panel=document.getElementById('panel-ov-onoff'), overview=document.getElementById('tab-overview');
+    if(onoffChartView_==='tenure' && panel?.classList.contains('active') && (!overview || overview.classList.contains('active'))){
+      renderRecruitAttritionChart();
+    }
+  });
+  onoffMonthlyPgTask_=task;
+  return task;
+}
+function onoffScopeRegions_(scope){
+  const tr=scope.trainerVal ? trainerOf(scope.trainerVal) : null;
+  let regions=scope.trainerVal ? [tr?.region] : scope.regionVal ? [scope.regionVal] : (config.regions||[]);
+  regions=Array.from(new Set(regions.filter(Boolean).map(normalizeAreaVN)));
+  if(isTrainer()){
+    const own=normalizeAreaVN(session.region||trainerOf(session.trainerId)?.region);
+    regions=regions.filter(region=>region===own);
+  }
+  return regions;
+}
+function onoffMonthlyPgStats_(scope,month){
+  const cached=month===currentMonth ? {status:'ready',groups:onoffPgGroups_(pgs)} : onoffMonthlyPgCache_.get(month);
+  if(cached?.status!=='ready') return {status:cached?.status||'loading',total:null,regions:[]};
+  const totals=new Map(onoffScopeRegions_(scope).map(region=>[region,0]));
+  let total=0;
+  cached.groups.forEach(group=>{
+    if(!onoffMatchesScope_(group,scope,true)) return;
+    const region=normalizeAreaVN(trainerOf(group.trainerId)?.region||group.area)||'Chưa xác định';
+    totals.set(region,(totals.get(region)||0)+group.count);
+    total+=group.count;
+  });
+  return {status:'ready',total,regions:Array.from(totals,([region,count])=>({region,count})).sort((a,b)=>a.region.localeCompare(b.region,'vi'))};
+}
+function buildOnOffRateModel_(scope,model){
+  const pgStats=model.months.map(month=>onoffMonthlyPgStats_(scope,month));
+  const offCounts=model.months.map((_,i)=>model.datasets.reduce((sum,d)=>sum+d.data[i],0));
+  const percentages=pgStats.map((stats,i)=>stats.status==='ready' && stats.total>0 ? Math.round(offCounts[i]/stats.total*1000)/10 : null);
+  return {pgStats,offCounts,percentages};
+}
+function onoffRateTooltip_(rate,model,index){
+  const stats=rate.pgStats[index];
+  if(!stats || stats.status!=='ready'){
+    const state=stats?.status==='loading' ? 'Đang tải' : stats?.status==='error' ? 'Không tải được' : 'Chưa có';
+    return [`${state} dữ liệu PGs ${monthLabel(model.months[index])}.`,'Chưa tính tỷ lệ OFF cho tháng này.'];
+  }
+  return [`OFF đang chọn: ${rate.offCounts[index]} PGs`,`PGs đang làm: ${stats.total} PGs`,
+    'PGs đang làm theo khu vực:',...stats.regions.map(r=>`${r.region}: ${r.count} PGs`),
+    ...(stats.total===0 ? ['Không tính tỷ lệ khi tổng PGs bằng 0.'] : [])];
+}
+
 function renderRecruitAttritionChart(){
   const tenureMode=onoffChartView_==='tenure', effectiveTenure=onoffEffectiveTenure_();
   document.getElementById('onoffTenureControls').hidden=!tenureMode;
@@ -8305,6 +8395,8 @@ function renderRecruitAttritionChart(){
   });
   const scope=onoffScope_(), model=buildOnOffChartModel_(scope,effectiveTenure);
   const {months}=model;
+  if(tenureMode) ensureOnOffMonthlyPgs_(months);
+  const rate=tenureMode ? buildOnOffRateModel_(scope,model) : null;
   const pct=(n,total)=>total ? `${Math.round(n/total*1000)/10}%` : '—';
   const tenureLabel=onoffTenureLabel_();
   document.getElementById('onoffTrendRange').textContent=`${monthLabel(months[0])} → ${monthLabel(months[months.length-1])}`;
@@ -8313,9 +8405,26 @@ function renderRecruitAttritionChart(){
     noteEl.textContent=tenureMode
       ? `${monthLabel(currentMonth)} · ${scope.label} · ${tenureLabel}: ${model.offCount} OFF / ${model.activeCount} PGs OPPO đang làm` +
         (model.activeCount ? ` = ${pct(model.offCount,model.activeCount)}.` : '. Chưa có PGs đang làm để tính tỷ lệ.') +
-        ' Cột thể hiện số PGs nghỉ từng tháng; thâm niên tính đến ngày nghỉ. Di chuột để xem tỷ trọng trong tổng OFF của tháng.'
+        ' Cột: số PGs OFF theo thâm niên tại ngày nghỉ. Đường: OFF đang chọn / PGs đang làm của đúng từng tháng (trục % bên phải). Rê chuột để xem tổng PGs theo khu vực.'
       : `${monthLabel(currentMonth)} · ${scope.label}: ON ${model.onCount} (${pct(model.onCount,model.activeCount)}) · OFF ${model.offCount} (${pct(model.offCount,model.activeCount)}). ` +
         `Tỷ lệ trên biểu đồ tính trên ${model.activeCount} PGs OPPO đang làm của ${monthLabel(currentMonth)} trong phạm vi đang chọn.`;
+  }
+  const rateStatus=document.getElementById('onoffRateStatus');
+  if(rateStatus){
+    rateStatus.hidden=!tenureMode;
+    if(tenureMode){
+      const pending=months.filter((_,i)=>rate.pgStats[i].status==='loading');
+      const missing=months.filter((_,i)=>rate.pgStats[i].status==='missing');
+      const errors=months.filter((_,i)=>rate.pgStats[i].status==='error');
+      const zero=months.filter((_,i)=>rate.pgStats[i].status==='ready' && rate.pgStats[i].total===0);
+      const short=list=>list.map(m=>m.slice(5)).join(', ');
+      rateStatus.textContent=[
+        pending.length ? 'Đang tải dữ liệu PGs theo tháng…' : '',
+        missing.length ? `Chưa có dữ liệu PGs tháng ${short(missing)}: để trống tỷ lệ.` : '',
+        errors.length ? `Không tải được dữ liệu PGs tháng ${short(errors)}: chưa tính tỷ lệ.` : '',
+        zero.length ? `Tháng ${short(zero)} có 0 PGs đang làm: chưa tính tỷ lệ.` : '',
+      ].filter(Boolean).join(' ');
+    }
   }
   // Reuse the model when cards and chart have the same scope; no persisted/cache data involved.
   const cardScope=onoffScope_(true);
@@ -8329,10 +8438,21 @@ function renderRecruitAttritionChart(){
   const frac=n=>card.activeCount ? `${pct(n,card.activeCount)} trên tổng ${card.activeCount} PGs OPPO đang làm (${cardScope.label})` : `0 PGs OPPO đang làm — chưa tính tỷ lệ (${cardScope.label})`;
   document.getElementById('onoffSummaryOnFrac').textContent=frac(card.onCount);
   document.getElementById('onoffSummaryOffFrac').textContent=frac(card.offCount);
-  const datasets=tenureMode ? model.datasets : [
+  const datasets=tenureMode ? model.datasets.map(d=>({...d,yAxisID:'y',order:2})) : [
     {label:'On (tuyển mới)',data:model.onData,borderColor:'#016C38',backgroundColor:'#016C38',tension:0.25,fill:false,pointRadius:4,datalabels:{align:'bottom',offset:6}},
     {label:'Off (nghỉ việc)',data:model.offTotals,borderColor:'#B23A32',backgroundColor:'#B23A32',tension:0.25,fill:false,pointRadius:4,datalabels:{align:'top',offset:6}},
   ].map(d=>({...d,pctData:d.data.map(n=>model.activeCount ? Math.round(n/model.activeCount*1000)/10 : 0)}));
+  if(tenureMode){
+    datasets.push({
+      type:'line',label:'Tỷ lệ OFF',isOffRate:true,data:rate.percentages,yAxisID:'yOffRate',order:0,
+      borderColor:'#125E85',backgroundColor:'#125E85',borderWidth:2.5,fill:false,tension:0.2,
+      pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#FFFFFF',pointBorderWidth:2,
+      spanGaps:false,clip:false,
+      datalabels:{anchor:'end',align:'top',offset:ctx=>ctx.chart.width<520 ? (ctx.dataIndex%2 ? 17 : 3) : 5,color:'#125E85',backgroundColor:'#FFFFFF',
+        borderRadius:4,padding:3,font:{size:10,weight:'bold'},
+        formatter:v=>v===null || !Number.isFinite(v) ? '' : v.toLocaleString('vi-VN',{maximumFractionDigits:1})+'%'},
+    });
+  }
   if(chartRecruitAttritionInstance) chartRecruitAttritionInstance.destroy();
   chartRecruitAttritionInstance=new Chart(document.getElementById('chartRecruitAttrition'),{
     type:tenureMode ? 'bar' : 'line',
@@ -8340,7 +8460,7 @@ function renderRecruitAttritionChart(){
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      layout:{padding:{top:tenureMode?12:26,right:16,bottom:tenureMode?0:22}},
+      layout:{padding:{top:tenureMode?30:26,right:16,bottom:tenureMode?0:22}},
       plugins:{
         legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,padding:16}},
         datalabels:tenureMode
@@ -8348,18 +8468,25 @@ function renderRecruitAttritionChart(){
           : {color:'#333333',font:{size:9,weight:'bold'},clamp:true,formatter:(v,ctx)=>{
               const value=ctx.dataset.pctData[ctx.dataIndex];return value>0 ? value+'%' : '';
             }},
-        tooltip:{callbacks:{
-          label:ctx=>tenureMode
+        tooltip:{bodyFont:{size:11},callbacks:{
+          label:ctx=>ctx.dataset.isOffRate
+            ? `Tỷ lệ OFF: ${ctx.parsed.y.toLocaleString('vi-VN',{maximumFractionDigits:1})}%`
+            : tenureMode
             ? `${ctx.dataset.label}: ${ctx.parsed.y} PGs (${ctx.dataset.pctData[ctx.dataIndex]}% tổng OFF tháng)`
             : `${ctx.dataset.label}: ${ctx.parsed.y} PGs (${model.activeCount ? ctx.dataset.pctData[ctx.dataIndex]+'%' : 'chưa có mẫu số'})`,
+          afterBody:items=>tenureMode && items.length ? onoffRateTooltip_(rate,model,items[0].dataIndex) : [],
           footer:items=>tenureMode && items.length ? `Tổng OFF tháng: ${model.offTotals[items[0].dataIndex]} PGs` : '',
         }},
       },
       scales:{
         x:{stacked:tenureMode,ticks:{font:{size:10}},grid:{display:false}},
         y:{stacked:tenureMode,beginAtZero:true,
-          suggestedMax:Math.max(1,...months.map((_,i)=>tenureMode ? datasets.reduce((sum,d)=>sum+d.data[i],0) : Math.max(...datasets.map(d=>d.data[i]))))*(tenureMode?1:1.3),
+          suggestedMax:Math.max(1,...months.map((_,i)=>tenureMode ? model.datasets.reduce((sum,d)=>sum+d.data[i],0) : Math.max(...datasets.map(d=>d.data[i]))))*(tenureMode?1:1.3),
           title:{display:tenureMode,text:'Số PGs OFF'},ticks:{precision:0,font:{size:10}},grid:{color:'#EDF1EF'}},
+        ...(tenureMode ? {yOffRate:{position:'right',stacked:false,beginAtZero:true,
+          suggestedMax:Math.max(5,...rate.percentages.filter(v=>v!==null).map(v=>v*1.3)),
+          title:{display:true,text:'Tỷ lệ OFF (%)',color:'#125E85'},
+          ticks:{font:{size:10},color:'#125E85',callback:v=>Number(v).toLocaleString('vi-VN')+'%'},grid:{drawOnChartArea:false}}} : {}),
       },
     },
   });
