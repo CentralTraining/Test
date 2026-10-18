@@ -1156,6 +1156,7 @@
 
   /* OFF tenure filter stays usable with the compact mobile scope-filter layout. */
   #panel-ov-onoff .onoff-tenure-filters{flex-wrap:wrap!important;overflow:visible;}
+  #onoffTenureControls[hidden]{display:none!important;}
   #panel-ov-onoff .onoff-tenure-filters select{flex:0 1 220px!important;width:220px!important;min-width:180px!important;max-width:100%;}
   #panel-ov-onoff .onoff-tenure-filters>span{flex:1 1 260px;}
   @media(max-width:600px){
@@ -1736,8 +1737,12 @@ const dailyOlieMessages_ = ["Chúc bạn một ngày làm việc tràn đầy n�
       </div>
 
       <div class="region-card">
-        <div class="region-head" style="flex-wrap:wrap;gap:12px;"><h3>Nhân sự OFF theo thâm niên</h3><span class="count" id="onoffTrendRange"></span></div>
-        <div class="scope-filters onoff-tenure-filters" style="margin-bottom:12px;">
+        <div class="region-head" style="flex-wrap:wrap;gap:12px;"><h3 id="onoffChartTitle">Biến động nhân sự ON/OFF</h3><span class="count" id="onoffTrendRange"></span></div>
+        <div class="subnav onoff-chart-tabs" style="margin-bottom:12px;" aria-label="Kiểu biểu đồ On/Off">
+          <button type="button" data-onoffchartview="trend" class="active" aria-pressed="true">Tỷ lệ ON/OFF</button>
+          <button type="button" data-onoffchartview="tenure" aria-pressed="false">OFF theo thâm niên</button>
+        </div>
+        <div id="onoffTenureControls" class="scope-filters onoff-tenure-filters" style="margin-bottom:12px;" hidden>
           <label class="scope-label" for="onoffOffTenureFilter">Thâm niên tại ngày nghỉ:</label>
           <select id="onoffOffTenureFilter" aria-label="Lọc OFF theo thâm niên" title="Số tháng tròn tại ngày nghỉ: dưới 3; từ 3 đến dưới 6; từ 6 đến dưới 12; từ 12 đến dưới 36; từ đủ 36 tháng.">
             <option value="">Tất cả thâm niên</option>
@@ -7590,24 +7595,8 @@ function renderNhanSuBreakdown(){
   `;
   const over2 = list.filter(p=>Number(p.star)>=2).length;
   const over2Pct = list.length ? Math.round((over2/list.length)*1000)/10 : 0;
-  const regionMap={}; list.forEach(p=>{ const tr=trainerOf(p.trainerId); const k=tr?tr.region:'Chưa xác định'; regionMap[k]=(regionMap[k]||0)+1; });
-  renderRegionBarChart(regionMap);
   document.getElementById('totalPgsMienTrung').textContent = pgs.filter(p=>p.brand==='OPPO' && p.status==='Đang làm').length;
 
-  const trainerMap={}; list.forEach(p=>{ const tr=trainerOf(p.trainerId); const k=tr?tr.name:'Chưa gán Trainer'; trainerMap[k]=(trainerMap[k]||0)+1; });
-  renderTrainerBarChart(trainerMap);
-
-  const channelMap={ 'MWG':0, 'K.A':0, 'IND':0 };
-  list.forEach(p=>{ channelMap[channelGroup(p.channel)]++; });
-  renderChannelByRegionChart();
-
-  const shopSizeMap={};
-  list.forEach(p=>{ const resolved = resolvedShopSize_(p); const k = resolved || 'Chưa xác định'; shopSizeMap[k]=(shopSizeMap[k]||0)+1; });
-  renderShopSizeBarChart(shopSizeMap);
-
-  renderSeniorityByRegionChart();
-
-  renderStarByRegionChart();
   document.getElementById('starOver2Ratio').textContent = `Tỉ lệ PGs từ 2 sao trở lên: ${over2Pct}% (${over2}/${list.length})`;
 
   applyPgChartView(document.getElementById('pgChartSelect').value);
@@ -7620,15 +7609,30 @@ const PG_CHART_META = {
   star:      { title:'Phân bổ PGs theo Sao',                showTotal:false, showStarRatio:true  },
   shopsize:  { title:'Phân bổ theo Size shop',              showTotal:false, showStarRatio:false },
 };
+function renderSelectedPgChart_(view){
+  const list=scopedActivePgs('OPPO');
+  if(view==='region'){
+    const map={};list.forEach(p=>{const k=trainerOf(p.trainerId)?.region||'Chưa xác định';map[k]=(map[k]||0)+1;});
+    renderRegionBarChart(map);
+  } else if(view==='trainer'){
+    const map={};list.forEach(p=>{const k=trainerOf(p.trainerId)?.name||'Chưa gán Trainer';map[k]=(map[k]||0)+1;});
+    renderTrainerBarChart(map);
+  } else if(view==='channel') renderChannelByRegionChart();
+  else if(view==='seniority') renderSeniorityByRegionChart();
+  else if(view==='star') renderStarByRegionChart();
+  else if(view==='shopsize'){
+    const map={};list.forEach(p=>{const k=resolvedShopSize_(p)||'Chưa xác định';map[k]=(map[k]||0)+1;});
+    renderShopSizeBarChart(map);
+  }
+}
 function applyPgChartView(view){
-  const meta = PG_CHART_META[view] || PG_CHART_META.region;
-  document.getElementById('pgChartTitle').textContent = meta.title;
-  document.getElementById('pgChartTotalInfo').style.display = meta.showTotal ? '' : 'none';
-  document.getElementById('starOver2RatioWrap').style.display = meta.showStarRatio ? '' : 'none';
-  document.querySelectorAll('.pg-chart-view').forEach(el=>{ el.style.display = (el.id==='pgChartWrap-'+view) ? '' : 'none'; });
-  const instanceMap = { region:chartRegionBarInstance, trainer:chartTrainerInstance, channel:chartChannelInstance, seniority:chartSeniorityInstance, star:chartStarInstance, shopsize:chartShopSizeInstance };
-  const inst = instanceMap[view];
-  if(inst) setTimeout(()=>inst.resize(), 0);
+  view=PG_CHART_META[view] ? view : 'region';
+  const meta=PG_CHART_META[view];
+  document.getElementById('pgChartTitle').textContent=meta.title;
+  document.getElementById('pgChartTotalInfo').style.display=meta.showTotal ? '' : 'none';
+  document.getElementById('starOver2RatioWrap').style.display=meta.showStarRatio ? '' : 'none';
+  document.querySelectorAll('.pg-chart-view').forEach(el=>{el.style.display=el.id==='pgChartWrap-'+view ? '' : 'none';});
+  renderSelectedPgChart_(view);
 }
 document.getElementById('pgChartSelect').addEventListener('change', (e)=> applyPgChartView(e.target.value));
 const PG_PAGE_SIZE = 10;
@@ -8089,6 +8093,10 @@ function renderOnOffTrainerTable(){
   }).join('');
 }
 function renderOnOff(){
+  document.querySelectorAll('[data-onoffview]').forEach(btn=>{
+    const active=btn.getAttribute('data-onoffview')===onoffViewMode;
+    btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));
+  });
   renderRecruitAttritionChart();
   renderOnOffDetailList();
 }
@@ -8133,6 +8141,14 @@ const ONOFF_TENURE_GROUPS_ = [
   {value:'unknown', label:'Chưa xác định', color:'#87938D'},
 ];
 let onoffTenureFilter_ = '';
+let onoffChartView_ = 'trend';
+// Reuse the formatter; constructing it for every row/month blocks the UI.
+const ONOFF_VN_DATE_FORMAT_ = new Intl.DateTimeFormat('en-GB',{
+  timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'
+});
+function onoffEffectiveTenure_(){
+  return onoffChartView_==='tenure' ? onoffTenureFilter_ : '';
+}
 // Date-only values are calendar dates in Vietnam; instants are converted to Vietnam first.
 function onoffDateParts_(value){
   if(value===null || value===undefined || value==='') return null;
@@ -8157,7 +8173,7 @@ function onoffDateParts_(value){
     instant = new Date(str);
     if(!Number.isFinite(instant.getTime())) return null;
   }
-  const parts = new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(instant);
+  const parts = ONOFF_VN_DATE_FORMAT_.formatToParts(instant);
   const part = type=>Number(parts.find(p=>p.type===type)?.value);
   return {year:part('year'),month:part('month'),day:part('day')};
 }
@@ -8169,8 +8185,7 @@ function onoffDateLabel_(value){
   const p=onoffDateParts_(value);
   return p ? `${pad(p.day)}/${pad(p.month)}/${p.year}` : '';
 }
-function onoffOffTenureMonths_(r){
-  const start=onoffDateParts_(r.joinedAt), end=onoffDateParts_(r.offDate);
+function onoffTenureMonthsBetween_(start,end){
   if(!start || !end) return null;
   const key=p=>p.year*10000+p.month*100+p.day;
   if(key(end)<key(start)) return null;
@@ -8180,15 +8195,20 @@ function onoffOffTenureMonths_(r){
   if(end.day<Math.min(start.day,endMonthDays)) months--;
   return months;
 }
-function onoffTenureBucket_(r){
-  const m=onoffOffTenureMonths_(r);
+function onoffOffTenureMonths_(r){
+  return onoffTenureMonthsBetween_(onoffDateParts_(r.joinedAt),onoffDateParts_(r.offDate));
+}
+function onoffTenureBucketForMonths_(m){
   return m===null ? 'unknown' : m<3 ? 'lt3' : m<6 ? '3to6' : m<12 ? '6to12' : m<36 ? '12to36' : 'gte36';
 }
-function onoffMatchesTenure_(r,filter=onoffTenureFilter_){
+function onoffTenureBucket_(r){
+  return onoffTenureBucketForMonths_(onoffOffTenureMonths_(r));
+}
+function onoffMatchesTenure_(r,filter=onoffEffectiveTenure_()){
   return !filter || onoffTenureBucket_(r)===filter;
 }
 function onoffTenureLabel_(){
-  return ONOFF_TENURE_GROUPS_.find(g=>g.value===onoffTenureFilter_)?.label || 'Tất cả thâm niên';
+  return ONOFF_TENURE_GROUPS_.find(g=>g.value===onoffEffectiveTenure_())?.label || 'Tất cả thâm niên';
 }
 function onoffScope_(cards=false){
   const selected=cards ? topCardScopeVals_() : {
@@ -8199,7 +8219,16 @@ function onoffScope_(cards=false){
   const {trainerVal,regionVal}=selected;
   const regionLabel=regionVal || (isTrainer() ? session.region : '') || 'Toàn Miền Trung';
   const label=(trainerVal ? (trainerOf(trainerVal)?.name||'Trainer đang chọn') : regionLabel) + (saleVal ? ` · Sale: ${saleVal}` : '');
-  return {trainerVal,regionVal,saleVal,label};
+  // Build a per-render lookup rather than scanning all personnel for every roster row.
+  const saleIndex=saleVal ? new Map() : null;
+  if(saleIndex) pgs.forEach(p=>{
+    if(p.brand!=='OPPO') return;
+    const code=normalizeCode_(p.code);
+    if(!code) return;
+    if(!saleIndex.has(code)) saleIndex.set(code,[]);
+    saleIndex.get(code).push(p);
+  });
+  return {trainerVal,regionVal,saleVal,label,saleIndex};
 }
 function onoffMatchesScope_(rec,scope,personnel=false){
   const tr=trainerOf(rec.trainerId);
@@ -8216,8 +8245,8 @@ function onoffMatchesScope_(rec,scope,personnel=false){
     const code=normalizeCode_(rec.code);
     if(!code) return false;
     // Roster has no Sale: use a unique OPPO personnel match with the same event owner.
-    const matches=pgs.filter(p=>p.brand==='OPPO' && normalizeCode_(p.code)===code &&
-      (rec.trainerId ? p.trainerId===rec.trainerId : normalizeAreaVN(trainerOf(p.trainerId)?.region||p.area)===region));
+    const candidates=scope.saleIndex ? (scope.saleIndex.get(code)||[]) : pgs.filter(p=>p.brand==='OPPO' && normalizeCode_(p.code)===code);
+    const matches=candidates.filter(p=>rec.trainerId ? p.trainerId===rec.trainerId : normalizeAreaVN(trainerOf(p.trainerId)?.region||p.area)===region);
     if(matches.length!==1 || String(matches[0].sale||'').trim()!==scope.saleVal) return false;
   }
   return true;
@@ -8228,70 +8257,109 @@ function onoffRosterMatchesScope(rec){
 function onoffActiveCount_(scope){
   return pgs.filter(p=>p.brand==='OPPO' && p.status==='Đang làm' && onoffMatchesScope_(p,scope,true)).length;
 }
-function buildOnOffChartModel_(scope,tenure=onoffTenureFilter_,month=currentMonth){
-  const months=monthsFromJanTo(month);
-  const scoped=onoffRoster.filter(r=>onoffMatchesScope_(r,scope));
-  const offByMonth=months.map(m=>scoped.filter(r=>onoffEventMonth_(r.offDate)===m));
-  const offTotals=offByMonth.map(rows=>rows.length);
-  const groups=ONOFF_TENURE_GROUPS_.filter(g=>
-    (!tenure || g.value===tenure) && (g.value!=='unknown' || tenure==='unknown' || offByMonth.some(rows=>rows.some(r=>onoffTenureBucket_(r)==='unknown'))));
-  const datasets=groups.map(g=>{
-    const data=offByMonth.map(rows=>rows.filter(r=>onoffTenureBucket_(r)===g.value).length);
-    return {label:g.label,tenure:g.value,data,pctData:data.map((n,i)=>offTotals[i] ? Math.round(n/offTotals[i]*1000)/10 : 0),
-      backgroundColor:g.color,borderColor:'#FFFFFF',borderWidth:1,stack:'off',maxBarThickness:52};
+function buildOnOffChartModel_(scope,tenure='',month=currentMonth){
+  const months=monthsFromJanTo(month), year=Number(months[0].slice(0,4));
+  const onData=months.map(()=>0), offTotals=months.map(()=>0);
+  const counts=Object.fromEntries(ONOFF_TENURE_GROUPS_.map(g=>[g.value,months.map(()=>0)]));
+  // One pass. Parse each event date once and classify tenure once, not once per month/group.
+  onoffRoster.forEach(r=>{
+    if(!onoffMatchesScope_(r,scope)) return;
+    const joined=onoffDateParts_(r.joinedAt), off=onoffDateParts_(r.offDate);
+    if(joined && joined.year===year && joined.month<=months.length) onData[joined.month-1]++;
+    if(off && off.year===year && off.month<=months.length){
+      const i=off.month-1;
+      offTotals[i]++;
+      counts[onoffTenureBucketForMonths_(onoffTenureMonthsBetween_(joined,off))][i]++;
+    }
   });
-  return {months,activeCount:onoffActiveCount_(scope),
-    onCount:scoped.filter(r=>onoffEventMonth_(r.joinedAt)===month).length,
-    offCount:scoped.filter(r=>onoffEventMonth_(r.offDate)===month && onoffMatchesTenure_(r,tenure)).length,
-    offTotals,datasets};
+  const groups=ONOFF_TENURE_GROUPS_.filter(g=>(!tenure || g.value===tenure) &&
+    (g.value!=='unknown' || tenure==='unknown' || counts.unknown.some(n=>n>0)));
+  const datasets=groups.map(g=>({
+    label:g.label,tenure:g.value,data:counts[g.value],
+    pctData:counts[g.value].map((n,i)=>offTotals[i] ? Math.round(n/offTotals[i]*1000)/10 : 0),
+    backgroundColor:g.color,borderColor:'#FFFFFF',borderWidth:1,stack:'off',maxBarThickness:52,
+  }));
+  const last=months.length-1;
+  return {months,activeCount:onoffActiveCount_(scope),onData,
+    onCount:onData[last],offCount:datasets.reduce((n,d)=>n+d.data[last],0),offTotals,datasets};
 }
+document.querySelectorAll('[data-onoffchartview]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    onoffChartView_=btn.dataset.onoffchartview==='tenure' ? 'tenure' : 'trend';
+    onoffDetailPage=1;
+    renderOnOff();
+  });
+});
 document.getElementById('onoffOffTenureFilter').addEventListener('change',e=>{
   onoffTenureFilter_=ONOFF_TENURE_GROUPS_.some(g=>g.value===e.target.value) ? e.target.value : '';
   onoffDetailPage=1;
   renderOnOff();
 });
 function renderRecruitAttritionChart(){
-  const scope=onoffScope_(), model=buildOnOffChartModel_(scope);
-  const {months,datasets}=model;
+  const tenureMode=onoffChartView_==='tenure', effectiveTenure=onoffEffectiveTenure_();
+  document.getElementById('onoffTenureControls').hidden=!tenureMode;
+  document.getElementById('onoffChartTitle').textContent=tenureMode ? 'Nhân sự OFF theo thâm niên' : 'Biến động nhân sự ON/OFF';
+  document.querySelectorAll('[data-onoffchartview]').forEach(btn=>{
+    const active=btn.dataset.onoffchartview===onoffChartView_;
+    btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));
+  });
+  const scope=onoffScope_(), model=buildOnOffChartModel_(scope,effectiveTenure);
+  const {months}=model;
   const pct=(n,total)=>total ? `${Math.round(n/total*1000)/10}%` : '—';
   const tenureLabel=onoffTenureLabel_();
   document.getElementById('onoffTrendRange').textContent=`${monthLabel(months[0])} → ${monthLabel(months[months.length-1])}`;
   const noteEl=document.getElementById('onoffAttritionNote');
   if(noteEl){
-    noteEl.textContent=`${monthLabel(currentMonth)} · ${scope.label} · ${tenureLabel}: ${model.offCount} OFF / ${model.activeCount} PGs OPPO đang làm` +
-      (model.activeCount ? ` = ${pct(model.offCount,model.activeCount)}.` : '. Chưa có PGs đang làm để tính tỷ lệ.') +
-      ' Cột thể hiện số PGs nghỉ từng tháng; thâm niên tính đến ngày nghỉ. Di chuột để xem tỷ trọng trong tổng OFF của tháng.';
+    noteEl.textContent=tenureMode
+      ? `${monthLabel(currentMonth)} · ${scope.label} · ${tenureLabel}: ${model.offCount} OFF / ${model.activeCount} PGs OPPO đang làm` +
+        (model.activeCount ? ` = ${pct(model.offCount,model.activeCount)}.` : '. Chưa có PGs đang làm để tính tỷ lệ.') +
+        ' Cột thể hiện số PGs nghỉ từng tháng; thâm niên tính đến ngày nghỉ. Di chuột để xem tỷ trọng trong tổng OFF của tháng.'
+      : `${monthLabel(currentMonth)} · ${scope.label}: ON ${model.onCount} (${pct(model.onCount,model.activeCount)}) · OFF ${model.offCount} (${pct(model.offCount,model.activeCount)}). ` +
+        `Tỷ lệ trên biểu đồ tính trên ${model.activeCount} PGs OPPO đang làm của ${monthLabel(currentMonth)} trong phạm vi đang chọn.`;
   }
-  // Active OPPO personnel in the selected month are the denominator, never historical roster size.
-  const cardScope=onoffScope_(true), card=buildOnOffChartModel_(cardScope);
+  // Reuse the model when cards and chart have the same scope; no persisted/cache data involved.
+  const cardScope=onoffScope_(true);
+  const sameScope=['trainerVal','regionVal','saleVal'].every(k=>cardScope[k]===scope[k]);
+  const card=sameScope ? model : buildOnOffChartModel_(cardScope,effectiveTenure);
   document.getElementById('onoffSummaryMonthLabel1').textContent=monthLabel(currentMonth);
   document.getElementById('onoffSummaryMonthLabel2').textContent=monthLabel(currentMonth);
-  document.getElementById('onoffSummaryOffTenureLabel').textContent=onoffTenureFilter_ ? ` · ${tenureLabel}` : '';
+  document.getElementById('onoffSummaryOffTenureLabel').textContent=effectiveTenure ? ` · ${tenureLabel}` : '';
   document.getElementById('onoffSummaryOnCount').textContent=card.onCount;
   document.getElementById('onoffSummaryOffCount').textContent=card.offCount;
   const frac=n=>card.activeCount ? `${pct(n,card.activeCount)} trên tổng ${card.activeCount} PGs OPPO đang làm (${cardScope.label})` : `0 PGs OPPO đang làm — chưa tính tỷ lệ (${cardScope.label})`;
   document.getElementById('onoffSummaryOnFrac').textContent=frac(card.onCount);
   document.getElementById('onoffSummaryOffFrac').textContent=frac(card.offCount);
+  const datasets=tenureMode ? model.datasets : [
+    {label:'On (tuyển mới)',data:model.onData,borderColor:'#016C38',backgroundColor:'#016C38',tension:0.25,fill:false,pointRadius:4,datalabels:{align:'bottom',offset:6}},
+    {label:'Off (nghỉ việc)',data:model.offTotals,borderColor:'#B23A32',backgroundColor:'#B23A32',tension:0.25,fill:false,pointRadius:4,datalabels:{align:'top',offset:6}},
+  ].map(d=>({...d,pctData:d.data.map(n=>model.activeCount ? Math.round(n/model.activeCount*1000)/10 : 0)}));
   if(chartRecruitAttritionInstance) chartRecruitAttritionInstance.destroy();
   chartRecruitAttritionInstance=new Chart(document.getElementById('chartRecruitAttrition'),{
-    type:'bar',
+    type:tenureMode ? 'bar' : 'line',
     data:{labels:months.map(monthLabel),datasets},
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      layout:{padding:{top:12,right:8}},
+      layout:{padding:{top:tenureMode?12:26,right:16,bottom:tenureMode?0:22}},
       plugins:{
         legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,padding:16}},
-        datalabels:{color:'#FFFFFF',font:{size:11,weight:'bold'},anchor:'center',align:'center',clamp:true,formatter:v=>v>0?v:''},
+        datalabels:tenureMode
+          ? {color:'#FFFFFF',font:{size:11,weight:'bold'},anchor:'center',align:'center',clamp:true,formatter:v=>v>0?v:''}
+          : {color:'#333333',font:{size:9,weight:'bold'},clamp:true,formatter:(v,ctx)=>{
+              const value=ctx.dataset.pctData[ctx.dataIndex];return value>0 ? value+'%' : '';
+            }},
         tooltip:{callbacks:{
-          label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y} PGs (${ctx.dataset.pctData[ctx.dataIndex]}% tổng OFF tháng)`,
-          footer:items=>items.length ? `Tổng OFF tháng: ${model.offTotals[items[0].dataIndex]} PGs` : '',
+          label:ctx=>tenureMode
+            ? `${ctx.dataset.label}: ${ctx.parsed.y} PGs (${ctx.dataset.pctData[ctx.dataIndex]}% tổng OFF tháng)`
+            : `${ctx.dataset.label}: ${ctx.parsed.y} PGs (${model.activeCount ? ctx.dataset.pctData[ctx.dataIndex]+'%' : 'chưa có mẫu số'})`,
+          footer:items=>tenureMode && items.length ? `Tổng OFF tháng: ${model.offTotals[items[0].dataIndex]} PGs` : '',
         }},
       },
       scales:{
-        x:{stacked:true,ticks:{font:{size:10}},grid:{display:false}},
-        y:{stacked:true,beginAtZero:true,suggestedMax:Math.max(1,...months.map((_,i)=>datasets.reduce((sum,d)=>sum+d.data[i],0))),
-          title:{display:true,text:'Số PGs OFF'},ticks:{precision:0,font:{size:10}},grid:{color:'#EDF1EF'}},
+        x:{stacked:tenureMode,ticks:{font:{size:10}},grid:{display:false}},
+        y:{stacked:tenureMode,beginAtZero:true,
+          suggestedMax:Math.max(1,...months.map((_,i)=>tenureMode ? datasets.reduce((sum,d)=>sum+d.data[i],0) : Math.max(...datasets.map(d=>d.data[i]))))*(tenureMode?1:1.3),
+          title:{display:tenureMode,text:'Số PGs OFF'},ticks:{precision:0,font:{size:10}},grid:{color:'#EDF1EF'}},
       },
     },
   });
@@ -8344,7 +8412,8 @@ document.getElementById('onoffDetailRegionFilter').addEventListener('change', (e
   renderOnOffDetailList();
 });
 function visibleOnOffDetailList(){
-  let scoped = onoffRoster.filter(onoffRosterMatchesScope);
+  const scope=onoffScope_();
+  let scoped = onoffRoster.filter(r=>onoffMatchesScope_(r,scope));
   if(onoffDetailRegion) scoped = scoped.filter(r=> normalizeAreaVN(r.area||trainerOf(r.trainerId)?.region)===normalizeAreaVN(onoffDetailRegion));
   let list;
   if(onoffViewMode==='On'){
@@ -8378,7 +8447,8 @@ function renderOnOffDetailList(){
 
   // Tổng số On/Off của đúng tháng đang xem (ưu tiên tháng đang lọc, nếu "Tất cả các tháng" thì lấy tháng đang chọn ở đầu trang)
   const targetMonth = onoffDetailMonth || currentMonth;
-  let scopedForSummary = onoffRoster.filter(onoffRosterMatchesScope);
+  const scope=onoffScope_();
+  let scopedForSummary = onoffRoster.filter(r=>onoffMatchesScope_(r,scope));
   if(onoffDetailRegion) scopedForSummary = scopedForSummary.filter(r=> normalizeAreaVN(r.area||trainerOf(r.trainerId)?.region)===normalizeAreaVN(onoffDetailRegion));
   const onCountMonth = scopedForSummary.filter(r=> onoffEventMonth_(r.joinedAt)===targetMonth).length;
   const offCountMonth = scopedForSummary.filter(r=> onoffEventMonth_(r.offDate)===targetMonth && onoffMatchesTenure_(r)).length;
@@ -8386,7 +8456,7 @@ function renderOnOffDetailList(){
   if(summaryEl){
     summaryEl.textContent = onoffViewMode==='On'
       ? `Tổng số ON ${monthLabel(targetMonth)}: ${onCountMonth}`
-      : `Tổng số OFF ${monthLabel(targetMonth)} · ${onoffTenureLabel_()}: ${offCountMonth}`;
+      : `Tổng số OFF ${monthLabel(targetMonth)}${onoffEffectiveTenure_() ? " · "+onoffTenureLabel_() : ""}: ${offCountMonth}`;
   }
 
   const isOffMode = onoffViewMode==='Off';
@@ -9465,9 +9535,12 @@ document.getElementById('exportBrandShopBtn').addEventListener('click', ()=>{
 });
 
 function renderOverviewAll(){
+  const panel=document.querySelector('#tab-overview > .panel.active')?.id || 'panel-ov-nhansu';
+  if(panel==='panel-ov-onoff'){ renderOnOff(); return; }
+  if(panel==='panel-ov-hang'){ renderBrandStats(); return; }
   populatePgTrainerSelect();
-  renderNhanSuBreakdown(); renderPgOppoTable();
-  renderOnOff(); renderBrandStats();
+  renderNhanSuBreakdown();
+  renderPgOppoTable();
 }
 
 /* ============ TIẾN ĐỘ KPI (theo tháng) ============ */
@@ -14215,6 +14288,7 @@ document.querySelectorAll('[data-sub]').forEach(btn=>{
     group.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-'+btn.dataset.sub).classList.add('active');
+    if(group.id==='tab-overview') renderOverviewAll();
   });
 });
 document.querySelectorAll('[data-kpi]').forEach(btn=>{
