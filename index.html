@@ -10993,10 +10993,10 @@ function surveyCountForCode(code){
   if(!c) return 0;
   return surveyResponses.filter(s=>String(s.code||'').trim()===c).length;
 }
-function syncPg01ActualFromCoaching(trainerId){
-  const rec = trainerRecord(trainerId);
+function syncPg01ActualFromCoaching(trainerId, source=surveyResponses, targetRecords=records){
+  const rec = targetRecords[trainerId] || (targetRecords[trainerId]=emptyRecord());
   // X = tổng số lượt khảo sát (đã import) của Trainer trong tháng — so với Y = target lượt coaching Admin giao
-  rec.pg01Actual = surveyResponses.filter(s=>s.trainerId===trainerId).length;
+  rec.pg01Actual = source.filter(s=>s.trainerId===trainerId).length;
   rec.updatedAt = new Date().toISOString();
 }
 function syncAllPg01Actuals(){
@@ -11013,8 +11013,8 @@ function newPgsForTrainer(trainerId){
   // "PGs mới" tính Target = vào TRƯỚC ngày 25 (1–24) của tháng này. (PG ≥25 tách riêng, không tính Target/Actual ở đây.)
   return onoffRoster.filter(r=> r.status==='On' && r.trainerId===trainerId && r.joinedAt && monthKeyOf(new Date(r.joinedAt))===currentMonth && new Date(r.joinedAt).getDate()<25);
 }
-function syncPgMoiActualFromSurvey(trainerId){
-  const rec = trainerRecord(trainerId);
+function syncPgMoiActualFromSurvey(trainerId, source=surveyResponsesNew, targetRecords=records){
+  const rec = targetRecords[trainerId] || (targetRecords[trainerId]=emptyRecord());
   // QUAN TRỌNG: KHÔNG đếm mọi lượt khảo sát "PGs mới" của Trainer — chỉ đếm lượt khảo sát của ĐÚNG
   // những PG thực sự nằm trong "Danh sách PGs mới" hợp lệ của THÁNG ĐANG XEM (onoffRoster, status=On,
   // Joined at đúng tháng này). Nếu không lọc, số liệu dễ bị đếm dư (VD PG của tháng khác, hoặc dữ liệu
@@ -11022,7 +11022,7 @@ function syncPgMoiActualFromSurvey(trainerId){
   const validPgs = newPgsForTrainer(trainerId);
   const validCodes = new Set(validPgs.filter(p=>p.code).map(p=>String(p.code).trim()));
   const validNames = new Set(validPgs.map(p=>normTrName_(p.name)).filter(Boolean));
-  rec.pgMoiActual = surveyResponsesNew.filter(s=>{
+  rec.pgMoiActual = source.filter(s=>{
     if(s.trainerId!==trainerId) return false;
     const code = String(s.code||'').trim();
     if(code) return validCodes.has(code);
@@ -11246,8 +11246,38 @@ function clParseDate_(v){
 }
 function clFmtDateTime_(d){ if(!(d instanceof Date)||isNaN(d)) return ''; const p=n=>String(n).padStart(2,'0'); return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; }
 function clMonthKey_(d){ return d instanceof Date && !isNaN(d) ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : ''; }
+function clIsCentralRegion_(value){
+  // TrainerRegion có thể là đường dẫn, VD "MIEN TRUNG / MIEN TRUNG / IND".
+  // So từng thành phần chính xác để không nhận nhầm một vùng chỉ chứa chuỗi tương tự.
+  return String(value??'').split(/[\/|,;>\n]+/).some(part=>clNorm_(part)==='mientrung');
+}
+function clPeriodMonth_(value){
+  const m=String(value??'').trim().match(/^(\d{4})[-\/](\d{1,2})$/);
+  if(m)return Number(m[2])>=1&&Number(m[2])<=12?m[1]+'-'+String(Number(m[2])).padStart(2,'0'):'';
+  return clMonthKey_(clParseDate_(value));
+}
+function clImportContext_(){
+  return JSON.stringify([currentMonth,session?.role,session?.trainerId,session?.region]);
+}
+async function clPersistCoachingMonth_(month, responses, responsesNew, nextRecords){
+  const updated_at=new Date().toISOString();
+  const entries=[{key:'surveyResponses:'+month,value:responses,updated_at},
+    {key:'surveyResponsesNew:'+month,value:responsesNew,updated_at},{key:'records:'+month,value:nextRecords,updated_at}];
+  if(!SUPABASE_URL){
+    const backup=entries.map(e=>localStorage.getItem(e.key));
+    try{entries.forEach(e=>localStorage.setItem(e.key,JSON.stringify(e.value)));}
+    catch(error){entries.forEach((e,i)=>{try{if(backup[i]===null)localStorage.removeItem(e.key);else localStorage.setItem(e.key,backup[i]);}catch{}});throw Error('Không lưu được dữ liệu khảo sát. Hãy thử lại.');}
+  }else{
+    // Cả hai log và số liệu KPI được upsert trong cùng một giao dịch PostgREST.
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`,{method:'POST',
+      headers:{...SUPA_HEADERS_,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(entries)});
+    if(!res.ok)throw Error('Chưa lưu được dữ liệu khảo sát (HTTP '+res.status+'). Dữ liệu đang hiển thị được giữ nguyên.');
+  }
+  if(typeof invalidateHomeSnapshot_==='function')invalidateHomeSnapshot_();
+}
 function clTypeLabel_(v){ const k=clNorm_(v); return (k.includes('newpg')||k.includes('pgmoi')||k.includes('new')) ? 'PGs mới' : 'PGs 0-1 sao'; }
 async function processCoachingLogSheet_(wb){
+  const context=clImportContext_();
   const ws=wb.Sheets[wb.SheetNames[0]];
   if(!ws) throw new Error('Không đọc được tab COACHING_LOG. Kiểm tra tên tab và quyền chia sẻ Sheet.');
   const arr=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
@@ -11263,12 +11293,12 @@ async function processCoachingLogSheet_(wb){
     const P=(...n)=>clPick_(row,idx,n);
     const ts=clParseDate_(P('Timestamp')); if(!ts) continue;
     total++;
-    if(clNorm_(P('TrainerRegion'))!=='mientrung'){ skipRegion++; continue; }
-    const periodD=clParseDate_(P('Period')); const mk=clMonthKey_(periodD||ts);
+    if(!clIsCentralRegion_(P('TrainerRegion'))){ skipRegion++; continue; }
+    const mk=clPeriodMonth_(P('Period'))||clMonthKey_(ts);
     if(mk!==currentMonth){ skipMonth++; continue; }
     const st=clNorm_(P('Status'));
     if(st && st!=='valid' && st!=='hople'){ skipStatus++; continue; }
-    const area=String(P('TrainerArea','Khu vực','SelectedArea')||'').trim();
+    const area=normalizeAreaVN(P('TrainerArea','Khu vực','SelectedArea'));
     if(isTrainer() && !isRegionImportAllowed(area)) continue;
     const code=String(P('PGCode','Mã NV','StaffCode')||'').trim().replace(/\.0$/,'');
     const type=clTypeLabel_(P('CoachingType'));
@@ -11304,37 +11334,58 @@ async function processCoachingLogSheet_(wb){
   const newWs=XLSX.utils.aoa_to_sheet(out); const newWb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(newWb,newWs,'Lich_su_Coaching');
 
   window.__coachingLogMergeInfo_={merged:mergedCount, kept:kept.length};
-  // COACHING_LOG luôn là DANH SÁCH ĐẦY ĐỦ của tháng -> XÓA SẠCH data khảo sát Coaching của tháng đang
-  // xem trước khi nạp lại, tránh cộng dồn (bấm cập nhật nhiều lần sẽ nhân đôi số liệu). Chỉ áp dụng cho
-  // MIEN TRUNG vì nguồn này chỉ chứa MIEN TRUNG; Admin là người duy nhất bấm nút này.
-  surveyResponses = [];
-  surveyResponsesNew = [];
-  await processCoachingHistoryWorkbook_(newWb);
+  // Chỉ thay phần log thuộc phạm vi người cập nhật sau khi đọc/lưu thành công.
+  // Trainer không được xoá khảo sát của các khu vực khác khi đồng bộ lại.
+  await processCoachingHistoryWorkbook_(newWb,{replaceFromLog:true});
+  if(context!==clImportContext_())return;
   // Bổ sung dòng thông tin gộp trùng vào cuối thông báo.
   const msg=document.getElementById('coachingImportMsg');
   if(msg && mergedCount){ msg.textContent += ` · Đã gộp ${mergedCount} khảo sát trùng (cùng PG, cùng ngày, cách ≤60 phút).`; }
 }
+let coachingLogUpdating_=false;
 async function updateCoachingFromLogSheet_(){
+  if(coachingLogUpdating_)return;
+  const context=clImportContext_();
   const msg=document.getElementById('coachingImportMsg');
   if(!isAdmin() && !isTrainer()){ if(msg){msg.style.display='block';msg.style.color='var(--red)';msg.textContent='Bạn không có quyền cập nhật.';} return; }
   if(monthLocked){ if(msg){msg.style.display='block';msg.style.color='var(--red)';msg.textContent='Tháng đã khoá — không cập nhật được.';} return; }
+  coachingLogUpdating_=true;
+  const button=document.getElementById('coachingLogUpdateBtn');if(button)button.disabled=true;
   if(msg){ msg.style.display='block'; msg.style.color='var(--muted)'; msg.textContent='⏳ Đang tải COACHING_LOG và lọc '+monthLabel(currentMonth)+' · MIEN TRUNG...'; }
   try{
-    const wb=await fetchGoogleSheetAsWorkbook_(COACHING_LOG_SHEET_URL_,[COACHING_LOG_SHEET_TAB_]);
+    const sheetId=parseGoogleSheetId_(COACHING_LOG_SHEET_URL_);
+    const rows=await fetchGoogleSheetRows_(sheetId,COACHING_LOG_SHEET_TAB_,{allowFallback:false});
+    const wb={SheetNames:[COACHING_LOG_SHEET_TAB_],Sheets:{[COACHING_LOG_SHEET_TAB_]:XLSX.utils.aoa_to_sheet(rows)}};
+    if(context!==clImportContext_())throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy cập nhật lại ở tháng cần xem.');
     await processCoachingLogSheet_(wb);
   }catch(err){
-    if(msg){ msg.style.display='block'; msg.style.color='var(--red)'; msg.textContent='Lỗi cập nhật: '+(err&&err.message?err.message:err); }
+    const currentMsg=context===clImportContext_()?document.getElementById('coachingImportMsg'):null;
+    if(currentMsg){ currentMsg.style.display='block'; currentMsg.style.color='var(--red)'; currentMsg.textContent='Lỗi cập nhật: '+(err&&err.message?err.message:err); }
+  }finally{
+    coachingLogUpdating_=false;
+    const currentButton=document.getElementById('coachingLogUpdateBtn');if(currentButton)currentButton.disabled=monthLocked;
   }
 }
-async function processCoachingHistoryWorkbook_(wb){
-  const msg = document.getElementById('coachingImportMsg');
+async function processCoachingHistoryWorkbook_(wb, options={}){
+  if((!isAdmin()&&!isTrainer())||monthLocked)throw Error('Bạn không có quyền cập nhật hoặc tháng đã khoá.');
+  const month=currentMonth,context=clImportContext_();
+  const keys=['surveyResponses:'+month,'surveyResponsesNew:'+month,'records:'+month];
+  const latest=await dbGetMulti(keys);
+  if(context!==clImportContext_()||monthLocked)throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy cập nhật lại.');
+  if(!keys.every(key=>Object.prototype.hasOwnProperty.call(latest,key)))throw Error('Không đọc được dữ liệu đã lưu. Chưa cập nhật khảo sát để tránh mất dữ liệu.');
+  if(keys.slice(0,2).some(key=>latest[key]!==null&&!Array.isArray(latest[key])))throw Error('Dữ liệu khảo sát đã lưu không đúng định dạng.');
+  const outsideScope=s=>isTrainer()&&!isRegionImportAllowed(normalizeAreaVN(s.area||trainerOf(s.trainerId)?.region));
+  const next01=(latest[keys[0]]||[]).filter(s=>!options.replaceFromLog||outsideScope(s));
+  const nextMoi=(latest[keys[1]]||[]).filter(s=>!options.replaceFromLog||outsideScope(s));
+  const nextRecords=JSON.parse(JSON.stringify(latest[keys[2]]||{}));
   const ws = wb.Sheets[wb.SheetNames[0]];
+  if(!ws)throw Error('Không đọc được dữ liệu khảo sát Coaching.');
   const allRows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
   const dataRows = allRows.slice(1);
 
-  let added01=0, addedMoi=0, skippedOtherMonth=0, skippedDup=0, skippedNoCode=0, skippedOtherRegion=0, invalidStatus=0, matchedByNameCount=0;
-  const existingKeys01 = new Set(surveyResponses.map(s=> s.timestamp+'|'+s.code));
-  const existingKeysMoi = new Set(surveyResponsesNew.map(s=> s.timestamp+'|'+s.code));
+  let added01=0, addedMoi=0, skippedOtherMonth=0, skippedDup=0, skippedNoCode=0, skippedOtherRegion=0, skippedTrainer=0, invalidStatus=0, matchedByNameCount=0;
+  const existingKeys01 = new Set(next01.map(s=> s.timestamp+'|'+s.code));
+  const existingKeysMoi = new Set(nextMoi.map(s=> s.timestamp+'|'+s.code));
 
   dataRows.forEach(row=>{
     if(!row || row.length===0) return;
@@ -11343,7 +11394,7 @@ async function processCoachingHistoryWorkbook_(wb){
     const monthKey = `${ts.getFullYear()}-${String(ts.getMonth()+1).padStart(2,'0')}`;
     if(monthKey !== currentMonth){ skippedOtherMonth++; return; }
 
-    const area = String(row[2]||'').trim();
+    const area = normalizeAreaVN(row[2]);
     if(isTrainer() && !isRegionImportAllowed(area)){ skippedOtherRegion++; return; }
 
     const trangThai = String(row[16]||'').trim();
@@ -11376,16 +11427,18 @@ async function processCoachingHistoryWorkbook_(wb){
     const key = ts.toISOString()+'|'+code;
     const existingKeys = isNew ? existingKeysMoi : existingKeys01;
     if(existingKeys.has(key)){ skippedDup++; return; }
-    existingKeys.add(key);
 
     const trainerUsername = String(row[4]||'').trim().toLowerCase();
     const trainerNameRaw = normTrName_(row[3]);
     let trainerObj = config.trainers.find(t=>(t.username||'').trim().toLowerCase()===trainerUsername && trainerUsername);
     if(!trainerObj) trainerObj = config.trainers.find(t=>normTrName_(t.name)===trainerNameRaw);
     if(!trainerObj){ const _lr=normTrNameLoose_(trainerNameRaw); if(_lr) trainerObj = config.trainers.find(t=> normTrNameLoose_(t.name)===_lr || (t.username||'').trim().toLowerCase()===_lr); } // bắt tên viết liền không dấu
+    if(!trainerObj){skippedTrainer++;return;}
+    if(isTrainer()&&!isRegionImportAllowed(normalizeAreaVN(trainerObj.region))){skippedOtherRegion++;return;}
+    existingKeys.add(key);
 
     if(isNew){
-      surveyResponsesNew.push({
+      nextMoi.push({
         id: uid('svn'), timestamp: ts.toISOString(), email:'', area,
         pgName: String(row[6]||'').trim(), phone: String(row[7]||'').trim(), code,
         trainerId: trainerObj?trainerObj.id:'', trainerName: trainerObj?trainerObj.name:String(row[3]||'').trim(),
@@ -11395,7 +11448,7 @@ async function processCoachingHistoryWorkbook_(wb){
       });
       addedMoi++;
     } else {
-      surveyResponses.push({
+      next01.push({
         id: uid('sv'), timestamp: ts.toISOString(), area,
         pgName: String(row[6]||'').trim(), phone: String(row[7]||'').trim(), code,
         trainerId: trainerObj?trainerObj.id:'', trainerName: trainerObj?trainerObj.name:String(row[3]||'').trim(),
@@ -11407,16 +11460,22 @@ async function processCoachingHistoryWorkbook_(wb){
     }
   });
 
-  await dbSet('surveyResponses:'+currentMonth, surveyResponses);
-  await dbSet('surveyResponsesNew:'+currentMonth, surveyResponsesNew);
-  syncAllPg01Actuals();
-  syncAllPgMoiActuals();
-  await dbSet('records:'+currentMonth, records);
+  if(options.replaceFromLog&&!added01&&!addedMoi)throw Error('Chưa có khảo sát khớp Trainer và mã PGs trong phạm vi cập nhật. Dữ liệu cũ được giữ nguyên.');
+  config.trainers.filter(t=>isAdmin()||isRegionImportAllowed(normalizeAreaVN(t.region))).forEach(t=>{
+    syncPg01ActualFromCoaching(t.id,next01,nextRecords);
+    syncPgMoiActualFromSurvey(t.id,nextMoi,nextRecords);
+  });
+  if(context!==clImportContext_()||monthLocked)throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy cập nhật lại.');
+  await clPersistCoachingMonth_(month,next01,nextMoi,nextRecords);
+  if(context!==clImportContext_())return;
+  surveyResponses=next01;surveyResponsesNew=nextMoi;records=nextRecords;
   renderKpiCategory('noibo');
 
+  // renderKpiCategory tạo lại ô thông báo: lấy phần tử mới, không ghi vào ô đã bị thay thế.
+  const msg = document.getElementById('coachingImportMsg');
   if(msg){
     msg.style.display='block'; msg.style.color='var(--green-ok)';
-    msg.textContent = `Đã import ${added01} lượt PGs 0★/1★ + ${addedMoi} lượt PGs mới (hợp lệ)${matchedByNameCount?`, trong đó ${matchedByNameCount} lượt tự tra theo Tên (Mã NV để trống, khớp Danh sách PGs mới tháng ${monthLabel(currentMonth)})`:''}. Bỏ qua: ${skippedOtherMonth} khác tháng, ${invalidStatus} Trạng thái không hợp lệ (Trùng/khác), ${skippedDup} trùng lặp, ${skippedNoCode} thiếu Mã NV (không tra được theo Tên)${skippedOtherRegion?`, ${skippedOtherRegion} ngoài khu vực bạn phụ trách`:''}.`;
+    msg.textContent = `Đã import ${added01} lượt PGs 0★/1★ + ${addedMoi} lượt PGs mới (hợp lệ)${matchedByNameCount?`, trong đó ${matchedByNameCount} lượt tự tra theo Tên (Mã NV để trống, khớp Danh sách PGs mới tháng ${monthLabel(currentMonth)})`:''}. Bỏ qua: ${skippedOtherMonth} khác tháng, ${invalidStatus} Trạng thái không hợp lệ (Trùng/khác), ${skippedDup} trùng lặp, ${skippedNoCode} thiếu Mã NV (không tra được theo Tên)${skippedTrainer?`, ${skippedTrainer} chưa khớp Trainer`:''}${skippedOtherRegion?`, ${skippedOtherRegion} ngoài khu vực bạn phụ trách`:''}.`;
   }
 }
 function renderCoachingImportBox(){
@@ -12002,16 +12061,19 @@ function renderSurveyFormNew(){
   const box=document.getElementById('surveyFormNewBox');
   if(!box) return;
 
+  const tList=isTrainer()?config.trainers.filter(t=>t.id===session.trainerId):visibleTrainers();
+  const trainerIds=noiboFilteredTrainerIds_(new Set(tList.map(t=>t.id)));
+  const scopedResponses=surveyResponsesNew.filter(s=>trainerIds.has(s.trainerId));
   let html = '';
-  const monthEntries = surveyResponsesNew.length;
+  const monthEntries = scopedResponses.length;
   html += `<div class="scope-filters" style="justify-content:space-between;margin-bottom:8px;">
     <span class="scope-label">Đã nhập <strong>${monthEntries}</strong> lượt khảo sát PGs mới trong ${monthLabel(currentMonth)}</span>
   </div>`;
 
-  if(surveyResponsesNew.length===0){
+  if(scopedResponses.length===0){
     box.innerHTML = html + `<div class="empty">Chưa có khảo sát PGs mới nào được import trong tháng này.</div>`;
   } else {
-    const sorted = [...surveyResponsesNew].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+    const sorted = [...scopedResponses].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
     html += `<table><thead><tr><th>Thời gian</th><th>Mã NV</th><th>Họ & Tên PGs</th><th>Trainer</th><th>Buổi thứ</th><th>Lượt/2</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>`;
     sorted.forEach(s=>{
       const cnt = surveyCountForCodeNew(s.code);
