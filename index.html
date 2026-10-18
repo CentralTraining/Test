@@ -1387,31 +1387,68 @@ const dailyOlieMessages_ = ["Chúc bạn một ngày làm việc tràn đầy n�
 @media(max-width:1150px){#panel-set-campaign .form-grid-4 {grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:650px){#panel-set-campaign .form-grid-4 {grid-template-columns:minmax(0,1fr);}#tab-settings > .olie-all-pages-banner{min-height:120px!important;padding:16px!important;}#tab-settings > .olie-all-pages-banner .olie-all-pages-banner-copy{max-width:78%;}}
 /* PGs MASTER ONLY - isolated styles for the detailed progress table */
-#pgsmProgressTableWrap{border:1px solid #dae7df;border-radius:18px;background:#fff;max-height:520px;overflow:auto;box-shadow:0 5px 18px rgba(11,95,50,.035);}
-#pgsmProgressTable{width:100%;border-collapse:separate;border-spacing:0;min-width:1220px;font-size:13px;}
-#pgsmProgressTable thead th{position:sticky;top:0;z-index:2;background:#eaf5ee;color:#075d37;font-weight:800;font-size:12px;line-height:1.35;padding:12px 9px;border-bottom:1px solid #dceae1;vertical-align:middle;text-align:left;}
-#pgsmProgressTable tbody td{padding:10px 9px;vertical-align:middle;border-bottom:1px solid #ecf2ee;line-height:1.4;}
+#pgsmProgressContent .pgsm-progress-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.15fr) minmax(0,1fr) minmax(0,1.1fr) auto;gap:8px;align-items:end;padding:12px;}
+#pgsmProgressContent .pgsm-progress-filters label{display:flex;min-width:0;gap:6px;margin:0;font-size:11px;line-height:1.3;}
+#pgsmProgressContent .pgsm-progress-filters select,#pgsmProgressContent .pgsm-progress-filters input{display:block;min-width:0;width:100%;max-width:100%;height:38px;min-height:38px;padding:7px 8px;font:inherit;font-size:12px;color:var(--text);text-overflow:ellipsis;}
+#pgsmProgressContent .pgsm-progress-filters button{height:38px;min-height:38px;padding:7px 11px;font-size:12px;white-space:nowrap;}
+#pgsmProgressContent .pgsm-progress-filters select:focus-visible,#pgsmProgressContent .pgsm-progress-filters input:focus-visible{outline:2px solid #119557;outline-offset:2px;}
+#pgsmProgressTableWrap{width:100%;min-width:0;max-width:100%;box-sizing:border-box;border:1px solid #dae7df;border-radius:14px;background:#fff;max-height:560px;overflow-x:hidden;overflow-y:auto;box-shadow:0 5px 18px rgba(11,95,50,.035);}
+#pgsmProgressTable{width:100%;max-width:100%;min-width:0!important;table-layout:fixed!important;border-collapse:separate;border-spacing:0;font-size:12px;}
+#pgsmProgressTable thead th{position:sticky;top:0;z-index:2;background:#eaf5ee;color:#075d37;font-weight:800;font-size:11px;line-height:1.3;padding:10px 5px;border-bottom:1px solid #dceae1;vertical-align:middle;text-align:left;letter-spacing:0;overflow-wrap:break-word;}
+#pgsmProgressTable tbody td{min-width:0;padding:10px 5px;font-size:clamp(11px,.8vw,12px);vertical-align:middle;border-bottom:1px solid #ecf2ee;line-height:1.4;white-space:normal;overflow-wrap:anywhere;}
 #pgsmProgressTable tbody tr:nth-child(even){background:#fafdfb;}
 #pgsmProgressTable tbody tr:hover{background:#f1f9f4;}
 #pgsmProgressTable td.pgsm-person-name{font-weight:750;color:#193d2a;}
-#pgsmProgressTable td.pgsm-score-cell{text-align:center;min-width:96px;}
+#pgsmProgressTable td.pgsm-score-cell{text-align:center;min-width:0;}
 #pgsmProgressTable .pgsm-actual-input{width:76px!important;max-width:100%;min-width:0;min-height:36px;box-sizing:border-box;padding:7px 8px;border:1px solid #cddfd2;border-radius:9px;background:#fff;font-family:inherit;font-size:14px;font-weight:700;text-align:center;}
 #pgsmProgressTable .pgsm-actual-input:focus{outline:2px solid rgba(17,149,87,.35);outline-offset:1px;border-color:#119557;}
 #pgsmProgressTable .pgsm-done-icon{display:inline-flex;margin-left:5px;align-items:center;justify-content:center;color:#08794b;font-weight:800;vertical-align:middle;}
 #pgsmProgressTable .pgsm-score-value{font-weight:700;}
-#pgsmProgressTable .pgsm-result-badge{display:inline-flex;gap:4px;align-items:center;white-space:nowrap;padding:5px 9px;border-radius:999px;background:#eef5f1;border:1px solid #dce8df;color:#285f45;font-size:12px;font-weight:750;}
+#pgsmProgressTable .pgsm-result-badge{display:inline-flex;max-width:100%;gap:3px;align-items:center;white-space:normal;padding:4px 6px;border-radius:10px;background:#eef5f1;border:1px solid #dce8df;color:#285f45;font-size:10px;font-weight:750;}
 #pgsmProgressTable .pgsm-result-badge.pgsm-result-done{background:#e0f3e7;color:#086c3b;border-color:#b5ddc6;}
-#pgsmProgressTable .pgsm-col-shop{max-width:190px;overflow-wrap:anywhere;}
-#pgsmProgressTable .pgsm-col-person{min-width:145px;}
-#pgsmProgressTable .pgsm-col-trainer{min-width:120px;}
-#pgsmProgressTable .pgsm-col-change{min-width:190px;max-width:280px;white-space:normal;overflow-wrap:anywhere;}
+#pgsmProgressTable .pgsm-col-shop,#pgsmProgressTable .pgsm-col-person,#pgsmProgressTable .pgsm-col-trainer,#pgsmProgressTable .pgsm-col-change{min-width:0;white-space:normal;overflow-wrap:break-word;}
+#pgsmProgressTable .pgsm-shop-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:normal;word-break:normal;text-overflow:ellipsis;}
+#pgsmProgressTable .pgsm-col-code{font-variant-numeric:tabular-nums;}
+#pgsmProgressTable .pgsm-stage-name{display:block;margin:3px 0;font-size:10px;font-weight:650;text-transform:none;}
+#pgsmProgressTable .pgsm-stage-target{display:block;font-size:9px;font-weight:600;text-transform:none;}
+#pgsmProgressTable .pgsm-fm-stage{min-width:0;max-width:100%;gap:4px;}
+#pgsmProgressTable .pgsm-fm-stars{font-size:13px;}
+#pgsmProgressTable .pgsm-fm-status{display:inline-block;max-width:100%;font-size:10px;line-height:1.3;white-space:normal;padding:3px 5px;}
+#pgsmProgressTable [data-pgsm-progress-remove]{max-width:100%;padding:5px 6px;font-size:10px;white-space:normal;}
 .pgsm-change-label{display:block;font-weight:800;}
-.pgsm-change-reason{display:block;margin-top:4px;font-size:12px;white-space:pre-wrap;}
+.pgsm-change-reason{display:block;margin-top:4px;font-size:11px;white-space:pre-wrap;}
 #pgsmProgressTable tbody tr.pgsm-change-add>td{background:#e8f5e9;}
 #pgsmProgressTable tbody tr.pgsm-change-remove>td{background:#ffebee;}
 #pgsmProgressTable tbody tr.pgsm-change-add .pgsm-person-name,#pgsmProgressTable tbody tr.pgsm-change-add .pgsm-change-label{color:#166534;}
 #pgsmProgressTable tbody tr.pgsm-change-remove .pgsm-person-name,#pgsmProgressTable tbody tr.pgsm-change-remove .pgsm-change-label{color:#b91c1c;}
-#pgsmProgressTable .pgsm-col-step{min-width:105px;}
+#pgsmProgressTable .pgsm-col-step{min-width:0;text-align:center;}
+@media(max-width:1000px){
+ #pgsmProgressContent .pgsm-progress-filters{grid-template-columns:repeat(3,minmax(0,1fr));}
+ #pgsmProgressContent .pgsm-progress-filters button{grid-column:1/-1;justify-self:end;}
+}
+/* Màn hình hẹp: từng PGs thành một thẻ, vẫn đủ 5 mốc và không cần kéo ngang. */
+@media(max-width:900px){
+ #pgsmProgressTableWrap{max-height:none;overflow:visible;border:0;border-radius:0;box-shadow:none;background:transparent;}
+ #pgsmProgressTable,#pgsmProgressTable tbody{display:block;width:100%;border:0;background:transparent;}
+ #pgsmProgressTable colgroup,#pgsmProgressTable thead{display:none;}
+ #pgsmProgressTable tbody{display:grid;gap:12px;}
+ #pgsmProgressTable tbody tr{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:10px 8px;padding:12px;border:1px solid #dae7df;border-radius:12px;background:#fff;}
+ #pgsmProgressTable tbody td{display:block;grid-column:span 2;min-width:0;border:0;padding:0!important;font-size:12px!important;background:transparent!important;}
+ #pgsmProgressTable tbody td:before{content:attr(data-label);display:block;margin-bottom:4px;font-size:10px;font-weight:750;color:#61786b;}
+ #pgsmProgressTable .pgsm-col-number{display:none;}
+ #pgsmProgressTable .pgsm-col-code{grid-column:span 4;}
+ #pgsmProgressTable .pgsm-col-person,#pgsmProgressTable .pgsm-col-shop,#pgsmProgressTable .pgsm-col-trainer{grid-column:span 6;}
+ #pgsmProgressTable .pgsm-col-region,#pgsmProgressTable .pgsm-col-channel{grid-column:span 4;}
+ #pgsmProgressTable .pgsm-col-change,#pgsmProgressTable .pgsm-col-result,#pgsmProgressTable .pgsm-col-action,#pgsmProgressTable .pgsm-empty{grid-column:1/-1;}
+ #pgsmProgressTable .pgsm-empty:before{display:none;}
+ #pgsmProgressTable .pgsm-fm-stage{align-items:center;}
+ #pgsmProgressTable tbody tr.pgsm-change-add{background:#e8f5e9;}
+ #pgsmProgressTable tbody tr.pgsm-change-remove{background:#ffebee;}
+}
+@media(max-width:550px){
+ #pgsmProgressContent .pgsm-progress-filters{grid-template-columns:repeat(2,minmax(0,1fr));}
+ #pgsmProgressContent .pgsm-progress-filters button{justify-self:stretch;}
+}
 </style>
 </head>
 <body>
@@ -16689,21 +16726,22 @@ async function pgsmDrawProgress_(camp){
    <div class="section-desc" style="margin-top:6px">Kết quả M1–M5 được cập nhật duy nhất từ OTraining. Không hỗ trợ nhập hoặc lưu tiến độ thủ công.</div>
  </section>
  <h3 class="pgsm-section-title" style="margin-top:22px">Danh sách PGs Master và tiến độ từng mốc</h3>
- <div class="pgsm-filter-grid">
+ <div class="pgsm-filter-grid pgsm-progress-filters">
   <label>Khu vực<select id="pgsmProgressRegion"><option value="">Tất cả khu vực</option>${regions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}</select></label>
   <label>Trainer<select id="pgsmProgressTrainer"><option value="">Tất cả Trainer</option>${trainerIds.map(id=>`<option value="${escapeHtml(id)}">${escapeHtml(trainerOf(id)?.name||rows.find(r=>String(r.trainerId)===id)?.trainerName||id)}</option>`).join('')}</select></label>
   <label>Kênh<select id="pgsmProgressChannel"><option value="">Tất cả kênh</option></select></label>
+  <label>Trạng thái<select id="pgsmProgressStatus"><option value="">Tất cả trạng thái</option><option value="current">Trong danh sách</option><option value="add">Thêm</option><option value="remove">Loại</option><option value="pending">Chờ duyệt</option></select></label>
   <label>Tên / Code PGs<input id="pgsmProgressPgSearch" placeholder="Tìm mã hoặc tên PGs"></label>
-  <label>ID / tên shop<input id="pgsmProgressShop" placeholder="Tìm shop"></label>
-  <button type="button" class="secondary" id="pgsmExportProgress">⬇ Xuất Excel tiến độ PGs</button>
+  <label>Tên shop<input id="pgsmProgressShop" placeholder="Tìm shop"></label>
+  <button type="button" class="secondary" id="pgsmExportProgress" title="Xuất Excel tiến độ PGs theo bộ lọc">⬇ Xuất Excel</button>
  </div>
  <p class="section-desc">Thêm: màu xanh · Loại: màu đỏ, kèm lý do Trainer. Yêu cầu chờ duyệt được ghi rõ; tổng tiến độ chỉ tính danh sách chính thức.</p>
- <div class="table-scroll" id="pgsmProgressTableWrap"><table id="pgsmProgressTable"><thead><tr><th>STT</th><th>Code PGs</th><th class="pgsm-col-person">Họ tên</th><th>ID shop</th><th>Shop</th><th>Khu vực</th><th>Trainer</th><th>Kênh</th><th class="pgsm-col-change">Trạng thái</th>${PGSM_STAGES_.map(m=>`<th>${escapeHtml(m.label)}<small style="display:block">Target: ${Number(d.thresholds[m.id]||0)}</small></th>`).join('')}<th>Kết quả</th>${isTrainer()?'<th>Thao tác</th>':''}</tr></thead><tbody id="pgsmProgressRows"></tbody></table></div>
+ <div class="table-scroll" id="pgsmProgressTableWrap"><table id="pgsmProgressTable" aria-label="Danh sách PGs Master và tiến độ từng mốc"><colgroup>${[3,6,isTrainer()?11:12,isTrainer()?10:11,6,isTrainer()?9:10,4,isTrainer()?11:12,...PGSM_STAGES_.map(()=>isTrainer()?5.6:6),6,...(isTrainer()?[6]:[])].map(width=>`<col style="width:${width}%">`).join('')}</colgroup><thead><tr><th scope="col">STT</th><th scope="col">Mã PGs</th><th scope="col">Họ tên</th><th scope="col">Shop</th><th scope="col">Khu vực</th><th scope="col">Trainer</th><th scope="col">Kênh</th><th scope="col">Trạng thái</th>${PGSM_STAGES_.map(m=>`<th scope="col" class="pgsm-col-step" title="${escapeHtml(m.label)}">${escapeHtml(m.id.toUpperCase())}<span class="pgsm-stage-name">${escapeHtml(m.label.replace(/^M\d\s*·\s*/,''))}</span><small class="pgsm-stage-target">Target: ${Number(d.thresholds[m.id]||0)}</small></th>`).join('')}<th scope="col">Kết quả</th>${isTrainer()?'<th scope="col">Thao tác</th>':''}</tr></thead><tbody id="pgsmProgressRows"></tbody></table></div>
  <div id="pgsmProgressPagination"></div>
  </div><div id="pgsmTrainerChanges"></div>`;
  const $=id=>el.querySelector('#'+id);
  const regionSel=$('pgsmProgressRegion'),trainerSel=$('pgsmProgressTrainer'),channelSel=$('pgsmProgressChannel');
- const pgInput=$('pgsmProgressPgSearch'),shopInput=$('pgsmProgressShop');
+ const pgInput=$('pgsmProgressPgSearch'),shopInput=$('pgsmProgressShop'),statusSel=$('pgsmProgressStatus');
  const pager=$('pgsmProgressPagination');
  const groupBy=$('pgsmProgressGroupBy');
  const pageSize=6;let page=1;
@@ -16749,6 +16787,7 @@ async function pgsmDrawProgress_(camp){
  const filtered=()=>rows.filter(r=>(!regionSel.value||pgsmNorm_(regionOf(r))===pgsmNorm_(regionSel.value))
    &&(!trainerSel.value||String(r.trainerId)===trainerSel.value)
    &&(!channelSel.value||pgsmNorm_(r.channel)===pgsmNorm_(channelSel.value))
+   &&(!statusSel.value||(statusSel.value==='pending'?!!r._pgsmChange?.pending:statusSel.value==='current'?!r._pgsmChange:r._pgsmChange?.action===statusSel.value))
    &&(!pgInput.value||pgsmNorm_(r.name).includes(pgsmNorm_(pgInput.value))||pgsmNorm_(r.code).includes(pgsmNorm_(pgInput.value)))
    &&(!shopInput.value||pgsmNorm_(r.shop).includes(pgsmNorm_(shopInput.value))||pgsmNorm_(r.shopId).includes(pgsmNorm_(shopInput.value))));
  function draw(){
@@ -16756,15 +16795,15 @@ async function pgsmDrawProgress_(camp){
    const start=(page-1)*pageSize;
    $('pgsmProgressRows').innerHTML=subset.slice(start,start+pageSize).map((r,i)=>{
      const n=achieved(r);
-     return `<tr class="${r._pgsmChange?'pgsm-change-'+r._pgsmChange.action:''}"><td>${start+i+1}</td><td>${escapeHtml(r.code)}</td><td class="pgsm-person-name pgsm-col-person">${escapeHtml(r.name)}</td><td>${escapeHtml(r.shopId||'—')}</td><td class="pgsm-col-shop" title="${escapeHtml(r.shop)}">${escapeHtml(r.shop)}</td><td>${escapeHtml(r.region)}</td><td class="pgsm-col-trainer">${escapeHtml(r.trainerName)}</td><td>${escapeHtml(r.channel||'—')}</td><td class="pgsm-col-change"><span class="pgsm-change-label">${escapeHtml(pgsmChangeLabel_(r))}</span>${r._pgsmChange?`<span class="pgsm-change-reason">Lý do: ${escapeHtml(r._pgsmChange.reason)}</span>`:''}</td>${PGSM_STAGES_.map(m=>{
+     return `<tr class="${r._pgsmChange?'pgsm-change-'+r._pgsmChange.action:''}"><td class="pgsm-col-number" data-label="STT">${start+i+1}</td><td class="pgsm-col-code" data-label="Mã PGs">${escapeHtml(r.code)}</td><td class="pgsm-person-name pgsm-col-person" data-label="Họ tên">${escapeHtml(r.name)}</td><td class="pgsm-col-shop" data-label="Shop"><span class="pgsm-shop-name" title="${escapeHtml(r.shop)}">${escapeHtml(r.shop)}</span></td><td class="pgsm-col-region" data-label="Khu vực">${escapeHtml(r.region)}</td><td class="pgsm-col-trainer" data-label="Trainer">${escapeHtml(r.trainerName)}</td><td class="pgsm-col-channel" data-label="Kênh">${escapeHtml(r.channel||'—')}</td><td class="pgsm-col-change" data-label="Trạng thái"><span class="pgsm-change-label">${escapeHtml(pgsmChangeLabel_(r))}</span>${r._pgsmChange?`<span class="pgsm-change-reason">Lý do: ${escapeHtml(r._pgsmChange.reason)}</span>`:''}</td>${PGSM_STAGES_.map(m=>{
        const st=stageStatus(r,m);
        if(!st.fromSystem){
-         return '<td class="pgsm-score-cell"><span class="pgsm-fm-status pgsm-fm-unknown">Chưa có dữ liệu</span></td>';
+         return `<td class="pgsm-score-cell" data-label="${escapeHtml(m.label)}"><span class="pgsm-fm-status pgsm-fm-unknown">Chưa có dữ liệu</span></td>`;
        }
        const stars=st.stars===null?'—':String(st.stars);
-       return `<td class="pgsm-score-cell"><div class="pgsm-fm-stage"><span class="pgsm-fm-stars" title="Số sao từ OTraining">★ ${escapeHtml(stars)}</span><span class="pgsm-fm-status ${st.done?'pgsm-fm-pass':st.known?'pgsm-fm-fail':'pgsm-fm-unknown'}">${st.done?'✓ Đạt':st.known?'Chưa đạt':'Chưa có kết quả'}</span></div></td>`;
-     }).join('')}<td><span class="pgsm-result-badge ${n===5?'pgsm-result-done':''}">${n===5?'🏆 Đạt Master':`${n}/5 mốc`}</span></td>${isTrainer()?`<td>${r._pgsmInTarget&&String(r.trainerId||'')===String(session?.trainerId||'')?`<button type="button" class="secondary" data-pgsm-progress-remove="${escapeHtml(r.code)}">Loại PGs</button>`:'—'}</td>`:''}</tr>`;
-   }).join('')||`<tr><td colspan="${isTrainer()?16:15}">Không có PGs phù hợp bộ lọc</td></tr>`;
+       return `<td class="pgsm-score-cell" data-label="${escapeHtml(m.label)}"><div class="pgsm-fm-stage"><span class="pgsm-fm-stars" title="Số sao từ OTraining">★ ${escapeHtml(stars)}</span><span class="pgsm-fm-status ${st.done?'pgsm-fm-pass':st.known?'pgsm-fm-fail':'pgsm-fm-unknown'}">${st.done?'✓ Đạt':st.known?'Chưa đạt':'Chưa có kết quả'}</span></div></td>`;
+     }).join('')}<td class="pgsm-col-result" data-label="Kết quả"><span class="pgsm-result-badge ${n===5?'pgsm-result-done':''}">${n===5?'🏆 Đạt Master':`${n}/5 mốc`}</span></td>${isTrainer()?`<td class="pgsm-col-action" data-label="Thao tác">${r._pgsmInTarget&&String(r.trainerId||'')===String(session?.trainerId||'')?`<button type="button" class="secondary" data-pgsm-progress-remove="${escapeHtml(r.code)}">Loại PGs</button>`:'—'}</td>`:''}</tr>`;
+   }).join('')||`<tr><td class="pgsm-empty" colspan="${isTrainer()?15:14}">Không có PGs phù hợp bộ lọc</td></tr>`;
    pager.innerHTML=pgsmPager_(subset.length,page,pageSize,'data-pgsm-progress-page','PGs');
    summary();
  }
@@ -16773,6 +16812,7 @@ async function pgsmDrawProgress_(camp){
  regionSel.addEventListener('change',()=>{fillTrainer();fillChannel();page=1;draw();});
  trainerSel.addEventListener('change',()=>{fillChannel();page=1;draw();});
  channelSel.addEventListener('change',()=>{page=1;draw();});
+ statusSel.addEventListener('change',()=>{page=1;draw();});
  pgInput.addEventListener('input',()=>{page=1;draw();});shopInput.addEventListener('input',()=>{page=1;draw();});
  $('pgsmProgressRows').addEventListener('click',async e=>{
    const btn=e.target.closest('[data-pgsm-progress-remove]');if(!btn||!isTrainer())return;
