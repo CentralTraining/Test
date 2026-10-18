@@ -2978,42 +2978,138 @@ let editingPgId=null;
 const BRANDS=['OPPO','Samsung','Xiaomi','Vivo','Realme','Honor'];
 const STATUS_LIST=['Đang làm','THAI SẢN','CODE ĐẠI LÝ','OFF (chưa cắt Center)'];
 const STATUS_CLASS={ 'Đang làm':'st-dangl','THAI SẢN':'st-thaisan','CODE ĐẠI LÝ':'st-ctv','OFF (chưa cắt Center)':'st-danghi' };
-/* ============ ĐỔI TRẠNG THÁI PG NGAY TRONG BẢNG COACHING (0★/1★ và PGs mới) ============
-   Bước 2 xác nhận trước khi áp dụng; PG vừa đổi được đánh dấu statusChangedAt để tô đỏ + đưa lên đầu danh sách. */
-function statusSelectHtml_(p, canEdit){
-  const statuses = ['Đang làm','THAI SẢN','CODE ĐẠI LÝ','OFF (chưa cắt Center)'];
-  return `<select class="pg-status-select" data-pg="${p.id}" style="width:100%;padding:5px 6px;font-size:7.5pt;border:1px solid var(--line);border-radius:6px;font-family:inherit;" ${canEdit?'':'disabled'}>
-    ${statuses.map(s=>`<option value="${s}" ${p.status===s?'selected':''}>${s}</option>`).join('')}
-  </select>`;
+/* PGs Dev và Tổng quan dùng cùng trạng thái chính thức + yêu cầu chờ Admin duyệt. */
+function pgStatusCode_(value){return String(value??'').trim().replace(/\.0$/,'');}
+function pgStatusPgForRoster_(r, source=pgs){
+  const code=pgStatusCode_(r?.code);if(!code)return null;
+  const matches=source.filter(p=>p.brand==='OPPO'&&pgStatusCode_(p.code)===code&&String(p.trainerId)===String(r.trainerId));
+  return matches.length===1?matches[0]:null;
 }
-async function confirmAndUpdatePgStatus_(pg, newStatus, selectEl, onDone){
-  if(!pg) return;
-  const oldStatus = pg.status;
-  if(oldStatus===newStatus) return;
-  const ok = await showConfirm(`Xác nhận đổi trạng thái của "${pg.name}" (${pg.code||'—'}) từ "${oldStatus}" sang "${newStatus}"?`);
-  if(!ok){ if(selectEl) selectEl.value = oldStatus; return; }
-  if(isTrainer()){
-    // Trainer không được áp dụng trạng thái trực tiếp: chỉ gửi yêu cầu cho Admin duyệt.
-    await requestPgStatusChange_(pg, newStatus);
-    if(selectEl) selectEl.value = oldStatus;
-    renderPendingPgStatusBell_();
-    if(onDone) onDone();
-    return;
+function pgStatusTarget_(pg, roster, sourcePgs=pgs, sourceRoster=onoffRoster){
+  if(roster){
+    const r=sourceRoster.find(x=>String(x.id)===String(roster.id)&&String(x.trainerId)===String(roster.trainerId));
+    return r?{pg:pgStatusPgForRoster_(r,sourcePgs),roster:r}:null;
   }
-  if(!isAdmin()){ if(selectEl) selectEl.value=oldStatus; return; }
-  pg.status = newStatus;
-  pg.statusChangedAt = new Date().toISOString();
-  pg.statusApprovedAt = new Date().toISOString();
-  await dbSet('pgs:'+currentMonth, pgs);
-  if(syncApprovedPgStatusToOnOff_(pg,newStatus)) await dbSet('onoffRoster', onoffRoster);
-  if(onDone) onDone();
+  const p=pg&&sourcePgs.find(x=>String(x.id)===String(pg.id)&&String(x.trainerId)===String(pg.trainerId));
+  return p?{pg:p,roster:null}:null;
+}
+function pgStatusCanEdit_(pg,roster){
+  const owner=(roster||pg)?.trainerId;
+  return !monthLocked&&!!(pg||roster)&&(isAdmin()||(isTrainer()&&!!owner&&String(owner)===String(session.trainerId)));
+}
+function pgStatusCurrent_(pg,roster){return pg?.status||roster?.devStatusNote||'Đang làm';}
+function pgStatusMatches_(req,pg,roster,month=currentMonth){
+  if(req.month!==month||String(req.trainerId)!==String((roster||pg)?.trainerId))return false;
+  return !!((pg&&req.pgId!=null&&String(req.pgId)===String(pg.id))
+    ||(roster&&req.onoffId!=null&&String(req.onoffId)===String(roster.id))
+    ||(pgStatusCode_(req.pgCode)&&pgStatusCode_(req.pgCode)===pgStatusCode_((roster||pg)?.code)));
+}
+function pgStatusKey_(pg,roster){return currentMonth+'|'+String((roster||pg)?.trainerId)+'|'+(pg?'pg:'+pg.id:'onoff:'+roster?.id);}
+function pgStatusContext_(){return JSON.stringify([currentMonth,session?.role,session?.trainerId,session?.region]);}
+async function pgStatusReadState_(month){
+  const keys=['pgs:'+month,'onoffRoster','pendingPgStatusRequests'];
+  const data=await dbGetMulti(keys);
+  if(!keys.every(key=>Object.prototype.hasOwnProperty.call(data,key)))throw Error('Không đọc được dữ liệu trạng thái. Hãy thử lại.');
+  if(keys.some(key=>data[key]!==null&&!Array.isArray(data[key])))throw Error('Dữ liệu trạng thái không đúng định dạng.');
+  return {pgs:JSON.parse(JSON.stringify(data[keys[0]]||[])),roster:JSON.parse(JSON.stringify(data[keys[1]]||[])),requests:JSON.parse(JSON.stringify(data[keys[2]]||[]))};
+}
+async function pgStatusPersist_(entries){
+  if(!SUPABASE_URL){
+    const backup=entries.map(e=>localStorage.getItem(e.key));
+    try{entries.forEach(e=>localStorage.setItem(e.key,JSON.stringify(e.value)));}
+    catch{entries.forEach((e,i)=>{try{if(backup[i]===null)localStorage.removeItem(e.key);else localStorage.setItem(e.key,backup[i]);}catch{}});throw Error('Không lưu được trạng thái. Hãy thử lại.');}
+  }else{
+    const updated_at=new Date().toISOString();
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`,{method:'POST',
+      headers:{...SUPA_HEADERS_,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(entries.map(e=>({...e,updated_at})))});
+    if(!res.ok)throw Error('Không lưu được trạng thái (HTTP '+res.status+'). Hãy thử lại.');
+  }
+  if(typeof invalidateHomeSnapshot_==='function')invalidateHomeSnapshot_();
+}
+function pgStatusFeedback_(key,text,error=false){
+  document.querySelectorAll('[data-pg-status-key]').forEach(box=>{
+    if(box.dataset.pgStatusKey!==key)return;
+    const msg=box.querySelector('.pg-status-feedback');
+    if(msg){msg.textContent=text;msg.style.color=error?'var(--red)':'var(--green-dark)';}
+  });
+}
+function pgStatusModalFeedback_(text){
+  const box=document.getElementById('pendingPgStatusModalBody');if(!box)return;
+  let msg=box.querySelector('.pg-status-modal-feedback');
+  if(!msg){msg=document.createElement('div');msg.className='pg-status-modal-feedback';msg.setAttribute('role','alert');box.prepend(msg);}
+  msg.textContent=text;msg.style.cssText='color:var(--red);font-size:12px;margin-bottom:10px;';
+}
+function statusSelectHtml_(p,canEdit,roster=null){
+  const cur=pgStatusCurrent_(p,roster),editable=canEdit&&pgStatusCanEdit_(p,roster);
+  const pending=pendingPgStatusRequests.find(r=>pgStatusMatches_(r,p,roster));
+  return `<div class="pg-status-editor" data-pg-status-key="${escapeHtml(pgStatusKey_(p,roster))}">
+    <select class="pg-status-select${roster?' dev-status-note-select':''}" data-pg="${escapeHtml(p?.id??'')}" data-oo-id="${escapeHtml(roster?.id??'')}" aria-label="Trạng thái của ${escapeHtml((roster||p)?.name||'PGs')}" style="width:100%;padding:5px 6px;font-size:7.5pt;border:1px solid var(--line);border-radius:6px;font-family:inherit;" ${editable?'':'disabled'}>
+    ${(!STATUS_LIST.includes(cur)?[cur,...STATUS_LIST]:STATUS_LIST).map(s=>`<option value="${escapeHtml(s)}" ${cur===s?'selected':''}>${escapeHtml(s)}</option>`).join('')}</select>
+    ${pending?`<div class="pg-status-pending" style="margin-top:5px;font-size:11px;color:var(--amber);font-weight:700;">Chờ duyệt → ${escapeHtml(pending.newStatus)}</div>${editable&&isTrainer()?'<button type="button" class="secondary" data-pg-status-cancel style="margin-top:5px;padding:3px 6px;font-size:11px;">Hủy yêu cầu</button>':''}`:''}
+    <div class="pg-status-feedback" role="status" aria-live="polite" style="margin-top:4px;font-size:11px;line-height:1.4;"></div></div>`;
+}
+async function pgStatusApplyChange_(pg,roster,newStatus,expectedStatus,requestId=null){
+  const context=pgStatusContext_(),month=currentMonth;
+  if(!isAdmin()||monthLocked)throw Error('Chỉ Admin được áp dụng trạng thái trong tháng chưa khoá.');
+  const state=await pgStatusReadState_(month);
+  if(context!==pgStatusContext_()||monthLocked)throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy thực hiện lại.');
+  const request=requestId?state.requests.find(r=>String(r.id)===String(requestId)&&r.month===month):null;
+  if(requestId&&!request)throw Error('Yêu cầu này không còn chờ duyệt trong tháng đang xem.');
+  if(request){
+    roster=request.onoffId!=null?state.roster.find(r=>String(r.id)===String(request.onoffId)&&String(r.trainerId)===String(request.trainerId)):null;
+    if(request.onoffId!=null&&!roster)throw Error('Không tìm thấy PGs trong danh sách On/Off của yêu cầu.');
+    pg=state.pgs.find(p=>String(p.id)===String(request.pgId)&&String(p.trainerId)===String(request.trainerId));
+    if(!pg&&!roster){
+      const matches=state.pgs.filter(p=>p.brand==='OPPO'&&pgStatusCode_(p.code)===pgStatusCode_(request.pgCode)&&String(p.trainerId)===String(request.trainerId));
+      if(matches.length===1)pg=matches[0];
+    }
+    newStatus=request.newStatus;expectedStatus=request.oldStatus;
+  }
+  const target=pgStatusTarget_(pg,roster,state.pgs,state.roster);
+  if(!target||!STATUS_LIST.includes(newStatus))throw Error('Không tìm thấy đúng PGs hoặc trạng thái không hợp lệ.');
+  if(pgStatusCurrent_(target.pg,target.roster)!==expectedStatus)throw Error('Trạng thái PGs đã thay đổi. Hãy tải lại và kiểm tra trước khi duyệt.');
+  const at=new Date().toISOString(),owner=(target.roster||target.pg).trainerId,code=pgStatusCode_((target.roster||target.pg).code);
+  if(target.pg)Object.assign(target.pg,{status:newStatus,statusChangedAt:at,statusApprovedAt:at,statusChangedBy:request?.trainerName||session.displayName||'Admin'});
+  state.roster.forEach(r=>{
+    if((target.roster&&String(r.id)===String(target.roster.id))||(target.pg&&code&&pgStatusCode_(r.code)===code&&String(r.trainerId)===String(owner))){
+      r.devStatusNote=newStatus==='Đang làm'?'':newStatus;r.statusChangedAt=at;r.statusApprovedAt=at;
+    }
+  });
+  state.requests=state.requests.filter(r=>!pgStatusMatches_(r,target.pg,target.roster,month));
+  await pgStatusPersist_([{key:'pgs:'+month,value:state.pgs},{key:'onoffRoster',value:state.roster},{key:'pendingPgStatusRequests',value:state.requests}]);
+  if(context===pgStatusContext_()){pgs=state.pgs;onoffRoster=state.roster;pendingPgStatusRequests=state.requests;}
+}
+async function confirmAndUpdatePgStatus_(pg,newStatus,selectEl,onDone,roster=null){
+  const oldStatus=pgStatusCurrent_(pg,roster),key=pgStatusKey_(pg,roster),context=pgStatusContext_();
+  const pending=pendingPgStatusRequests.some(r=>pgStatusMatches_(r,pg,roster));
+  if(!pgStatusCanEdit_(pg,roster)||!STATUS_LIST.includes(newStatus)){if(selectEl)selectEl.value=oldStatus;return;}
+  if(oldStatus===newStatus&&!pending)return;
+  if(selectEl)selectEl.disabled=true;
+  try{
+    const cancel=oldStatus===newStatus;
+    const message=cancel?'Hủy yêu cầu đổi trạng thái đang chờ duyệt?':`${isTrainer()?'Gửi yêu cầu cho Admin duyệt đổi':'Xác nhận đổi'} trạng thái của "${(roster||pg).name||'PGs'}" (${(roster||pg).code||'—'}) từ "${oldStatus}" sang "${newStatus}"?`;
+    if(!await showConfirm(message)){if(selectEl)selectEl.value=oldStatus;return;}
+    if(context!==pgStatusContext_()||!pgStatusCanEdit_(pg,roster))throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy thực hiện lại.');
+    const trainer=isTrainer();
+    if(trainer){if(!await requestPgStatusChange_(pg,newStatus,roster))throw Error('Không gửi được yêu cầu. Kiểm tra quyền phụ trách PGs.');}
+    else await pgStatusApplyChange_(pg,roster,newStatus,oldStatus);
+    if(selectEl)selectEl.value=trainer?oldStatus:newStatus;
+    if(context!==pgStatusContext_())return;
+    renderPendingPgStatusBell_();if(onDone)onDone();
+    pgStatusFeedback_(key,cancel?'Đã hủy yêu cầu.':trainer?'Đã gửi yêu cầu, chờ Admin duyệt.':'Đã cập nhật trạng thái.');
+  }catch(error){if(selectEl)selectEl.value=oldStatus;pgStatusFeedback_(key,error.message||'Không cập nhật được trạng thái.',true);}
+  finally{if(selectEl)selectEl.disabled=!pgStatusCanEdit_(pg,roster);}
 }
 function wirePgStatusSelects_(box){
   box.querySelectorAll('.pg-status-select').forEach(sel=>{
-    sel.addEventListener('change', async ()=>{
-      const p = pgs.find(x=>x.id===sel.getAttribute('data-pg'));
-      await confirmAndUpdatePgStatus_(p, sel.value, sel, ()=>{ renderKpiCategory('noibo'); renderOverviewAll(); });
-    });
+    const resolve=()=>{
+      const r=sel.dataset.ooId?onoffRoster.find(x=>String(x.id)===sel.dataset.ooId):null;
+      const p=r?pgStatusPgForRoster_(r):pgs.find(x=>String(x.id)===sel.dataset.pg);
+      return {pg:p,roster:r};
+    };
+    const done=()=>{renderKpiCategory('noibo');renderOverviewAll();};
+    sel.addEventListener('change',async()=>{const t=resolve();await confirmAndUpdatePgStatus_(t.pg,sel.value,sel,done,t.roster);});
+    sel.closest('.pg-status-editor')?.querySelector('[data-pg-status-cancel]')?.addEventListener('click',async()=>{const t=resolve();await confirmAndUpdatePgStatus_(t.pg,pgStatusCurrent_(t.pg,t.roster),sel,done,t.roster);});
   });
 }
 const SENIORITY_BUCKETS=['<3T','3T - 6T','6T-1N','1N-3N','>3N'];
@@ -7817,31 +7913,22 @@ function resetPgForm(){
   document.getElementById('savePgBtn').textContent='Thêm nhân sự';
   document.getElementById('cancelEditPgBtn').style.display='none';
 }
-async function requestPgStatusChange_(pg, newStatus){
-  if(!pg || !isTrainer() || pg.trainerId!==session.trainerId) return false;
-  const oldStatus = pg.status || 'Đang làm';
-  if(newStatus===oldStatus){
-    // Nếu Trainer đổi lại đúng trạng thái hiện tại thì hủy yêu cầu đang chờ (nếu có).
-    const before=pendingPgStatusRequests.length;
-    pendingPgStatusRequests=pendingPgStatusRequests.filter(r=>!(r.month===currentMonth && r.pgId===pg.id));
-    if(pendingPgStatusRequests.length!==before) await dbSet('pendingPgStatusRequests', pendingPgStatusRequests);
-    return false;
+async function requestPgStatusChange_(pg,newStatus,roster=null){
+  if(!isTrainer()||!pgStatusCanEdit_(pg,roster)||!STATUS_LIST.includes(newStatus))return false;
+  const context=pgStatusContext_(),month=currentMonth,state=await pgStatusReadState_(month);
+  if(context!==pgStatusContext_()||monthLocked)throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy thực hiện lại.');
+  const target=pgStatusTarget_(pg,roster,state.pgs,state.roster);
+  if(!target||!pgStatusCanEdit_(target.pg,target.roster))return false;
+  const oldStatus=pgStatusCurrent_(target.pg,target.roster),tr=trainerOf(session.trainerId);
+  const existing=state.requests.find(r=>pgStatusMatches_(r,target.pg,target.roster,month));
+  state.requests=state.requests.filter(r=>!pgStatusMatches_(r,target.pg,target.roster,month));
+  if(newStatus!==oldStatus){
+    state.requests.push({id:existing?.id||uid('pgsr'),month,pgId:target.pg?.id??'',
+      ...(target.roster?{onoffId:target.roster.id}:{}),pgCode:(target.roster||target.pg).code||'',pgName:(target.roster||target.pg).name||'',
+      trainerId:session.trainerId,trainerName:tr?.name||session.displayName||'Trainer',oldStatus,newStatus,requestedAt:new Date().toISOString()});
   }
-  let req=pendingPgStatusRequests.find(r=>r.month===currentMonth && r.pgId===pg.id);
-  const tr=trainerOf(session.trainerId);
-  if(req){
-    req.newStatus=newStatus;
-    req.requestedAt=new Date().toISOString();
-    req.trainerId=session.trainerId;
-    req.trainerName=tr?tr.name:(session.displayName||'Trainer');
-  }else{
-    pendingPgStatusRequests.push({
-      id:uid('pgsr'), month:currentMonth, pgId:pg.id, pgCode:pg.code||'', pgName:pg.name||'',
-      trainerId:session.trainerId, trainerName:tr?tr.name:(session.displayName||'Trainer'),
-      oldStatus, newStatus, requestedAt:new Date().toISOString()
-    });
-  }
-  await dbSet('pendingPgStatusRequests', pendingPgStatusRequests);
+  await pgStatusPersist_([{key:'pendingPgStatusRequests',value:state.requests}]);
+  if(context===pgStatusContext_())pendingPgStatusRequests=state.requests;
   return true;
 }
 function renderPendingPgStatusBell_(){
@@ -7855,38 +7942,42 @@ function renderPendingPgStatusBell_(){
 }
 function syncApprovedPgStatusToOnOff_(pg,newStatus){
   // Đồng bộ note sang roster On/Off để các thống kê/Target dựa trên roster cũng loại PG không còn "Đang làm".
-  const code=String(pg.code||'').trim();
+  const code=pgStatusCode_(pg.code);
   if(!code) return false;
   let changed=false;
   onoffRoster.forEach(r=>{
-    if(String(r.code||'').trim()===code){
+    if(pgStatusCode_(r.code)===code&&String(r.trainerId)===String(pg.trainerId)){
       r.devStatusNote = newStatus==='Đang làm' ? '' : newStatus;
+      r.statusChangedAt=pg.statusChangedAt||new Date().toISOString();
+      if(pg.statusApprovedAt)r.statusApprovedAt=pg.statusApprovedAt;
       changed=true;
     }
   });
   return changed;
 }
 async function approvePgStatusRequest_(id){
-  const req=pendingPgStatusRequests.find(r=>r.id===id);
-  if(!req || !isAdmin()) return;
-  const pg=pgs.find(p=>p.id===req.pgId);
-  if(pg){
-    pg.status=req.newStatus;
-    pg.statusChangedAt=new Date().toISOString();
-    pg.statusChangedBy=req.trainerName||req.trainerId||'Trainer';
-    pg.statusApprovedAt=new Date().toISOString();
-    await dbSet('pgs:'+currentMonth, pgs);
-    if(syncApprovedPgStatusToOnOff_(pg,req.newStatus)) await dbSet('onoffRoster', onoffRoster);
-  }
-  pendingPgStatusRequests=pendingPgStatusRequests.filter(r=>r.id!==id);
-  await dbSet('pendingPgStatusRequests', pendingPgStatusRequests);
-  renderPendingPgStatusModal_(); renderPendingPgStatusBell_(); renderOverviewAll(); renderKpiAll();
+  if(!isAdmin())return;
+  const context=pgStatusContext_();
+  try{
+    await pgStatusApplyChange_(null,null,null,null,id);
+    if(context!==pgStatusContext_())return;
+    renderPendingPgStatusModal_();renderPendingPgStatusBell_();renderOverviewAll();renderKpiAll();
+  }catch(error){pgStatusModalFeedback_(error.message||'Không duyệt được trạng thái. Hãy thử lại.');}
 }
 async function rejectPgStatusRequest_(id){
-  if(!isAdmin()) return;
-  pendingPgStatusRequests=pendingPgStatusRequests.filter(r=>r.id!==id);
-  await dbSet('pendingPgStatusRequests', pendingPgStatusRequests);
-  renderPendingPgStatusModal_(); renderPendingPgStatusBell_(); renderOverviewAll();
+  if(!isAdmin())return;
+  const context=pgStatusContext_(),month=currentMonth;
+  try{
+    if(monthLocked)throw Error('Tháng đã khoá. Hãy mở tháng trước khi xử lý yêu cầu.');
+    const state=await pgStatusReadState_(month);
+    if(context!==pgStatusContext_()||monthLocked)throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy thực hiện lại.');
+    const req=state.requests.find(r=>String(r.id)===String(id)&&r.month===month);if(!req)return;
+    state.requests=state.requests.filter(r=>String(r.id)!==String(id));
+    await pgStatusPersist_([{key:'pendingPgStatusRequests',value:state.requests}]);
+    if(context!==pgStatusContext_())return;
+    pendingPgStatusRequests=state.requests;
+    renderPendingPgStatusModal_();renderPendingPgStatusBell_();renderOverviewAll();renderKpiAll();
+  }catch(error){pgStatusModalFeedback_(error.message||'Không từ chối được yêu cầu. Hãy thử lại.');}
 }
 function renderPendingPgStatusModal_(){
   const box=document.getElementById('pendingPgStatusModalBody');
@@ -7895,13 +7986,13 @@ function renderPendingPgStatusModal_(){
   if(!items.length){ box.innerHTML='<div class="empty">Không có thay đổi trạng thái PG nào đang chờ duyệt.</div>'; return; }
   box.innerHTML=items.map(it=>`<div class="form-card" style="margin-bottom:12px;">
     <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
-      <div><strong>${it.pgName||'—'}</strong> <span style="color:var(--muted);">(${it.pgCode||'—'})</span></div>
-      <div style="font-size:var(--cap);color:var(--muted);">${it.trainerName||'Trainer'} · ${it.requestedAt?new Date(it.requestedAt).toLocaleString('vi-VN'):''}</div>
+      <div><strong>${escapeHtml(it.pgName||'—')}</strong> <span style="color:var(--muted);">(${escapeHtml(it.pgCode||'—')})</span></div>
+      <div style="font-size:var(--cap);color:var(--muted);">${escapeHtml(it.trainerName||'Trainer')} · ${it.requestedAt?escapeHtml(new Date(it.requestedAt).toLocaleString('vi-VN')):''}</div>
     </div>
-    <div style="font-size:var(--cap);margin-bottom:10px;">Trạng thái: <span class="status-badge ${STATUS_CLASS[it.oldStatus]||''}">${it.oldStatus}</span> → <span class="status-badge ${STATUS_CLASS[it.newStatus]||''}">${it.newStatus}</span></div>
+    <div style="font-size:var(--cap);margin-bottom:10px;">Trạng thái: <span class="status-badge ${STATUS_CLASS[it.oldStatus]||''}">${escapeHtml(it.oldStatus)}</span> → <span class="status-badge ${STATUS_CLASS[it.newStatus]||''}">${escapeHtml(it.newStatus)}</span></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="primary" data-approve-pgsr="${it.id}">✓ Duyệt thay đổi</button>
-      <button class="secondary" data-reject-pgsr="${it.id}">Từ chối</button>
+      <button class="primary" data-approve-pgsr="${escapeHtml(it.id)}" ${monthLocked?'disabled':''}>✓ Duyệt thay đổi</button>
+      <button class="secondary" data-reject-pgsr="${escapeHtml(it.id)}" ${monthLocked?'disabled':''}>Từ chối</button>
     </div>
   </div>`).join('');
   box.querySelectorAll('[data-approve-pgsr]').forEach(b=>b.addEventListener('click',()=>approvePgStatusRequest_(b.getAttribute('data-approve-pgsr'))));
@@ -7947,11 +8038,16 @@ document.getElementById('savePgBtn').addEventListener('click', async ()=>{
     existing.shop=document.getElementById('pgShop').value.trim();
     existing.shopSize=document.getElementById('pgShopSize').value.trim();
     await dbSet('pgs:'+currentMonth, pgs);
-    await requestPgStatusChange_(existing, requestedStatus);
+    try{
+      if(!await requestPgStatusChange_(existing,requestedStatus))throw Error('Không gửi được yêu cầu đổi trạng thái.');
+    }catch(error){
+      const msg=document.getElementById('pgSaveMsg');msg.style.display='block';msg.style.color='var(--red)';msg.textContent=error.message;return;
+    }
   }
 
   resetPgForm(); renderOverviewAll(); renderPendingPgStatusBell_();
   const msg=document.getElementById('pgSaveMsg'); msg.style.display='block';
+  msg.style.color='var(--green-ok)';
   msg.textContent = trainer && existing && requestedStatus!==existing.status
     ? 'Đã gửi yêu cầu đổi trạng thái cho Admin duyệt. Trạng thái hiện tại chưa thay đổi.'
     : 'Đã lưu.';
@@ -11749,50 +11845,17 @@ function rerenderNoiboLists_(){
   renderNewPgList25_();
   renderSurveyForm();
 }
-/* Ô "Trạng thái" cho từng PG mới trong 2 bảng PGs mới — Trainer đổi trực tiếp trạng thái PG (Đang làm/
-   THAI SẢN/CODE ĐẠI LÝ/OFF), có xác nhận bước 2 trước khi áp dụng. Đồng bộ 2 nơi:
-   1) pgs[].status (trạng thái thật của PG, hiển thị khắp app)
-   2) onoffRoster[].devStatusNote (giữ nguyên cơ chế cũ: khác "Đang làm" thì tự loại khỏi Target Coaching PGs mới)
-   PG vừa đổi được đánh dấu statusChangedAt để tô đỏ + đưa lên đầu danh sách. */
+/* PGs mới dùng cùng ô trạng thái và quy trình duyệt với PGs 0★/1★ và Tổng quan. */
 function devStatusNoteCellHtml_(r, canEdit){
-  const matchedPg = pgs.find(p=>p.code && r.code && p.code===r.code);
-  const cur = matchedPg ? matchedPg.status : (r.devStatusNote || 'Đang làm');
-  const statuses = ['Đang làm','THAI SẢN','CODE ĐẠI LÝ','OFF (chưa cắt Center)'];
-  return `<select class="dev-status-note-select" data-oo-id="${r.id}" style="width:100%;padding:5px 6px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:7.5pt;" ${canEdit?'':'disabled'}>
-    ${statuses.map(s=>`<option value="${s}" ${cur===s?'selected':''}>${s}</option>`).join('')}
-  </select>`;
+  return statusSelectHtml_(pgStatusPgForRoster_(r),canEdit,r);
 }
 function wireDevStatusNoteSelects_(box){
-  box.querySelectorAll('.dev-status-note-select').forEach(sel=>{
-    sel.addEventListener('change', async ()=>{
-      const rec = onoffRoster.find(r=>r.id===sel.getAttribute('data-oo-id'));
-      if(!rec) return;
-      const matchedPg = pgs.find(p=>p.code && rec.code && p.code===rec.code);
-      const newStatus = sel.value;
-      const oldStatus = matchedPg ? matchedPg.status : (rec.devStatusNote || 'Đang làm');
-      if(newStatus===oldStatus) return;
-      const ok = await showConfirm(`Xác nhận đổi trạng thái của "${rec.name||rec.code||'PG này'}" (${rec.code||'—'}) từ "${oldStatus}" sang "${newStatus}"?`);
-      if(!ok){ sel.value = oldStatus; return; }
-      rec.devStatusNote = (newStatus==='Đang làm') ? '' : newStatus;
-      rec.statusChangedAt = new Date().toISOString();
-      if(matchedPg){ matchedPg.status = newStatus; matchedPg.statusChangedAt = rec.statusChangedAt; await dbSet('pgs:'+currentMonth, pgs); }
-      await dbSet('onoffRoster', onoffRoster);
-      // Target Coaching PGs mới cần đổi do note này — KHÔNG tự áp dụng ngay, gửi yêu cầu chờ Admin duyệt.
-      if(rec.trainerId) await requestTargetAdjustment_(rec.trainerId, rec.code, rec.name, newStatus);
-      renderKpiCategory('noibo');
-      renderOverviewAll();
-      renderPendingTargetBell_();
-    });
-  });
+  wirePgStatusSelects_(box);
 }
 /* Trạng thái hiệu lực của 1 bản ghi PGs mới (onoffRoster): ưu tiên trạng thái thật của PG (pgs[]),
    nếu chưa khớp được PG nào thì fallback theo devStatusNote (hoặc "Đang làm" nếu chưa note gì). */
 function effectivePgMoiStatus_(r){
-  // ƯU TIÊN trạng thái Trainer note ở bảng PGs Dev (devStatusNote) — đây là cập nhật mới nhất, chính xác nhất.
-  if(r.devStatusNote && String(r.devStatusNote).trim()) return r.devStatusNote;
-  // Nếu không có note riêng -> lấy trạng thái từ Danh sách Nhân sự chính (pgs) theo Code.
-  const matchedPg = pgs.find(p=>p.code && r.code && p.code===r.code);
-  return matchedPg ? matchedPg.status : 'Đang làm';
+  return pgStatusCurrent_(pgStatusPgForRoster_(r),r);
 }
 function renderSurveyFormPagination_(totalItems){
   const box = document.getElementById('surveyFormPagination');
@@ -11841,7 +11904,7 @@ function renderNewPgList(){
   const now = new Date();
   const lateList = [];
   let html = '';
-  const canEditNote = isAdmin() || isTrainer();
+  const canEditNote = (isAdmin() || isTrainer()) && !monthLocked;
   // Tính cảnh báo trễ TRÊN TOÀN BỘ danh sách đã lọc (không phải chỉ trang đang xem) — để cảnh báo đầu
   // trang luôn đúng, không phụ thuộc đang xem trang mấy.
   newPgs.forEach(r=>{
@@ -11949,7 +12012,7 @@ function renderNewPgList25_(){
   const now = new Date();
   const lateList = [];
   let html = '';
-  const canEditNote = isAdmin() || isTrainer();
+  const canEditNote = (isAdmin() || isTrainer()) && !monthLocked;
   const tableRows = newPgs.map((r,idx)=>{
     const tr = config.trainers.find(t=>t.id===r.trainerId);
     const cnt = surveyCountForCodeNew(r.code);
