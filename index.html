@@ -1175,6 +1175,38 @@
   .so-filter-bar .so-filter-field .scope-label{display:block;white-space:nowrap;}
   .scope-filters.so-filter-bar .so-filter-field select,.scope-filters.so-filter-bar .so-filter-field input{flex:none!important;box-sizing:border-box;width:100%!important;min-width:0!important;max-width:100%;height:38px;margin:0;padding:7px 10px;border:1.5px solid #9FD8CB;border-radius:10px;font-family:inherit;font-size:var(--cap);background:#fff;}
   .so-filter-bar .so-filter-count{flex:0 0 auto;white-space:nowrap;padding-bottom:10px;}
+  .so-stats-pages{display:flex;gap:8px;margin-bottom:18px;}
+  .so-stats-pages button{padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--green-dark);font-family:inherit;font-size:var(--cap);font-weight:600;cursor:pointer;}
+  .so-stats-pages button.active{background:var(--green-dark);border-color:var(--green-dark);color:#fff;}
+  .so-stats-page[hidden]{display:none!important;}
+  #soMilestonePage .so-filter-fields{grid-template-columns:1.15fr 1fr 1.3fr .85fr 1.1fr;}
+  .so-milestone-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px;}
+  .so-milestone-head h3{margin:0 0 6px;color:var(--green-dark);font-size:var(--h3);}
+  .so-milestone-head p{margin:0;color:var(--muted);font-size:var(--cap);line-height:1.6;}
+  .so-milestone-period{flex:0 0 auto;background:#E7F4ED;border:1px solid #CCE5D7;border-radius:9px;padding:7px 10px;color:#075D37;font-size:var(--cap);font-weight:700;white-space:nowrap;}
+  #soMilestoneCards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px;}
+  #soMilestoneCards .kpi-card{padding:15px 18px;border-top:3px solid var(--so-stage-color,#087B4C);min-width:0;}
+  #soMilestoneCards .label{font-size:11px!important;}
+  #soMilestoneCards .value{color:var(--so-stage-color,#087B4C);font-size:25px!important;}
+  #soMilestoneCards .frac{margin-top:6px;color:var(--muted);font-size:12px!important;}
+  .so-milestone-note{font-size:var(--cap);color:var(--muted);line-height:1.7;margin:10px 0 16px;}
+  .so-milestone-chart-scroll{max-height:760px;overflow-y:auto;}
+  #soMilestoneChartWrap{position:relative;height:360px;}
+  .so-milestone-empty{padding:28px 14px;text-align:center;color:var(--muted);line-height:1.7;}
+  .so-milestone-legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0 14px;font-size:var(--cap);color:var(--muted);}
+  .so-milestone-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+  .so-milestone-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+  #soMilestoneTable{width:100%;min-width:760px;table-layout:auto;font-size:var(--cap);}
+  #soMilestoneTable th:first-child,#soMilestoneTable td:first-child{white-space:nowrap;}
+  #soMilestoneTable th:not(:first-child),#soMilestoneTable td:not(:first-child){text-align:center;white-space:nowrap;}
+  #soMilestoneTable td .so-milestone-ratio{display:block;color:var(--muted);font-size:var(--tag);margin-top:3px;}
+  #soMilestoneTable tfoot{background:#E9F5EF;font-weight:700;}
+  @media(max-width:760px){
+    #soMilestoneCards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+    #soMilestoneCards .kpi-card{padding:12px;}
+    .so-milestone-head{flex-wrap:wrap;}
+    .so-stats-pages button{flex:1;min-width:0;padding:9px;font-size:11px;}
+  }
   @media(max-width:760px){
     .so-filter-bar .so-filter-fields{min-width:620px;}
     .so-filter-bar .so-filter-count{display:none;}
@@ -1924,6 +1956,52 @@ const dailyOlieMessages_ = ["Chúc bạn một ngày làm việc tràn đầy n�
 
     <!-- ===== THỐNG KÊ ===== -->
     <div id="sotab-stats" class="panel">
+      <div class="so-stats-pages" role="group" aria-label="Trang thống kê S.O">
+        <button type="button" data-so-stats-page="milestones" class="active" aria-pressed="true">Hoàn thành Target theo mốc</button>
+        <button type="button" data-so-stats-page="phone" aria-pressed="false">S.O Phone trung bình</button>
+      </div>
+      <div id="soMilestonePage" class="so-stats-page">
+        <div class="so-milestone-head">
+          <div><h3>Tiến độ hoàn thành Target của PGs</h3><p>So sánh số lượng và tỷ lệ PGs ở từng mốc hoàn thành.</p></div>
+          <span id="soMilestonePeriod" class="so-milestone-period"></span>
+        </div>
+        <div class="scope-filters so-filter-bar">
+          <div class="so-filter-fields">
+            <label class="so-filter-field"><span class="scope-label">Xem theo</span>
+              <select id="soMilestoneGroup"><option value="region">Khu vực</option><option value="trainer">Trainer</option><option value="star">Nhóm sao PGs</option><option value="tenure">Thâm niên</option></select>
+            </label>
+            <label class="so-filter-field"><span class="scope-label">Khu vực</span>
+              <select id="soMilestoneRegion"><option value="">Tất cả Khu vực</option></select>
+            </label>
+            <label class="so-filter-field"><span class="scope-label">Trainer</span>
+              <select id="soMilestoneTrainer"><option value="">Tất cả Trainer</option></select>
+            </label>
+            <label class="so-filter-field"><span class="scope-label">Nhóm sao PGs</span>
+              <select id="soMilestoneStar"><option value="">Tất cả Sao</option><option value="0">0 ★</option><option value="1">1 ★</option><option value="2">2 ★</option><option value="3">3 ★</option><option value="4">4 ★</option><option value="5">5 ★</option><option value="unknown">Chưa rõ sao</option></select>
+            </label>
+            <label class="so-filter-field"><span class="scope-label">Thâm niên</span>
+              <select id="soMilestoneTenure"><option value="">Tất cả thâm niên</option><option value="0">&lt; 3 tháng</option><option value="1">3 – &lt; 6 tháng</option><option value="2">6 – &lt; 12 tháng</option><option value="3">1 – &lt; 3 năm</option><option value="4">≥ 3 năm</option><option value="unknown">Chưa rõ thâm niên</option></select>
+            </label>
+          </div>
+        </div>
+        <div id="soMilestoneCards"></div>
+        <p id="soMilestoneNote" class="so-milestone-note" aria-live="polite"></p>
+        <div class="region-card">
+          <div class="region-head"><h3 id="soMilestoneChartTitle">Tỷ lệ PGs theo mốc · Khu vực</h3></div>
+          <div id="soMilestoneLegend" class="so-milestone-legend" aria-label="Chú giải mốc hoàn thành"></div>
+          <div id="soMilestoneChartEmpty" class="so-milestone-empty" role="status" hidden></div>
+          <div class="so-milestone-chart-scroll"><div id="soMilestoneChartWrap"><canvas id="chartSoMilestones" aria-label="Tỷ lệ PGs hoàn thành theo mốc; số liệu đầy đủ trong bảng bên dưới" role="img"></canvas></div></div>
+        </div>
+        <div class="region-card" style="margin-top:16px;">
+          <div class="region-head"><h3>Chi tiết số PGs và tỷ lệ hoàn thành</h3></div>
+          <div style="overflow-x:auto;"><table id="soMilestoneTable">
+            <thead><tr><th id="soMilestoneGroupHeading">Khu vực</th><th>Tổng PGs</th><th>Mốc 1</th><th>Mốc 2</th><th>Mốc 3</th><th>Chưa đạt</th><th>Không có mốc</th><th>Chưa xác định</th></tr></thead>
+            <tbody id="soMilestoneTableBody"></tbody><tfoot id="soMilestoneTableFoot"></tfoot>
+          </table></div>
+        </div>
+        <p class="so-milestone-note">Mỗi PG được tính một lần tại mốc ghi trên Sheet, không cộng dồn Mốc 3 vào Mốc 1–2. Tỷ lệ = số PG ở mốc / tổng PG Đang làm thuộc bộ lọc. PGs cùng Shop dùng chung kết quả Shop nhưng vẫn tính riêng từng PG. “Chưa xác định” gồm PG chưa ghép được Shop hoặc mốc chưa được nhận diện. Nhóm sao và thâm niên theo danh sách nhân sự đang xem.</p>
+      </div>
+      <div id="soPhoneStatsPage" class="so-stats-page" hidden>
       <div class="kpi-row" id="soKpiRowStats"></div>
       <p class="section-desc">S.O Phone trung bình / PG — chỉ tính PGs Đang làm và có dữ liệu S.O.</p>
       <div class="scope-filters">
@@ -1944,6 +2022,7 @@ const dailyOlieMessages_ = ["Chúc bạn một ngày làm việc tràn đầy n�
       <div class="region-card">
         <div class="region-head"><h3 id="soStatsChartTitle">Theo Khu vực</h3></div>
         <div class="chart-wrap" id="soStatsChartWrap" style="height:360px;"><canvas id="chartSoStats"></canvas></div>
+      </div>
       </div>
     </div>
   </section>
@@ -2448,6 +2527,8 @@ function loadScriptBackground_(src){
       const active=typeof currentTabId_==='function'?currentTabId_():'';
       if(active==='overview'||active==='kpi'){
         try{ renderAll(); }catch(e){ console.error('Lỗi vẽ lại biểu đồ sau khi Chart.js tải xong:', e); }
+      }else if(active==='so'&&document.getElementById('sotab-stats')?.classList.contains('active')){
+        try{renderSoStatsTab_();}catch(e){console.error('Lỗi vẽ thống kê S.O:',e);}
       }
     }
   }
@@ -15529,6 +15610,7 @@ async function updateSoShopFromGoogle_(raw){
       soShopRevision_++;soShopProgressData_=payload;soLoadedMonth_=month;
       soCurrentPage=1;soListCurrentPage=1;
       renderSoSummary_();renderSoListTab_();
+      if(document.getElementById('sotab-stats')?.classList.contains('active'))renderSoStatsTab_();
     }
     if(isAdmin()&&context===soShopContext_())await saveSoShopConfig_(cfg);
     return {status:'ok',message:`Đã cập nhật ${payload.shops.length} Shop · ${monthLabel(month)}.${parsed.skipped?' Bỏ qua '+parsed.skipped+' dòng ngoài phạm vi.':''}${parsed.duplicates?' Gộp '+parsed.duplicates+' dòng trùng cùng kết quả.':''}`};
@@ -15991,7 +16073,7 @@ function renderSoKpiRowStats_(){
     <div class="kpi-card"><div class="label">TB S.O/PG theo Thâm niên</div><div class="value">${totalAvg}</div><div class="frac">${nSeniority} nhóm</div></div>
   `;
 }
-function renderSoStatsTab_(){
+function renderSoPhoneStats_(){
   populateSoStatsFilters_();
   renderSoKpiRowStats_();
   const view = document.getElementById('soStatsViewSelect').value;
@@ -16061,9 +16143,124 @@ function renderSoStatsTab_(){
       }
     };
   }
-  chartSoStatsInstance = new Chart(ctx, cfg);
+  if(typeof Chart!=='undefined')chartSoStatsInstance = new Chart(ctx, cfg);
 }
 document.getElementById('soStatsViewSelect').addEventListener('change', renderSoStatsTab_);
+
+/* ============ THỐNG KÊ MỐC HOÀN THÀNH S.O SHOP ============ */
+let soStatsCurrentPage_='milestones', chartSoMilestonesInstance_=null;
+const SO_MILESTONE_STAGES_=[
+  {source:'moc 1',label:'Mốc 1',color:'#3F94B5',text:'#FFFFFF'},
+  {source:'moc 2',label:'Mốc 2',color:'#27A58B',text:'#FFFFFF'},
+  {source:'moc 3',label:'Mốc 3',color:'#087B4C',text:'#FFFFFF'},
+  {source:'chua dat',label:'Chưa đạt',color:'#E5B255',text:'#473508'},
+  {source:'khong co',label:'Không có mốc',color:'#A5B4BF',text:'#233440'},
+  {source:'',label:'Chưa xác định',color:'#E2E8E4',text:'#42564A'}
+];
+const SO_MILESTONE_TENURES_=['< 3 tháng','3 – < 6 tháng','6 – < 12 tháng','1 – < 3 năm','≥ 3 năm'];
+const SO_MILESTONE_GROUPS_={region:'Khu vực',trainer:'Trainer',star:'Nhóm sao PGs',tenure:'Thâm niên'};
+const soMilestoneNumber_=new Intl.NumberFormat('vi-VN',{maximumFractionDigits:1});
+function soMilestonePct_(count,total){return total?soMilestoneNumber_.format(count/total*100)+'%':'—';}
+function soMilestoneRoster_(){
+  if(!session)return [];
+  const index=soShopProgressIndex_(),seen=new Set(),out=[];
+  const own=isTrainer()?normalizeAreaVN(session.region||trainerOf(session.trainerId)?.region):'';
+  if(isTrainer()&&!own)return [];
+  pgs.forEach((p,i)=>{
+    if(p.brand!=='OPPO'||p.status!=='Đang làm')return;
+    const trainer=trainerOf(p.trainerId),region=normalizeAreaVN(trainer?.region||p.region||p.area);
+    if(isTrainer()&&region!==own)return;
+    const identity=normalizeCode_(p.code)||'__row_'+i;if(seen.has(identity))return;seen.add(identity);
+    const shop=soShopForPg_(p,index),source=normalizeImportHeader_(shop?.milestone||'');
+    const stage=SO_MILESTONE_STAGES_.findIndex(s=>s.source&&s.source===source);
+    const star=p.star!==null&&p.star!==undefined&&String(p.star).trim()!==''?Number(p.star):NaN;
+    const months=p.seniority!==null&&p.seniority!==undefined&&String(p.seniority).trim()!==''?Number(p.seniority):NaN;
+    const tenure=Number.isFinite(months)&&months>=0?(months<3?0:months<6?1:months<12?2:months<36?3:4):'unknown';
+    out.push({region,trainerId:p.trainerId||'',trainerName:trainer?.name||'Chưa gán Trainer',star:Number.isInteger(star)&&star>=0&&star<=5?String(star):'unknown',tenure:String(tenure),stage:stage<0?5:stage});
+  });
+  return out;
+}
+function populateSoMilestoneFilters_(roster){
+  const region=document.getElementById('soMilestoneRegion'),trainer=document.getElementById('soMilestoneTrainer');
+  const oldRegion=region.value,oldTrainer=trainer.value;
+  const own=isTrainer()?normalizeAreaVN(session.region||trainerOf(session.trainerId)?.region):'';
+  const regions=isTrainer()?(own?[own]:[]):Array.from(new Set(roster.map(e=>e.region).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'vi'));
+  region.innerHTML=(isTrainer()?'':'<option value="">Tất cả Khu vực</option>')+regions.map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
+  if(isTrainer()&&!own)region.innerHTML='<option value="">Chưa xác định khu vực</option>';
+  region.disabled=isTrainer();
+  if(regions.includes(oldRegion))region.value=oldRegion;
+  const scope=region.value,trainers=new Map();
+  roster.forEach(e=>{if(e.trainerId&&(!scope||e.region===scope))trainers.set(e.trainerId,e.trainerName);});
+  trainer.innerHTML='<option value="">Tất cả Trainer</option>'+Array.from(trainers).sort((a,b)=>a[1].localeCompare(b[1],'vi')).map(([id,name])=>`<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join('');
+  if(trainers.has(oldTrainer))trainer.value=oldTrainer;
+}
+function soMilestoneFiltered_(roster){
+  const region=document.getElementById('soMilestoneRegion').value,trainer=document.getElementById('soMilestoneTrainer').value;
+  const star=document.getElementById('soMilestoneStar').value,tenure=document.getElementById('soMilestoneTenure').value;
+  return roster.filter(e=>(!region||e.region===region)&&(!trainer||e.trainerId===trainer)&&(!star||e.star===star)&&(!tenure||e.tenure===tenure));
+}
+function soMilestoneAggregate_(list,view){
+  const map=new Map(),totals=Array(6).fill(0);
+  list.forEach(e=>{
+    const key=view==='trainer'?e.trainerId:view==='star'?e.star:view==='tenure'?e.tenure:e.region;
+    const label=view==='trainer'?e.trainerName:view==='star'?(key==='unknown'?'Chưa rõ sao':key+' ★'):view==='tenure'?(SO_MILESTONE_TENURES_[Number(key)]||'Chưa rõ thâm niên'):(key||'Chưa rõ khu vực');
+    if(!map.has(key))map.set(key,{key,label,total:0,counts:Array(6).fill(0)});
+    const group=map.get(key);group.total++;group.counts[e.stage]++;totals[e.stage]++;
+  });
+  const rows=Array.from(map.values());
+  if(view==='star'||view==='tenure')rows.sort((a,b)=>(a.key==='unknown'?99:Number(a.key))-(b.key==='unknown'?99:Number(b.key)));
+  else rows.sort((a,b)=>a.label.localeCompare(b.label,'vi'));
+  return {rows,total:list.length,counts:totals};
+}
+function soMilestoneChartConfig_(summary){
+  return {type:'bar',data:{labels:summary.rows.map(r=>r.label),datasets:SO_MILESTONE_STAGES_.map((s,i)=>({label:s.label,data:summary.rows.map(r=>r.counts[i]/r.total*100),backgroundColor:s.color,borderWidth:0,barPercentage:.7,categoryPercentage:.85,maxBarThickness:44}))},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
+      layout:{padding:{top:6,right:12,bottom:4}},interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{
+        callbacks:{title:items=>items.length?summary.rows[items[0].dataIndex].label:'',
+          label:ctx=>{const row=summary.rows[ctx.dataIndex],count=row.counts[ctx.datasetIndex];return `${ctx.dataset.label}: ${count} PGs · ${soMilestonePct_(count,row.total)}`;},
+          footer:items=>items.length?`Tổng: ${summary.rows[items[0].dataIndex].total} PGs`:''}},
+        datalabels:{color:ctx=>SO_MILESTONE_STAGES_[ctx.datasetIndex].text,font:{size:11,weight:'bold'},textAlign:'center',anchor:'center',align:'center',clamp:true,
+          display:ctx=>{const value=ctx.dataset.data[ctx.dataIndex],width=(ctx.chart.chartArea?.width||0)*value/100;return width>=54;},
+          formatter:(value,ctx)=>{const row=summary.rows[ctx.dataIndex],count=row.counts[ctx.datasetIndex],width=(ctx.chart.chartArea?.width||0)*value/100;return width>=90?[count+' PGs',soMilestonePct_(count,row.total)]:String(count);}}},
+      scales:{x:{stacked:true,min:0,max:100,border:{display:false},title:{display:true,text:'Tỷ lệ PGs trong từng nhóm (%)',color:'#60756A',font:{size:11}},grid:{color:'#EDF2EF'},ticks:{stepSize:25,callback:v=>v+'%',color:'#60756A',font:{size:11}}},
+        y:{stacked:true,border:{display:false},grid:{display:false},ticks:{autoSkip:false,color:'#234B36',font:{size:11,weight:'600'},callback:function(value){const label=String(this.getLabelForValue(value));const max=this.chart.width<600?16:28;return label.length>max?label.slice(0,max-1)+'…':label;}}}}}
+  };
+}
+function renderSoMilestones_(){
+  const roster=soMilestoneRoster_();populateSoMilestoneFilters_(roster);
+  const view=document.getElementById('soMilestoneGroup').value,list=soMilestoneFiltered_(roster),summary=soMilestoneAggregate_(list,view);
+  const month=soTargetMonth_(),ready=soLoadedMonth_===month&&soShopProgressData_?.month===month&&Array.isArray(soShopProgressData_?.shops);
+  document.getElementById('soMilestonePeriod').textContent='S.O '+monthLabel(month);
+  document.getElementById('soMilestoneChartTitle').textContent='Tỷ lệ PGs theo mốc · '+SO_MILESTONE_GROUPS_[view];
+  document.getElementById('soMilestoneGroupHeading').textContent=SO_MILESTONE_GROUPS_[view];
+  const card=(label,value,desc,color)=>`<div class="kpi-card" style="--so-stage-color:${color}"><div class="label">${label}</div><div class="value">${value}<span style="font-size:var(--cap);font-weight:600;"> PGs</span></div><div class="frac">${desc}</div></div>`;
+  document.getElementById('soMilestoneCards').innerHTML=card('Tổng PGs Đang làm',summary.total,'Trong phạm vi bộ lọc','#234B36')+SO_MILESTONE_STAGES_.slice(0,3).map((s,i)=>card(s.label,summary.counts[i],soMilestonePct_(summary.counts[i],summary.total)+' tổng PGs',s.color)).join('');
+  let note=ready?`Đã xác định mốc: ${summary.total-summary.counts[5]}/${summary.total} PGs · Chưa xác định: ${summary.counts[5]} PGs. `:`Chưa cập nhật S.O Shop ${monthLabel(month)}. Vào DATA → DATA S.O → Cập nhật Google Sheet S.O Shop. `;
+  note+='Mốc lấy từ cột “Mức đạt” của Shop, không suy ra từ % target. Mẫu số tỷ lệ gồm toàn bộ PGs Đang làm thuộc bộ lọc.';
+  document.getElementById('soMilestoneNote').textContent=note;
+  document.getElementById('soMilestoneLegend').innerHTML=SO_MILESTONE_STAGES_.map(s=>`<span><i style="background:${s.color}"></i>${s.label}</span>`).join('');
+  const cells=row=>`<td><strong>${row.total}</strong></td>`+row.counts.map(count=>`<td><strong>${count} PGs</strong><span class="so-milestone-ratio">${soMilestonePct_(count,row.total)}</span></td>`).join('');
+  document.getElementById('soMilestoneTableBody').innerHTML=summary.rows.length?summary.rows.map(row=>`<tr><td><strong>${escapeHtml(row.label)}</strong></td>${cells(row)}</tr>`).join(''):'<tr><td colspan="8" class="empty">Không có PGs phù hợp với bộ lọc.</td></tr>';
+  document.getElementById('soMilestoneTableFoot').innerHTML=summary.rows.length?`<tr><td>Tổng phạm vi</td>${cells({total:summary.total,counts:summary.counts})}</tr>`:'';
+  if(chartSoMilestonesInstance_){chartSoMilestonesInstance_.destroy();chartSoMilestonesInstance_=null;}
+  const wrap=document.getElementById('soMilestoneChartWrap'),empty=document.getElementById('soMilestoneChartEmpty');
+  const message=!summary.total?'Không có PGs phù hợp với bộ lọc.':!ready?'Chưa có dữ liệu S.O Shop của tháng này để vẽ biểu đồ.':typeof Chart==='undefined'?'Biểu đồ chưa sẵn sàng. Có thể xem đầy đủ số liệu trong bảng bên dưới.':'';
+  empty.hidden=!message;empty.textContent=message;wrap.hidden=!!message;
+  if(message)return;
+  wrap.style.height=Math.max(300,summary.rows.length*66+78)+'px';
+  chartSoMilestonesInstance_=new Chart(document.getElementById('chartSoMilestones'),soMilestoneChartConfig_(summary));
+}
+function renderSoStatsTab_(){
+  const milestones=soStatsCurrentPage_==='milestones';
+  document.getElementById('soMilestonePage').hidden=!milestones;document.getElementById('soPhoneStatsPage').hidden=milestones;
+  document.querySelectorAll('[data-so-stats-page]').forEach(btn=>{const active=btn.dataset.soStatsPage===soStatsCurrentPage_;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});
+  if(milestones){if(chartSoStatsInstance){chartSoStatsInstance.destroy();chartSoStatsInstance=null;}renderSoMilestones_();}
+  else{if(chartSoMilestonesInstance_){chartSoMilestonesInstance_.destroy();chartSoMilestonesInstance_=null;}renderSoPhoneStats_();}
+}
+document.querySelectorAll('[data-so-stats-page]').forEach(btn=>btn.addEventListener('click',()=>{soStatsCurrentPage_=btn.dataset.soStatsPage;renderSoStatsTab_();}));
+document.getElementById('soMilestoneRegion').addEventListener('change',()=>{document.getElementById('soMilestoneTrainer').value='';renderSoMilestones_();});
+['soMilestoneGroup','soMilestoneTrainer','soMilestoneStar','soMilestoneTenure'].forEach(id=>document.getElementById(id).addEventListener('change',renderSoMilestones_));
 
 renderAuthScreen();
 
