@@ -1190,12 +1190,6 @@
   #soMilestoneCards .value{color:var(--so-stage-color,#087B4C);font-size:25px!important;}
   #soMilestoneCards .frac{margin-top:6px;color:var(--muted);font-size:12px!important;}
   .so-milestone-note{font-size:var(--cap);color:var(--muted);line-height:1.7;margin:10px 0 16px;}
-  .so-milestone-chart-scroll{max-height:760px;overflow-y:auto;}
-  #soMilestoneChartWrap{position:relative;height:360px;}
-  .so-milestone-empty{padding:28px 14px;text-align:center;color:var(--muted);line-height:1.7;}
-  .so-milestone-legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0 14px;font-size:var(--cap);color:var(--muted);}
-  .so-milestone-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
-  .so-milestone-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
   #soMilestoneTable{width:100%;min-width:760px;table-layout:auto;font-size:var(--cap);}
   #soMilestoneTable th:first-child,#soMilestoneTable td:first-child{white-space:nowrap;}
   #soMilestoneTable th:not(:first-child),#soMilestoneTable td:not(:first-child){text-align:center;white-space:nowrap;}
@@ -1987,12 +1981,6 @@ const dailyOlieMessages_ = ["Chúc bạn một ngày làm việc tràn đầy n�
         <div id="soMilestoneCards"></div>
         <p id="soMilestoneNote" class="so-milestone-note" aria-live="polite"></p>
         <div class="region-card">
-          <div class="region-head"><h3 id="soMilestoneChartTitle">Tỷ lệ PGs theo mốc · Khu vực</h3></div>
-          <div id="soMilestoneLegend" class="so-milestone-legend" aria-label="Chú giải mốc hoàn thành"></div>
-          <div id="soMilestoneChartEmpty" class="so-milestone-empty" role="status" hidden></div>
-          <div class="so-milestone-chart-scroll"><div id="soMilestoneChartWrap"><canvas id="chartSoMilestones" aria-label="Tỷ lệ PGs hoàn thành theo mốc; số liệu đầy đủ trong bảng bên dưới" role="img"></canvas></div></div>
-        </div>
-        <div class="region-card" style="margin-top:16px;">
           <div class="region-head"><h3>Chi tiết số PGs và tỷ lệ hoàn thành</h3></div>
           <div style="overflow-x:auto;"><table id="soMilestoneTable">
             <thead><tr><th id="soMilestoneGroupHeading">Khu vực</th><th>Tổng PGs</th><th>Mốc 1</th><th>Mốc 2</th><th>Mốc 3</th><th>Chưa đạt</th><th>Không có mốc</th><th>Chưa xác định</th></tr></thead>
@@ -16148,7 +16136,7 @@ function renderSoPhoneStats_(){
 document.getElementById('soStatsViewSelect').addEventListener('change', renderSoStatsTab_);
 
 /* ============ THỐNG KÊ MỐC HOÀN THÀNH S.O SHOP ============ */
-let soStatsCurrentPage_='milestones', chartSoMilestonesInstance_=null;
+let soStatsCurrentPage_='milestones';
 const SO_MILESTONE_STAGES_=[
   {source:'moc 1',label:'Mốc 1',color:'#3F94B5',text:'#FFFFFF'},
   {source:'moc 2',label:'Mốc 2',color:'#27A58B',text:'#FFFFFF'},
@@ -16212,51 +16200,27 @@ function soMilestoneAggregate_(list,view){
   else rows.sort((a,b)=>a.label.localeCompare(b.label,'vi'));
   return {rows,total:list.length,counts:totals};
 }
-function soMilestoneChartConfig_(summary){
-  return {type:'bar',data:{labels:summary.rows.map(r=>r.label),datasets:SO_MILESTONE_STAGES_.map((s,i)=>({label:s.label,data:summary.rows.map(r=>r.counts[i]/r.total*100),backgroundColor:s.color,borderWidth:0,barPercentage:.7,categoryPercentage:.85,maxBarThickness:44}))},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
-      layout:{padding:{top:6,right:12,bottom:4}},interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{
-        callbacks:{title:items=>items.length?summary.rows[items[0].dataIndex].label:'',
-          label:ctx=>{const row=summary.rows[ctx.dataIndex],count=row.counts[ctx.datasetIndex];return `${ctx.dataset.label}: ${count} PGs · ${soMilestonePct_(count,row.total)}`;},
-          footer:items=>items.length?`Tổng: ${summary.rows[items[0].dataIndex].total} PGs`:''}},
-        datalabels:{color:ctx=>SO_MILESTONE_STAGES_[ctx.datasetIndex].text,font:{size:11,weight:'bold'},textAlign:'center',anchor:'center',align:'center',clamp:true,
-          display:ctx=>{const value=ctx.dataset.data[ctx.dataIndex],width=(ctx.chart.chartArea?.width||0)*value/100;return width>=54;},
-          formatter:(value,ctx)=>{const row=summary.rows[ctx.dataIndex],count=row.counts[ctx.datasetIndex],width=(ctx.chart.chartArea?.width||0)*value/100;return width>=90?[count+' PGs',soMilestonePct_(count,row.total)]:String(count);}}},
-      scales:{x:{stacked:true,min:0,max:100,border:{display:false},title:{display:true,text:'Tỷ lệ PGs trong từng nhóm (%)',color:'#60756A',font:{size:11}},grid:{color:'#EDF2EF'},ticks:{stepSize:25,callback:v=>v+'%',color:'#60756A',font:{size:11}}},
-        y:{stacked:true,border:{display:false},grid:{display:false},ticks:{autoSkip:false,color:'#234B36',font:{size:11,weight:'600'},callback:function(value){const label=String(this.getLabelForValue(value));const max=this.chart.width<600?16:28;return label.length>max?label.slice(0,max-1)+'…':label;}}}}}
-  };
-}
 function renderSoMilestones_(){
   const roster=soMilestoneRoster_();populateSoMilestoneFilters_(roster);
   const view=document.getElementById('soMilestoneGroup').value,list=soMilestoneFiltered_(roster),summary=soMilestoneAggregate_(list,view);
   const month=soTargetMonth_(),ready=soLoadedMonth_===month&&soShopProgressData_?.month===month&&Array.isArray(soShopProgressData_?.shops);
   document.getElementById('soMilestonePeriod').textContent='S.O '+monthLabel(month);
-  document.getElementById('soMilestoneChartTitle').textContent='Tỷ lệ PGs theo mốc · '+SO_MILESTONE_GROUPS_[view];
   document.getElementById('soMilestoneGroupHeading').textContent=SO_MILESTONE_GROUPS_[view];
   const card=(label,value,desc,color)=>`<div class="kpi-card" style="--so-stage-color:${color}"><div class="label">${label}</div><div class="value">${value}<span style="font-size:var(--cap);font-weight:600;"> PGs</span></div><div class="frac">${desc}</div></div>`;
   document.getElementById('soMilestoneCards').innerHTML=card('Tổng PGs Đang làm',summary.total,'Trong phạm vi bộ lọc','#234B36')+SO_MILESTONE_STAGES_.slice(0,3).map((s,i)=>card(s.label,summary.counts[i],soMilestonePct_(summary.counts[i],summary.total)+' tổng PGs',s.color)).join('');
   let note=ready?`Đã xác định mốc: ${summary.total-summary.counts[5]}/${summary.total} PGs · Chưa xác định: ${summary.counts[5]} PGs. `:`Chưa cập nhật S.O Shop ${monthLabel(month)}. Vào DATA → DATA S.O → Cập nhật Google Sheet S.O Shop. `;
   note+='Mốc lấy từ cột “Mức đạt” của Shop, không suy ra từ % target. Mẫu số tỷ lệ gồm toàn bộ PGs Đang làm thuộc bộ lọc.';
   document.getElementById('soMilestoneNote').textContent=note;
-  document.getElementById('soMilestoneLegend').innerHTML=SO_MILESTONE_STAGES_.map(s=>`<span><i style="background:${s.color}"></i>${s.label}</span>`).join('');
   const cells=row=>`<td><strong>${row.total}</strong></td>`+row.counts.map(count=>`<td><strong>${count} PGs</strong><span class="so-milestone-ratio">${soMilestonePct_(count,row.total)}</span></td>`).join('');
   document.getElementById('soMilestoneTableBody').innerHTML=summary.rows.length?summary.rows.map(row=>`<tr><td><strong>${escapeHtml(row.label)}</strong></td>${cells(row)}</tr>`).join(''):'<tr><td colspan="8" class="empty">Không có PGs phù hợp với bộ lọc.</td></tr>';
   document.getElementById('soMilestoneTableFoot').innerHTML=summary.rows.length?`<tr><td>Tổng phạm vi</td>${cells({total:summary.total,counts:summary.counts})}</tr>`:'';
-  if(chartSoMilestonesInstance_){chartSoMilestonesInstance_.destroy();chartSoMilestonesInstance_=null;}
-  const wrap=document.getElementById('soMilestoneChartWrap'),empty=document.getElementById('soMilestoneChartEmpty');
-  const message=!summary.total?'Không có PGs phù hợp với bộ lọc.':!ready?'Chưa có dữ liệu S.O Shop của tháng này để vẽ biểu đồ.':typeof Chart==='undefined'?'Biểu đồ chưa sẵn sàng. Có thể xem đầy đủ số liệu trong bảng bên dưới.':'';
-  empty.hidden=!message;empty.textContent=message;wrap.hidden=!!message;
-  if(message)return;
-  wrap.style.height=Math.max(300,summary.rows.length*66+78)+'px';
-  chartSoMilestonesInstance_=new Chart(document.getElementById('chartSoMilestones'),soMilestoneChartConfig_(summary));
 }
 function renderSoStatsTab_(){
   const milestones=soStatsCurrentPage_==='milestones';
   document.getElementById('soMilestonePage').hidden=!milestones;document.getElementById('soPhoneStatsPage').hidden=milestones;
   document.querySelectorAll('[data-so-stats-page]').forEach(btn=>{const active=btn.dataset.soStatsPage===soStatsCurrentPage_;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});
   if(milestones){if(chartSoStatsInstance){chartSoStatsInstance.destroy();chartSoStatsInstance=null;}renderSoMilestones_();}
-  else{if(chartSoMilestonesInstance_){chartSoMilestonesInstance_.destroy();chartSoMilestonesInstance_=null;}renderSoPhoneStats_();}
+  else renderSoPhoneStats_();
 }
 document.querySelectorAll('[data-so-stats-page]').forEach(btn=>btn.addEventListener('click',()=>{soStatsCurrentPage_=btn.dataset.soStatsPage;renderSoStatsTab_();}));
 document.getElementById('soMilestoneRegion').addEventListener('change',()=>{document.getElementById('soMilestoneTrainer').value='';renderSoMilestones_();});
