@@ -1859,6 +1859,54 @@ html:not(.mobile-layout) .mobile-tool-details>summary{display:none;}
  .mobile-layout .pgsm-target-grid{grid-template-columns:1fr;}
 
 }
+/* Four compact Trainer tiles and aligned Workshop/media bars on phones. */
+.mobile-layout .home-trainer-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important;margin-top:7px;}
+.mobile-layout .home-trainer-grid .home-tcard{padding:5px!important;gap:4px!important;border-radius:9px!important;box-shadow:0 2px 7px #0e4a3009!important;}
+.mobile-layout .home-trainer-grid .home-tcard:hover{transform:none!important;}
+.mobile-layout .home-trainer-grid .home-tcard:before{height:2px;}
+.mobile-layout .home-trainer-grid .olie-trainer-hero{min-height:0!important;padding:0!important;gap:0!important;display:block!important;}
+.mobile-layout .home-trainer-grid .olie-hero-picture{display:none!important;}
+.mobile-layout .home-trainer-grid .home-tcard-name{font-size:0!important;line-height:0!important;min-height:12px;}
+.mobile-layout .home-trainer-grid .home-tcard-name:after{content:attr(data-mobile-trainer-name);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden;font-size:10px;font-weight:800;line-height:12px;}
+.mobile-layout .home-trainer-grid .home-tcard-region{font-size:0!important;line-height:0;margin-top:1px;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mobile-layout .home-trainer-grid .home-tcard-region:after{content:attr(data-mobile-region);display:block;font-size:8px;line-height:10px;}
+.mobile-layout .home-trainer-grid .olie-hero-title{padding:0!important;}
+.mobile-layout .home-trainer-grid .home-tcard-total{padding:3px 4px!important;margin:0!important;gap:2px;border-radius:5px;}
+.mobile-layout .home-trainer-grid .home-tcard-total span{font-size:0;letter-spacing:0;}
+.mobile-layout .home-trainer-grid .home-tcard-total span:after{content:'KPI';font-size:8px;}
+.mobile-layout .home-trainer-grid .home-tcard-total strong{font-size:14px;line-height:16px;white-space:nowrap;}
+.mobile-layout .home-trainer-grid .home-kpirow{gap:2px!important;margin:0!important;}
+.mobile-layout .home-trainer-grid .home-kpilabel{font-size:8px!important;line-height:11px;gap:1px;}
+.mobile-layout .home-trainer-grid .home-kpilabel>span:first-child{font-size:0;line-height:0;}
+.mobile-layout .home-trainer-grid .home-kpilabel>span:last-child{font-size:8px;line-height:10px;}
+.mobile-layout .home-trainer-grid .home-kpilabel>span:first-child:after{content:attr(data-mobile-kpi-label);display:block;font-size:8px;line-height:10px;}
+.mobile-layout .home-trainer-grid .home-kpibar{height:3px!important;border-radius:2px;}
+.mobile-layout .home-trainer-grid .home-btn-detail{width:100%!important;min-height:22px!important;margin:1px 0 0!important;padding:2px!important;border-radius:5px!important;font-size:8px!important;line-height:14px;}
+.mobile-layout .mobile-progress-table tr.mobile-inline-progress-row{grid-template-columns:minmax(54px,.9fr) repeat(var(--mobile-inline-count),minmax(0,1fr));gap:4px;align-items:center;padding:4px 5px;}
+.mobile-layout .mobile-progress-table tr.mobile-inline-progress-row:before{display:none;}
+.mobile-layout .mobile-progress-table tr.mobile-inline-progress-row>td{display:none;grid-row:1;grid-column:var(--mobile-inline-column);}
+.mobile-layout .mobile-progress-table tr.mobile-inline-progress-row>td[data-mobile-inline-bar]{display:block;grid-column:var(--mobile-inline-column);}
+.mobile-layout .mobile-progress-table tr.mobile-inline-progress-row>td[data-mobile-progress-primary]{display:block!important;grid-column:1;font-size:0!important;line-height:12px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mobile-layout .mobile-inline-progress-row>td[data-mobile-progress-primary]>strong{font-size:0!important;}
+.mobile-layout .mobile-inline-progress-row>td[data-mobile-progress-primary]:before{display:none!important;}
+.mobile-layout .mobile-inline-progress-row>td[data-mobile-progress-primary]:after{content:attr(data-mobile-short-identity);font-size:9px;font-weight:750;color:var(--green-dark);}
+.mobile-layout .mobile-progress-table tr.mobile-inline-progress-row>td[data-mobile-inline-bar]:before{content:attr(data-mobile-progress-label) ' ' attr(data-mobile-inline-pct);font-size:8px;line-height:10px;white-space:nowrap;text-align:center;margin:0 0 2px;overflow:hidden;text-overflow:ellipsis;}
+.mobile-layout .mobile-inline-progress-row>td[data-mobile-inline-bar]>div{gap:0!important;}
+.mobile-layout .mobile-inline-progress-row>td[data-mobile-inline-bar]>div>div{height:14px!important;min-width:0!important;border-radius:3px!important;}
+.mobile-layout .mobile-inline-progress-row>td[data-mobile-inline-bar]>div>span{display:none!important;}
+.mobile-layout .mobile-inline-progress-row .mobile-inline-bar-value{font-size:0!important;line-height:14px;white-space:nowrap;}
+.mobile-layout .mobile-inline-progress-row .mobile-inline-bar-value:after{content:attr(data-mobile-compact-value);font-size:8px;line-height:12px;white-space:nowrap;color:#16422e;background:#ffffffe6;border-radius:2px;padding:0 2px;}
+.mobile-layout table[data-mobile-record-kind="event"] tr.mobile-pg-row>td{font-size:8.5px!important;}
+.mobile-layout table[data-mobile-record-kind="event"] tr.mobile-pg-row>td.mobile-pg-name-cell{font-size:10px!important;}
+.mobile-layout .mobile-campaign-tools{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:4px!important;margin-bottom:5px!important;}
+.mobile-layout .mobile-campaign-tools>input.mobile-campaign-id,.mobile-layout input.mobile-campaign-id{flex:0 0 80px!important;width:80px!important;max-width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;padding:3px 5px!important;font-size:16px!important;border-radius:6px!important;box-sizing:border-box;}
+.mobile-layout .mobile-campaign-tools>button{flex:0 1 auto!important;width:auto!important;min-width:0!important;max-width:100%;height:auto!important;min-height:30px!important;font-size:10px!important;line-height:1.2!important;padding:4px 6px!important;border-radius:6px!important;}
+.mobile-layout .mobile-campaign-tools>button.primary{flex:1 1 125px!important;}
+.mobile-layout .mobile-campaign-tools>.save-msg{flex-basis:100%;margin:0;}
+.mobile-layout .pgsm-system-tools{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:4px!important;align-items:end!important;}
+.mobile-layout .pgsm-system-field:has(.mobile-campaign-id){flex:0 0 80px!important;min-width:0!important;max-width:80px!important;gap:2px;}
+.mobile-layout .pgsm-system-field:has(.mobile-campaign-id)>label{font-size:8px;line-height:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mobile-layout .pgsm-system-tools>button{width:auto!important;min-height:30px!important;height:auto!important;padding:4px 6px!important;font-size:10px!important;border-radius:6px;}
 @media(prefers-reduced-motion:reduce){.mobile-layout *{scroll-behavior:auto!important;transition:none!important;}}
 </style>
 </head>
@@ -16598,6 +16646,8 @@ function mobileRecordHeaders_(table){
 }
 function mobileRecordType_(table){
  const headers=mobileRecordHeaders_(table),keys=headers.map(h=>mobilePgKey_(h.split(' · ').at(-1)));
+ const eventName=keys.findIndex(k=>['tenworkshop','tenhub','tenworkshophub','tenwshub'].includes(k));
+ if(eventName>=0)return {kind:'event',name:eventName,headers,keys};
  const codes=['code','codepg','codepgs','mapg','mapgs','manv','staffid','employeecode','employeeid'];
  const names=['hovaten','hoten','tenpg','tenpgs','tennv','staffname','employeename','tenhocvien','tennhanvien','tenhienthi','fullname','name','ten'];
  let name=keys.findIndex(k=>names.includes(k));
@@ -16629,6 +16679,7 @@ function syncCompactPgRows_(table){
   if(inline.length<4)add(items.find(x=>['code','codepg','codepgs','mapg','mapgs','manv','staffid','codeshop','storeid','idshop'].includes(x.key)&&x!==name));
   if(inline.length<3)add(items.find(x=>x!==name&&!['code','codepg','codepgs','mapg','mapgs','manv','staffid','codeshop','storeid','idshop','stt','ngayvao','thamnien'].includes(x.key)&&!x.cell.querySelector('input,select,button')&&/^[+-]?\d/.test(x.cell.textContent.trim())));
   if(inline.length<3)add(items.find(x=>x.key==='khuvuc'||x.key==='kenh'));
+  if(type.kind==='event'){inline.splice(0,inline.length,name);['kenh','hr','khaosat'].forEach(key=>add(items.find(x=>x.key===key)));}
   const order=x=>x===name?0:['code','codepg','codepgs','mapg','mapgs','manv','staffid','codeshop','storeid','idshop'].includes(x.key)?1:x.cell.querySelector('button,select,input')?3:2;
   inline.sort((a,b)=>order(a)-order(b));items.forEach(x=>{if(!inline.includes(x))delete x.cell.dataset.mobileInline;});
   const weight=x=>x===name?10:x.cell.querySelector('select')?5:3,total=inline.reduce((n,x)=>n+weight(x),0);let column=1,remaining=24;
@@ -16692,10 +16743,58 @@ document.addEventListener('click',e=>{const cell=e.target.closest('.mobile-pg-na
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.mobile-pg-name-cell,[data-mobile-detail-trigger]')&&document.documentElement.classList.contains('mobile-layout')){e.preventDefault();openMobilePgDetails_(e.target);}});
 document.addEventListener('pointerover',e=>{const cell=e.target.closest('.mobile-pg-name-cell,[data-mobile-detail-trigger]');if(cell?.contains(e.relatedTarget))return;if(cell&&document.documentElement.classList.contains('mobile-layout')&&matchMedia('(hover:hover) and (pointer:fine)').matches&&(!mobilePgDetailsOverlay_||mobilePgDetailsOverlay_.classList.contains('hidden')||mobilePgDetailsOverlay_.classList.contains('mobile-pg-hover')))openMobilePgDetails_(cell,true);});
 document.addEventListener('pointerout',e=>{const cell=e.target.closest('.mobile-pg-name-cell,[data-mobile-detail-trigger]');if(cell?.contains(e.relatedTarget))return;if(cell&&mobilePgDetailsOverlay_?.classList.contains('mobile-pg-hover'))mobilePgHoverTimer_=setTimeout(closeMobileRecordDetails_,160);});
+function mobileRegionLabel_(name){
+ return ({binhdinh:'BĐ',danang:'ĐN',hue:'Huế',nhatrang:'NT',taynguyen:'TN',vungtau:'VT',mientrung:'Miền Trung'})[mobilePgKey_(name)]||String(name||'');
+}
+function mobileProgressLabel_(label){
+ const key=mobilePgKey_(label);
+ if(key.includes('dophu'))return 'Độ phủ';
+ if(key.includes('baithi')||key==='sobaiviet')return 'Bài';
+ if(key.includes('sobuoi'))return 'Buổi';
+ if(key.includes('hocvien'))return 'HV';
+ if(key.includes('tbkhaosat'))return 'TB KS';
+ if(key.includes('khaosat'))return 'KS';
+ return String(label).replace(/\s*\/\s*Target/ig,'').replace(/^Số lượng /i,'').replace(/^Số /i,'');
+}
+function syncMobileInlineProgressRow_(row,positions,columns,heads,meta){
+ const bars=positions.filter(({cell,col})=>!meta[col]&&cell.querySelector('div[style*="z-index:1"]'));
+ const primary=positions.find(x=>meta[x.col])?.cell;if(!primary||!bars.length)return;
+ row.classList.add('mobile-inline-progress-row');row.style.setProperty('--mobile-inline-count',bars.length);
+ row._mobileRecordFields=Array.from(new Set(columns)).filter(Boolean).map(cell=>({cell,label:heads[columns.indexOf(cell)]||''}));
+ const trainer=columns[heads.findIndex(h=>mobilePgKey_(h)==='trainer')],region=columns[heads.findIndex(h=>mobilePgKey_(h)==='khuvuc')];
+ const name=trainer?.textContent.trim().split(/\s+/).slice(-2).join(' '),area=trainer===region?'':region?.dataset.areaFull||region?.textContent.trim();
+ primary.dataset.mobileShortIdentity=name?[name,mobileRegionLabel_(area)].filter(Boolean).join(' · '):mobileRegionLabel_(primary.dataset.areaFull||primary.textContent.trim());
+ primary.dataset.mobileProgressPrimary='1';primary.dataset.mobileDetailTrigger='1';primary.dataset.mobileDetailTitle=row.dataset.mobileProgressIdentity;
+ if(document.documentElement.classList.contains('mobile-layout')){primary.setAttribute('role','button');primary.setAttribute('tabindex','0');primary.setAttribute('aria-label','Xem đầy đủ tiến độ: '+row.dataset.mobileProgressIdentity);}else ['role','tabindex','aria-label'].forEach(attr=>primary.removeAttribute(attr));
+ bars.forEach(({cell,col},i)=>{
+  cell.dataset.mobileInlineBar='1';cell.style.setProperty('--mobile-inline-column',i+2);cell.dataset.mobileProgressLabel=mobileProgressLabel_(heads[col]);
+  const value=cell.querySelector('div[style*="z-index:1"]'),text=value.textContent.replace(/\s+/g,' ').trim(),parts=text.split('·');
+  cell.dataset.mobileInlinePct=text.match(/-?\d+(?:[.,]\d+)?\s*%/)?.[0]||'';
+  const compact=parts[0].trim().replace(/\s*\/\s*/g,'/');
+  value.dataset.mobileCompactValue=compact.replace(/\d{4,}(?:[.,]\d+)?/g,n=>{const v=Number(n.replace(',','.'));return v>=1000?Number((v/1000).toFixed(1)).toLocaleString('vi-VN')+'k':n;});
+  value.classList.add('mobile-inline-bar-value');value.title=text;
+ });
+}
+function syncMobileCampaignControls_(){
+ const mobile=document.documentElement.classList.contains('mobile-layout');
+ document.querySelectorAll('input[id^="otr"][id$="CampaignId"],#otrMediaProgramId,#pgsmSystemCampaignId').forEach(input=>{
+  input.classList.add('mobile-campaign-id');
+  input.dataset.mobileOriginalPlaceholder??=input.getAttribute('placeholder')||'';
+  const label=input.dataset.mobileOriginalPlaceholder;input.placeholder=mobile?(input.id==='otrMediaProgramId'?'ID Prog.':'ID Camp.'):label;
+  if(!input.getAttribute('aria-label'))input.setAttribute('aria-label',label||'ID chiến dịch');
+  if(input.parentElement.querySelector(':scope>button'))input.parentElement.classList.add('mobile-campaign-tools');
+ });
+ document.querySelectorAll('.home-trainer-grid .home-tcard').forEach(card=>{
+  const name=card.querySelector('.home-tcard-name'),region=card.querySelector('.home-tcard-region');
+  if(name){name.dataset.mobileTrainerName=name.textContent.trim().split(/\s+/).slice(-2).join(' ');name.title=name.textContent.trim();}
+  if(region){region.dataset.mobileRegion=mobileRegionLabel_(region.textContent.trim());region.title=region.textContent.trim();}
+  card.querySelectorAll('.home-kpilabel>span:first-child').forEach(label=>{label.dataset.mobileKpiLabel=({noibo:'NB',doitac:'ĐT',truyenthong:'TT'})[mobilePgKey_(label.textContent)]||label.textContent;});
+ });
+}
 function syncMobileProgressTables_(){
  const selector='#noiboProgressTableBox table,#mediaProgressTableBox table,#mediaCampaignsOverviewBox table,#doitacProgressTableBox table,[id^="simpleProgressBox-"] table,[id^="partnerTrainingRegionProgressBox-"] table,#partnerWorkshopRegionProgressBox table';
  document.querySelectorAll(selector).forEach(table=>{
-  if(table.tHead?.rows.length!==1)return;
+  if(table.tHead?.rows.length!==1||mobileRecordType_(table))return;
   const heads=Array.from(table.tHead.rows[0].cells).map(c=>c.textContent.trim()),meta=heads.map(h=>['trainer','khuvuc','chiendich','kenh'].includes(mobilePgKey_(h)));
   if(!meta.some(Boolean))return;table.classList.add('mobile-progress-table');table.parentElement.classList.add('mobile-progress-wrap');
   Array.from(table.tBodies).forEach(body=>{const spans=[];
@@ -16707,6 +16806,7 @@ function syncMobileProgressTables_(){
     row.title=row.dataset.mobileProgressIdentity;
     let metrics=0;positions.forEach(({cell,col})=>{if(meta[col])cell.dataset.mobileProgressMeta='1';else{delete cell.dataset.mobileProgressMeta;cell.dataset.mobileProgressLabel=heads[col]||'';metrics++;}cell.dataset.mobileProgressWide=cell.querySelector('textarea,button,input')?'1':'';});
     row.style.setProperty('--mobile-progress-cols',Math.max(1,Math.min(3,metrics)));row.classList.add('mobile-progress-row');
+    if(table.closest('#mediaProgressTableBox,#mediaCampaignsOverviewBox,[id^="simpleProgressBox-"],[id^="partnerTrainingRegionProgressBox-"],#partnerWorkshopRegionProgressBox'))syncMobileInlineProgressRow_(row,positions,columns,heads,meta);
     if(table.closest('#doitacProgressTableBox')){
      row.classList.add('mobile-ftf-row');const channelColumn=heads.findIndex(h=>mobilePgKey_(h)==='kenh'),channel=columns[channelColumn];
      const person=[...new Set(columns.filter((_,i)=>meta[i]&&i!==channelColumn).map(c=>c.textContent.trim()).filter(Boolean))].join(' · ');row.dataset.mobileFtfPerson=person;
@@ -16735,6 +16835,7 @@ function syncMobileChartOptions_(chart){
  chart.update('none');
 }
 function syncMobileDashboardDensity_(){
+ syncMobileCampaignControls_();
  document.querySelectorAll('.section-desc,.pgsm-form-desc,.pgsm-target-sub,.banner-note').forEach(note=>{
   if(note.closest('[role="alert"],[role="status"],[aria-live]')||note.querySelector('input,select,textarea,button,[role="alert"],[role="status"],[aria-live]'))return;
   const box=note.closest('.form-card,.cfg-card,[id*="ImportBox"],[id*="ImportWrap"],#pgsmSystemSection,#soImportCard');
