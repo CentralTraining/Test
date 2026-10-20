@@ -1654,6 +1654,42 @@ html.mobile-layout body{min-width:0;font-size:14px;}
 .mobile-layout #pgsmProgressTable .pgsm-fm-stars{font-size:12px;}
 .mobile-layout #pgsmProgressTable .pgsm-fm-status{font-size:9px;padding:2px 3px;}
 .mobile-layout #pgsmProgressTable .pgsm-result-badge{font-size:9px;padding:3px 5px;}
+/* Three single-line rows per PG; long values remain available by tapping the name. */
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tbody tr.mobile-pg-row{display:grid!important;grid-template-columns:repeat(24,minmax(0,1fr))!important;grid-template-rows:repeat(3,26px);gap:2px 4px;padding:6px 8px;align-items:center;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tbody tr.mobile-pg-row>td{display:block;grid-row:var(--pg-row)!important;grid-column:var(--pg-start)/span var(--pg-span)!important;order:0;min-width:0;height:26px;min-height:0;padding:0!important;border:0!important;font-size:10.5px!important;line-height:26px;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;text-align:left!important;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tbody tr.mobile-pg-row>td:before{content:attr(data-mobile-label);display:inline;font-size:9px;line-height:inherit;margin:0 3px 0 0;white-space:nowrap;color:var(--muted);}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tbody tr.mobile-pg-row>td[data-mobile-label=""]:before{display:none;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tbody tr.mobile-pg-row>td[data-mobile-pg-hidden]{display:none;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tbody tr.mobile-pg-row>td.mobile-pg-name-cell{position:relative;padding-right:14px!important;font-size:12px!important;font-weight:750;color:#075e38;cursor:pointer;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tbody tr.mobile-pg-row>td.mobile-pg-name-cell:after{content:'ⓘ'!important;position:absolute;right:0;font-size:11px;color:#5e7b6a;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tbody tr.mobile-pg-row>td.mobile-pg-name-cell:focus-visible{outline:2px solid #119557;outline-offset:-2px;border-radius:3px;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tr.mobile-pg-row td>div{display:inline!important;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tr.mobile-pg-row :is(.pill,.pgsm-change-label,.pgsm-change-reason,.pgsm-shop-name,.pgsm-result-badge){display:inline;font-size:inherit!important;line-height:inherit;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tr.mobile-pg-row :is(button,select,input){width:auto;max-width:100%;min-width:0;min-height:24px;height:24px;font-size:10px!important;line-height:1.2;padding:2px 4px!important;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mobile-layout :is(table.mobile-compact-pg,#pgsmProgressTable) tr.mobile-pg-row input[type=checkbox]{width:16px;height:16px;min-height:16px;padding:0!important;}
+.mobile-layout #pgsmProgressTable tr.mobile-pg-row .pgsm-fm-stars{font-size:10px;}
+.mobile-layout #pgsmProgressTable tr.mobile-pg-row .pgsm-fm-status{font-size:0!important;line-height:inherit;padding:0;background:transparent;}
+.mobile-layout #pgsmProgressTable tr.mobile-pg-row .pgsm-fm-status:after{content:'−';font-size:10px;color:#61786b;}
+.mobile-layout #pgsmProgressTable tr.mobile-pg-row .pgsm-fm-pass:after{content:'✓';color:#08794b;}
+.mobile-layout #pgsmProgressTable tr.mobile-pg-row .pgsm-fm-fail:after{content:'×';}
+.mobile-layout #pgsmProgressTable tr.mobile-pg-row .pgsm-fm-unknown:after{content:'?';}
+/* Filter controls use at most two compact rows; additional columns scroll inside the bar. */
+.mobile-layout .mobile-filter-two-rows,.mobile-layout #pgsmProgressContent .pgsm-progress-filters.mobile-filter-two-rows{display:grid!important;grid-auto-flow:row!important;grid-template-rows:repeat(var(--mobile-filter-rows,2),auto)!important;grid-template-columns:repeat(var(--mobile-filter-cols,3),minmax(82px,1fr))!important;grid-auto-columns:minmax(82px,1fr);gap:5px!important;align-items:end!important;min-width:0!important;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;padding:7px!important;}
+.mobile-layout .scope-filters.mobile-filter-two-rows>div,.mobile-layout .scope-filters.mobile-filter-two-rows .subnav{display:contents!important;}
+.mobile-layout .mobile-filter-two-rows .scope-label:not(label){display:none!important;}
+.mobile-layout .mobile-filter-two-rows>div,.mobile-layout #pgsmProgressContent .mobile-filter-two-rows label{flex:none!important;min-width:0!important;max-width:100%;width:auto;font-size:9px;gap:2px;}
+.mobile-layout .mobile-filter-two-rows :is(input,select,button),.mobile-layout #pgsmProgressContent .mobile-filter-two-rows :is(input,select,button){width:100%!important;min-width:0!important;max-width:100%!important;min-height:30px!important;height:30px!important;font-size:10.5px!important;padding:4px 6px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mobile-layout .mobile-filter-two-rows label{font-size:9px!important;line-height:1.2;}
+.mobile-layout .mobile-filter-two-rows>:is(input,select,button,label,div),.mobile-layout #pgsmProgressContent .mobile-filter-two-rows>:is(button,label){grid-column:auto!important;grid-row:auto!important;justify-self:stretch;}
+.mobile-layout .so-filter-bar .so-filter-fields.mobile-filter-two-rows{flex:1;min-width:0!important;width:100%;padding:0!important;}
+.mobile-pg-detail-overlay.hidden{display:none!important;}
+.mobile-pg-detail-overlay{z-index:10060;}
+.mobile-pg-detail-head{display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:14px;}
+.mobile-pg-detail-head h3{margin:0;font-size:16px;line-height:1.4;overflow-wrap:anywhere;}
+.mobile-pg-detail-head button{flex:0 0 auto;}
+.mobile-pg-detail-overlay dl{display:grid;grid-template-columns:minmax(80px,.8fr) minmax(0,1.4fr);gap:8px 12px;margin:0;font-size:12px;line-height:1.5;}
+.mobile-pg-detail-overlay dt{color:var(--muted);font-weight:600;}
+.mobile-pg-detail-overlay dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap;}
 @media(max-width:600px){
  .mobile-layout .home-trainer-grid{grid-template-columns:1fr!important;}
  .mobile-layout :is(.form-grid-4,.form-grid-6){grid-template-columns:1fr!important;}
@@ -16391,10 +16427,82 @@ renderAuthScreen();
 /* ============ RESPONSIVE: bọc mọi bảng để cuộn ngang trên mobile ============
    Dùng MutationObserver thay vì chạy 1 lần lúc tải trang — vì tuyệt đại đa số bảng trong app
    được tạo SAU KHI đăng nhập/đổi tab (qua innerHTML), nếu chỉ chạy 1 lần sẽ bỏ sót gần hết bảng. */
+/* Compact PG cards use existing, already-authorized rows; no additional data is fetched. */
+function mobilePgKey_(text){return String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function syncCompactPgRows_(tbl){
+ const supported=tbl.classList.contains('mobile-record-table')||tbl.id==='pgsmProgressTable';
+ if(!supported)return;
+ tbl.classList.add('mobile-compact-pg');
+ const heads=Array.from(tbl.querySelectorAll('thead th')).map(th=>th.textContent.trim());
+ const shortLabels={khuvuc:'KV',trainer:'Tr.',trainerphutrach:'Tr.',shop:'Shop',sizeshop:'Size',thamnien:'TN',sale:'Sale',ngayvao:'Vào',sokhaosat:'KS',canhbaotre:'Trễ',dangky:'ĐK',sophone:'S.O',tongso:'Tổng',hoanthanhtargetshop:'HT',mochoanthanhshop:'Mốc',solanhoanthanh:'Lượt'};
+ Array.from(tbl.tBodies).forEach(body=>Array.from(body.rows).forEach(row=>{
+  if(row.querySelector('[colspan]'))return;
+  const cells=Array.from(row.cells),items=cells.map((cell,i)=>({cell,label:cell.dataset.label||heads[i]||'',key:mobilePgKey_(cell.dataset.label||heads[i])}));
+  const name=items.find(x=>['hovaten','hoten','tenpg','tenpgs'].includes(x.key));if(!name)return;
+  row.classList.add('mobile-pg-row');
+  const groups=[[],[],[]];
+  items.forEach(item=>{
+   const {cell,key,label}=item;
+   if(!cell.hasAttribute('data-label'))cell.dataset.label=label;
+   if(key==='stt'){cell.dataset.mobilePgHidden='1';return;}
+   const line=item===name||['code','codepg','codepgs','mapg','mapgs','trangthai'].includes(key)?0:['shop','cuahang','trainer','trainerphutrach','khuvuc','kv','kenh'].includes(key)?1:2;
+   const weight=item===name?7:line===0?4:['shop','cuahang'].includes(key)?7:['trainer','trainerphutrach'].includes(key)?5:cell.querySelector('button,select')?4:3;
+   groups[line].push({...item,weight});
+   const stage=label.match(/^M([1-5])\b/i);
+   cell.dataset.mobileLabel=stage?stage[0].toUpperCase():shortLabels[key]||(['code','codepg','codepgs','mapg','mapgs','trangthai','sao','kenh','ketqua'].includes(key)||item===name?'':label.replace(/\s*\(.*?\)/g,'').trim());
+   if(!cell.title)cell.title=cell.dataset.shopFull||cell.dataset.areaFull||cell.textContent.trim();
+  });
+  groups.forEach((group,line)=>{
+   if(line===0)group.sort((a,b)=>(a===name||a.cell===name.cell?-1:b.cell===name.cell?1:0));
+   const total=group.reduce((n,x)=>n+x.weight,0);let column=1,remaining=24;
+   group.forEach((item,i)=>{const span=i===group.length-1?remaining:Math.max(1,Math.min(remaining-(group.length-i-1),Math.round(item.weight/total*24)));
+    item.cell.style.setProperty('--pg-row',line+1);item.cell.style.setProperty('--pg-start',column);item.cell.style.setProperty('--pg-span',span);column+=span;remaining-=span;
+   });
+  });
+  name.cell.classList.add('mobile-pg-name-cell');
+  const mobile=document.documentElement.classList.contains('mobile-layout');
+  if(mobile){name.cell.setAttribute('tabindex','0');name.cell.setAttribute('role','button');name.cell.setAttribute('aria-label','Xem đầy đủ thông tin: '+name.cell.textContent.trim());}
+  else{['tabindex','role','aria-label'].forEach(attr=>name.cell.removeAttribute(attr));}
+ }));
+}
+function syncCompactMobileFilters_(){
+ document.querySelectorAll('.scope-filters:not(.so-filter-bar),.so-filter-fields,.mobile-filter-grid,.pgsm-progress-filters').forEach(bar=>{
+  if(bar.querySelector('input[type=file],#pgsmSearch'))return;
+  const controls=Array.from(bar.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]),select,button')).filter(e=>!e.hidden&&e.style.display!=='none'&&!e.classList.contains('hidden'));
+  if(controls.length<3&&!bar.matches('.so-filter-fields,.mobile-filter-grid,.pgsm-progress-filters'))return;
+  bar.classList.add('mobile-filter-two-rows');bar.setAttribute('data-mobile-scroll','');
+  const lines=controls.length>3?2:1;bar.style.setProperty('--mobile-filter-rows',lines);bar.style.setProperty('--mobile-filter-cols',Math.max(1,Math.ceil(controls.length/lines)));
+ });
+}
+let mobilePgDetailsOverlay_=null,mobilePgDetailsFocus_=null;
+function mobilePgCellText_(cell){
+ const copy=cell.cloneNode(true);
+ copy.querySelectorAll('select,input,textarea').forEach((e,i)=>{const original=cell.querySelectorAll('select,input,textarea')[i];e.replaceWith(document.createTextNode(original.tagName==='SELECT'?Array.from(original.selectedOptions).map(o=>o.textContent).join(', '):original.type==='checkbox'?(original.checked?'Đã chọn':'Chưa chọn'):original.value));});
+ copy.querySelectorAll('button').forEach(e=>e.remove());
+ return cell.dataset.shopFull||cell.dataset.areaFull||copy.textContent.replace(/\s+/g,' ').trim()||'—';
+}
+function openMobilePgDetails_(cell){
+ const row=cell.closest('tr');if(!row)return;
+ if(!mobilePgDetailsOverlay_){
+  const overlay=document.createElement('div');overlay.id='mobilePgDetails';overlay.className='modal-overlay hidden mobile-pg-detail-overlay';
+  overlay.innerHTML='<div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="mobilePgDetailsTitle"><div class="mobile-pg-detail-head"><h3 id="mobilePgDetailsTitle"></h3><button type="button" class="secondary" aria-label="Đóng thông tin PGs">Đóng</button></div><dl></dl></div>';
+  const close=()=>{overlay.classList.add('hidden');mobilePgDetailsFocus_?.focus();};
+  overlay.querySelector('button').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+  overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}else if(e.key==='Tab'){e.preventDefault();overlay.querySelector('button').focus();}});
+  document.body.appendChild(overlay);mobilePgDetailsOverlay_=overlay;
+ }
+ const overlay=mobilePgDetailsOverlay_,list=overlay.querySelector('dl');list.replaceChildren();
+ overlay.querySelector('h3').textContent=cell.textContent.trim();
+ Array.from(row.cells).forEach(td=>{const label=td.dataset.label;if(!label||mobilePgKey_(label)==='stt'||mobilePgKey_(label)==='thaotac')return;const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=mobilePgCellText_(td);list.append(dt,dd);});
+ mobilePgDetailsFocus_=cell;overlay.classList.remove('hidden');overlay.querySelector('button').focus();
+}
+document.addEventListener('click',e=>{const cell=e.target.closest('.mobile-pg-name-cell');if(cell&&document.documentElement.classList.contains('mobile-layout')&&!e.target.closest('button,input,select,a'))openMobilePgDetails_(cell);});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.mobile-pg-name-cell')&&document.documentElement.classList.contains('mobile-layout')){e.preventDefault();openMobilePgDetails_(e.target);}});
+
 function syncMobileLayout_(){
   const root=document.documentElement;
   const enabled=root.classList.contains('ui-force-mobile')||(!root.classList.contains('ui-force-desktop')&&window.matchMedia('(max-width:860px)').matches);
-  if(root.classList.contains('mobile-layout')!==enabled)root.classList.toggle('mobile-layout',enabled);
+  if(root.classList.contains('mobile-layout')!==enabled){root.classList.toggle('mobile-layout',enabled);document.querySelectorAll('.mobile-compact-pg').forEach(syncCompactPgRows_);}
 }
 syncMobileLayout_();
 const mobileLayoutMedia_=window.matchMedia('(max-width:860px)');
@@ -16406,6 +16514,7 @@ function syncResponsiveTable_(tbl){
   const heads=Array.from(tbl.querySelectorAll('thead th')).map(th=>th.textContent.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,''));
   const record=heads.some(h=>['code','codepg','codepgs'].includes(h))&&heads.some(h=>['hovaten','hoten','tenpg','tenpgs'].includes(h))&&!tbl.querySelector('thead [colspan],thead [rowspan]')&&!tbl.closest('#pgsmProgressContent');
   if(tbl.classList.contains('mobile-record-table')!==record)tbl.classList.toggle('mobile-record-table',record);
+  syncCompactPgRows_(tbl);
   const wide=tbl.getBoundingClientRect().width>wrap.clientWidth+2;
   if(wrap.classList.contains('has-horizontal-scroll')!==wide)wrap.classList.toggle('has-horizontal-scroll',wide);
   if(wide){wrap.setAttribute('tabindex','0');wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Bảng dữ liệu. Vuốt ngang để xem đầy đủ các cột.');}
@@ -16782,7 +16891,9 @@ document.addEventListener('click',(e)=>{
           else { td.dataset.areaAbbr='1'; }
         });
       });
+      if(typeof syncCompactPgRows_==='function')syncCompactPgRows_(tb);
     });
+    if(typeof syncCompactMobileFilters_==='function')syncCompactMobileFilters_();
   }
   var t=null;
   var obs=new MutationObserver(function(){ clearTimeout(t); t=setTimeout(processTables,120); });
