@@ -1909,6 +1909,28 @@ html:not(.mobile-layout) .mobile-tool-details>summary{display:none;}
 .mobile-layout .pgsm-system-tools>button{width:auto!important;min-height:30px!important;height:auto!important;padding:4px 6px!important;font-size:10px!important;border-radius:6px;}
 @media(prefers-reduced-motion:reduce){.mobile-layout *{scroll-behavior:auto!important;transition:none!important;}}
 </style>
+<style id="kpi-navigation-refinement">
+/* KPI navigation: distinct category segments and understated section tabs. */
+#tab-kpi>.kpi-primary-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;max-width:580px;box-sizing:border-box;gap:4px;margin:10px 0 12px;padding:4px;border:1px solid #d9e5dd;border-radius:9px;background:#edf3ef;overflow:visible;}
+#tab-kpi>.kpi-primary-nav>button{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:37px;padding:8px 12px;border:1px solid transparent;border-radius:6px!important;background:transparent;color:#53695c;font-size:12px;font-weight:700;line-height:1.2;white-space:nowrap;}
+#tab-kpi>.kpi-primary-nav>button svg{width:15px;height:15px;flex:0 0 15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+#tab-kpi>.kpi-primary-nav>button:hover:not(.active){background:#ffffffb8;color:#0b5e36;}
+#tab-kpi>.kpi-primary-nav>button.active{background:#0b5e36;color:#fff;border-color:#0b5e36;box-shadow:0 2px 4px #0b5e361a;}
+#tab-kpi .kpi-subtype-nav{display:flex;flex-wrap:wrap;align-items:stretch;gap:3px;max-width:100%;box-sizing:border-box;margin:0 0 12px;padding:4px;border:1px solid #e0e9e3;border-radius:8px;background:#fff;overflow:visible;}
+#tab-kpi .kpi-subtype-nav>button{position:relative;flex:0 1 auto;min-width:0;min-height:34px;padding:7px 13px;border:0;border-bottom:2px solid transparent;border-radius:4px!important;background:transparent;color:#65766c;font-size:11px;font-weight:600;line-height:1.25;white-space:normal;overflow-wrap:normal;}
+#tab-kpi .kpi-subtype-nav>button:hover:not(.active){background:#f4f7f5;color:#25523a;}
+#tab-kpi .kpi-subtype-nav>button.active{border-bottom-color:#158054;background:#edf6f0;color:#075e38;font-weight:750;box-shadow:none;}
+#tab-kpi :is(.kpi-primary-nav,.kpi-subtype-nav)>button:focus-visible{outline:2px solid #14905b;outline-offset:1px;z-index:1;}
+#tab-kpi .kpi-tab-short{display:none;}
+.mobile-layout #tab-kpi>.kpi-primary-nav{max-width:none;margin:7px 0 8px;padding:3px;gap:3px;border-radius:8px;}
+.mobile-layout #tab-kpi>.kpi-primary-nav>button{height:32px;min-height:32px;padding:5px 6px;gap:5px;font-size:11px;}
+.mobile-layout #tab-kpi>.kpi-primary-nav>button svg{width:13px;height:13px;flex-basis:13px;}
+.mobile-layout #tab-kpi .kpi-subtype-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin:0 0 8px;padding:3px;border-radius:7px;}
+.mobile-layout #tab-kpi :is(#kpi-doitac,#kpi-truyenthong)>.kpi-subtype-nav{grid-template-columns:repeat(2,minmax(0,1fr));}
+.mobile-layout #tab-kpi .kpi-subtype-nav>button{height:32px;min-height:32px;padding:3px 4px;font-size:10px;line-height:12px;}
+.mobile-layout #tab-kpi .kpi-tab-label{display:none;}
+.mobile-layout #tab-kpi .kpi-tab-short{display:block;}
+</style>
 </head>
 <body>
 
@@ -2293,10 +2315,10 @@ html:not(.mobile-layout) .mobile-tool-details>summary{display:none;}
       <button class="secondary" id="exportKpiExcelBtn" type="button" style="white-space:nowrap;">⬇ Xuất Excel tiến độ</button>
     </div>
     <div id="kpiCampaignContext" class="campaign-context"></div>
-    <div class="subnav">
-      <button data-kpi="noibo" class="active">Nội bộ</button>
-      <button data-kpi="doitac">Đối tác</button>
-      <button data-kpi="truyenthong">Truyền thông</button>
+    <div class="subnav kpi-primary-nav" role="group" aria-label="Chọn nhóm KPI">
+      <button type="button" data-kpi="noibo" class="active" aria-pressed="true"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 21h18M5 21V5h14v16M9 9h2m2 0h2M9 13h2m2 0h2M10 21v-4h4v4"/></svg><span>Nội bộ</span></button>
+      <button type="button" data-kpi="doitac" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 7 5-3 4 2 4-2 5 3-3 10-5 3-5-3-3-7m3-4 4 3 4-3m-8 6 6 4m-9-7 5 4"/></svg><span>Đối tác</span></button>
+      <button type="button" data-kpi="truyenthong" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m3 10 17-5v14L3 14v-4Zm4 5 2 5h4l-2-4M20 9h2m-2 6h2"/></svg><span>Truyền thông</span></button>
     </div>
     <div id="kpi-noibo" class="panel active"></div>
     <div id="kpi-doitac" class="panel"></div>
@@ -10306,7 +10328,7 @@ function renderKpiCategory(catKey){
   const subOptions = CAMPAIGN_SUBTYPE_OPTIONS[catKey]||[];
   const activeSub = kpiSubtype[catKey] || CAMPAIGN_SUBTYPE_DEFAULT[catKey];
   const subnavHtml = subOptions.length>1
-    ? `<div class="subnav" style="margin-bottom:12px;">${subOptions.map(o=>`<button data-kpi-sub="${o.key}" class="${o.key===activeSub?'active':''}">${o.label}</button>`).join('')}</div>`
+    ? `<div class="subnav kpi-subtype-nav" role="group" aria-label="Chọn hạng mục KPI">${subOptions.map(o=>`<button type="button" data-kpi-sub="${o.key}" class="${o.key===activeSub?'active':''}" aria-pressed="${o.key===activeSub}" aria-label="${escapeHtml(o.label)}" title="${escapeHtml(o.label)}"><span class="kpi-tab-label">${escapeHtml(o.label)}</span><span class="kpi-tab-short" aria-hidden="true">${escapeHtml(o.key==='tuvanai_checkshop'?'AI & Check shop':o.label)}</span></button>`).join('')}</div>`
     : '';
   outerContainer.innerHTML = subnavHtml + `<div id="kpiSubBody-${catKey}"><div style="text-align:center;padding:40px 0;color:var(--muted);">⏳ Đang tải...</div></div>`;
   outerContainer.querySelectorAll('[data-kpi-sub]').forEach(btn=>{
@@ -14940,9 +14962,8 @@ document.querySelectorAll('[data-sub]').forEach(btn=>{
 document.querySelectorAll('[data-kpi]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const group=btn.closest('.maintab');
-    group.querySelectorAll('.subnav button').forEach(b=>b.classList.remove('active'));
-    group.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
+    group.querySelectorAll(':scope > .kpi-primary-nav [data-kpi]').forEach(b=>{const active=b===btn;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
+    group.querySelectorAll(':scope > .panel').forEach(p=>p.classList.remove('active'));
     document.getElementById('kpi-'+btn.dataset.kpi).classList.add('active');
     updateOlieQrWidgetVisibility_();
   });
