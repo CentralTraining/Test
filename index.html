@@ -1931,6 +1931,35 @@ html:not(.mobile-layout) .mobile-tool-details>summary{display:none;}
 .mobile-layout #tab-kpi .kpi-tab-label{display:none;}
 .mobile-layout #tab-kpi .kpi-tab-short{display:block;}
 </style>
+<style id="app-navigation-refinement">
+/* Shared two-level navigation, following the KPI menu design. */
+html body .main-content .subnav:not(.kpi-primary-nav):not(.kpi-subtype-nav),html body .main-content .so-stats-pages{display:flex;flex-wrap:wrap;align-items:stretch;gap:3px;box-sizing:border-box;max-width:100%;margin:0 0 12px;padding:4px;border:1px solid #e0e9e3;border-radius:8px;background:#fff;overflow:visible;}
+html body .main-content :is(.subnav:not(.kpi-primary-nav):not(.kpi-subtype-nav),.so-stats-pages)>button{position:relative;flex:0 1 auto;min-width:0;min-height:34px;padding:7px 13px;border:0;border-bottom:2px solid transparent;border-radius:4px!important;background:transparent;color:#65766c;font-family:inherit;font-size:11px;font-weight:600;line-height:1.25;white-space:normal;overflow-wrap:normal;box-shadow:none;cursor:pointer;}
+html body .main-content :is(.subnav:not(.kpi-primary-nav):not(.kpi-subtype-nav),.so-stats-pages)>button:hover:not(.active){background:#f4f7f5;color:#25523a;}
+html body .main-content :is(.subnav:not(.kpi-primary-nav):not(.kpi-subtype-nav),.so-stats-pages)>button.active{border-bottom-color:#158054;background:#edf6f0;color:#075e38;font-weight:750;box-shadow:none;}
+html body :is(#tab-overview,#tab-so,#tab-settings,#tab-data)>.subnav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;max-width:580px;margin:10px 0 12px;padding:4px;gap:4px;border-color:#d9e5dd;border-radius:9px;background:#edf3ef;overflow:visible;}
+html body #tab-so>.subnav{grid-template-columns:repeat(2,minmax(0,1fr));}
+html body #tab-data>.subnav{grid-template-columns:repeat(4,minmax(0,1fr));}
+html body :is(#tab-overview,#tab-so,#tab-settings,#tab-data)>.subnav>button{display:flex;align-items:center;justify-content:center;min-height:37px;padding:8px 10px;border:1px solid transparent;border-radius:6px!important;background:transparent;color:#53695c;font-size:12px;font-weight:700;line-height:1.2;}
+html body :is(#tab-overview,#tab-so,#tab-settings,#tab-data)>.subnav>button.active{border-color:#0b5e36;background:#0b5e36;color:#fff;box-shadow:0 2px 4px #0b5e361a;}
+html body :is(#tab-overview,#tab-so,#tab-settings,#tab-data)>.subnav>button:hover:not(.active){background:#ffffffb8;color:#0b5e36;}
+html body .app .sidebar-col nav.tabs{padding:4px;border:1px solid #d9e5dd;border-radius:9px;background:#edf3ef;}
+html body .app .sidebar-col nav.tabs button{border:1px solid transparent!important;border-radius:6px!important;background:transparent!important;color:#53695c!important;box-shadow:none!important;}
+html body .app .sidebar-col nav.tabs button.active{border-color:#0b5e36!important;background:#0b5e36!important;color:#fff!important;box-shadow:0 2px 4px #0b5e361a!important;}
+html body .app .sidebar-col nav.tabs button:hover:not(.active){background:#ffffffb8!important;color:#0b5e36!important;}
+html body .mobile-home-chart-tabs{box-sizing:border-box;max-width:100%;padding:3px;border:1px solid #e0e9e3;border-radius:7px;background:#fff;}
+html body .main-content .mobile-home-chart-tabs>button{border:0;border-bottom:2px solid transparent;border-radius:4px;background:transparent;color:#65766c;line-height:1.2;}
+html body .main-content .mobile-home-chart-tabs>button[aria-pressed="true"]{border-bottom-color:#158054;background:#edf6f0;color:#075e38;font-weight:750;}
+html body :is(nav.tabs,.subnav,.so-stats-pages,.mobile-home-chart-tabs)>button:focus-visible,html body nav.tabs .nav-group>button:focus-visible{outline:2px solid #14905b!important;outline-offset:1px;z-index:1;}
+.mobile-layout body .main-content :is(.subnav:not(.kpi-primary-nav):not(.kpi-subtype-nav),.so-stats-pages){gap:3px;margin-bottom:8px;padding:3px;border-radius:7px;}
+.mobile-layout body .main-content :is(.subnav:not(.kpi-primary-nav):not(.kpi-subtype-nav),.so-stats-pages)>button{flex:1 1 0;min-height:30px;height:auto;padding:4px 6px;font-size:10px;line-height:12px;}
+.mobile-layout body :is(#tab-overview,#tab-so,#tab-settings,#tab-data)>.subnav{max-width:none;gap:3px;margin:7px 0 8px;padding:3px;border-radius:8px;}
+.mobile-layout body :is(#tab-overview,#tab-so,#tab-settings,#tab-data)>.subnav>button{height:32px;min-height:32px;padding:4px 5px;font-size:10px;line-height:12px;}
+.mobile-layout body .main-content .so-stats-pages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+.mobile-layout body .main-content .scope-filters .subnav>button{width:auto;min-width:0;max-width:100%;white-space:normal;}
+.mobile-layout body .app .sidebar-col nav.tabs{gap:3px;padding:3px;}
+.mobile-layout body .mobile-home-chart-tabs{gap:3px;}
+</style>
 </head>
 <body>
 
@@ -14952,8 +14981,8 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 document.querySelectorAll('[data-sub]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const group=btn.closest('.maintab');
-    group.querySelectorAll('.subnav button').forEach(b=>b.classList.remove('active'));
-    group.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.parentElement.querySelectorAll(':scope > button').forEach(b=>b.classList.remove('active'));
+    group.querySelectorAll(':scope > .panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-'+btn.dataset.sub).classList.add('active');
     if(group.id==='tab-overview') renderOverviewAll();
@@ -14971,8 +15000,8 @@ document.querySelectorAll('[data-kpi]').forEach(btn=>{
 document.querySelectorAll('[data-set]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const group=btn.closest('.maintab');
-    group.querySelectorAll('.subnav button').forEach(b=>b.classList.remove('active'));
-    group.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.parentElement.querySelectorAll(':scope > button').forEach(b=>b.classList.remove('active'));
+    group.querySelectorAll(':scope > .panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-'+btn.dataset.set).classList.add('active');
   });
@@ -16242,7 +16271,7 @@ document.getElementById('soClearBtn').addEventListener('click', async ()=>{
 document.querySelectorAll('[data-sosub]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const tab = document.getElementById('tab-so');
-    tab.querySelectorAll('.subnav button').forEach(b=>b.classList.remove('active'));
+    tab.querySelectorAll(':scope > .subnav > button').forEach(b=>b.classList.remove('active'));
     tab.querySelectorAll(':scope > .panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('sotab-'+btn.dataset.sosub).classList.add('active');
@@ -16855,7 +16884,20 @@ function syncMobileChartOptions_(chart){
  });
  chart.update('none');
 }
+function syncAppNavigation_(){
+ document.querySelectorAll('nav.tabs,.subnav,.so-stats-pages,.mobile-home-chart-tabs').forEach(group=>{
+  if(group.matches('nav')){if(!group.getAttribute('aria-label'))group.setAttribute('aria-label','Điều hướng Dashboard');}
+  else{group.setAttribute('role','group');if(!group.getAttribute('aria-label'))group.setAttribute('aria-label','Chọn mục hiển thị');}
+  group.querySelectorAll('button').forEach(button=>{
+   if(!button.hasAttribute('type'))button.type='button';
+   if(!group.classList.contains('mobile-home-chart-tabs'))button.setAttribute('aria-pressed',String(button.classList.contains('active')));
+   if(group.matches('nav')){if(button.classList.contains('active'))button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}
+  });
+ });
+}
+document.addEventListener('click',event=>{if(event.target.closest('nav.tabs button,.subnav button,.so-stats-pages button,.mobile-home-chart-tabs button'))queueMicrotask(syncAppNavigation_);});
 function syncMobileDashboardDensity_(){
+ syncAppNavigation_();
  syncMobileCampaignControls_();
  document.querySelectorAll('.section-desc,.pgsm-form-desc,.pgsm-target-sub,.banner-note').forEach(note=>{
   if(note.closest('[role="alert"],[role="status"],[aria-live]')||note.querySelector('input,select,textarea,button,[role="alert"],[role="status"],[aria-live]'))return;
