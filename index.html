@@ -1502,6 +1502,136 @@ const dailyOlieMessages_ = ["Chúc bạn một ngày làm việc tràn đầy n�
  #pgsmProgressContent .pgsm-progress-filters button{justify-self:stretch;}
 }
 </style>
+<style id="mobile-layout-20261020">
+/* Mobile sizing is shared by automatic layout and the explicit mobile view. */
+html.mobile-layout{--body:14px;--cap:12px;--tag:11px;--title:20px;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+html.mobile-layout body{min-width:0;font-size:14px;}
+.mobile-layout .app{width:100%;max-width:100%;min-width:0;padding:10px 10px calc(24px + env(safe-area-inset-bottom));}
+.mobile-layout .app-body{display:block;min-width:0;}
+.mobile-layout .main-content,.mobile-layout .sidebar-col{width:100%;min-width:0;max-width:100%;}
+.mobile-layout section.maintab{overflow:visible;min-width:0;}
+.mobile-layout .panel,.mobile-layout .region-card,.mobile-layout .cfg-card,.mobile-layout .form-card,.mobile-layout .chart-wrap{min-width:0;max-width:100%;}
+.mobile-layout .main-content :is(h2,h3,h4,p,.section-desc,.campaign-context){overflow-wrap:anywhere;}
+.mobile-layout .section-title{font-size:20px;line-height:1.35;}
+.mobile-layout .section-desc,.mobile-layout .campaign-context{font-size:12px;line-height:1.6;}
+.mobile-layout :is(.region-card,.cfg-card,.form-card){padding:14px!important;border-radius:14px;}
+.mobile-layout :is(.region-head,.cfg-head){flex-wrap:wrap;gap:10px;min-width:0;}
+.mobile-layout :is(.region-head,.cfg-head) h3{font-size:16px;line-height:1.4;}
+.mobile-layout img{max-width:100%;}
+.mobile-layout .chart-wrap canvas{width:100%!important;height:100%!important;}
+.mobile-layout header.top{padding:10px;top:6px;min-width:0;}
+.mobile-layout header.top .userbox{gap:6px;min-width:0;}
+.mobile-layout header.top .userinfo{min-width:0;}
+.mobile-layout header.top .uname{font-size:12px;}
+.mobile-layout header.top .role-pill{font-size:10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mobile-layout header.top #monthPicker{min-height:40px;width:128px;max-width:128px;font-size:12px;}
+.mobile-layout header.top #logoutBtn{min-height:40px;padding:7px 9px;font-size:11px;}
+.mobile-layout .sidebar-inner{padding:10px;min-width:0;}
+.mobile-layout .sidebar-brand{padding:4px 4px 10px;min-width:0;}
+.mobile-layout .sidebar-brand h1{font-size:16px;}
+.mobile-layout nav.tabs{display:flex;flex-direction:row;gap:3px;width:100%;min-width:0;}
+.mobile-layout nav.tabs .nav-group{display:contents;}
+.mobile-layout nav.tabs button{flex:1 1 0;width:auto;min-width:0;min-height:54px;padding:6px 1px;gap:5px;border-radius:10px;}
+.mobile-layout nav.tabs button .nav-label{display:none!important;}
+.mobile-layout nav.tabs button .nav-short{display:block!important;font-size:10px;line-height:1.2;white-space:nowrap;}
+.mobile-layout nav.tabs button .nav-ic{font-size:19px;}
+.mobile-layout .subnav{max-width:100%;gap:7px;padding-bottom:5px;overflow-x:auto;overscroll-behavior-x:contain;}
+.mobile-layout .subnav button{font-size:12px;min-height:42px;padding:8px 13px;}
+.mobile-layout .kpi-row,.mobile-layout .kpi-row:is(.cols-2,.cols-4,.cols-5,.cols-6){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;}
+.mobile-layout .kpi-card{padding:12px!important;min-width:0;text-align:left;min-height:100px;}
+.mobile-layout .kpi-card .label{display:block;min-height:0;font-size:11px!important;line-height:1.45;text-align:left;overflow:visible;word-break:normal;}
+.mobile-layout .kpi-card .value{font-size:24px!important;line-height:1.2;margin-top:8px;}
+.mobile-layout .kpi-card .frac,.mobile-layout .kpi-card .sub{font-size:11px!important;line-height:1.45;margin-top:6px;}
+.mobile-layout .metric-row{grid-template-columns:minmax(100px,1.1fr) minmax(0,1fr) 46px!important;gap:8px!important;}
+.mobile-layout .metric-row .m-name{font-size:12px!important;white-space:normal;line-height:1.4;}
+.mobile-layout .mini-progress-pct{font-size:12px!important;white-space:nowrap;}
+.mobile-layout .home-banner{width:100%;min-height:0!important;padding:20px 16px;}
+.mobile-layout .home-banner>div:not(.home-banner-bg){width:100%;min-width:0;max-width:100%;}
+.mobile-layout .home-banner>div>div{min-width:0;max-width:100%;}
+.mobile-layout .home-banner-title{font-size:24px!important;line-height:1.25;}
+.mobile-layout .home-banner-sub{font-size:13px;line-height:1.5;}
+.mobile-layout .home-banner .scope-filters{margin:12px 0 0!important;}
+.mobile-layout .home-panels,.mobile-layout .home-campaign-cards{grid-template-columns:1fr;}
+.mobile-layout .home-trainer-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+.mobile-layout .home-tcard,.mobile-layout .home-stat-card,.mobile-layout .home-panel{min-width:0;}
+.mobile-layout .home-tcard-name{font-size:15px!important;line-height:1.4!important;}
+.mobile-layout .home-tcard-region{font-size:12px!important;}
+.mobile-layout .home-kpilabel{font-size:12px;}
+.mobile-layout .home-btn-detail{min-height:44px;font-size:14px;}
+.mobile-layout .scope-filters:not(.so-filter-bar):not(.pgsm-progress-filters){flex-wrap:wrap!important;overflow:visible;gap:8px;padding:12px;min-width:0;}
+.mobile-layout .scope-filters:not(.so-filter-bar):not(.pgsm-progress-filters)>div:not(.so-filter-fields){min-width:0;max-width:100%;flex-wrap:wrap;}
+.mobile-layout .scope-filters:not(.so-filter-bar):not(.pgsm-progress-filters) :is(input,select){flex:1 1 135px!important;min-width:0!important;width:auto!important;max-width:100%;min-height:44px;font-size:16px!important;padding:9px 10px!important;}
+.mobile-layout .scope-filters:not(.so-filter-bar)>.scope-label[id]{display:block;flex-basis:100%;font-size:12px;white-space:normal;}
+.mobile-layout .so-filter-bar{min-width:0;max-width:100%;overscroll-behavior-x:contain;}
+.mobile-layout .so-filter-bar .so-filter-field :is(select,input){height:44px;min-height:44px;font-size:16px!important;}
+.mobile-layout .so-filter-bar .so-filter-field .scope-label{font-size:12px;}
+.mobile-layout .mobile-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+.mobile-layout :is(.mobile-filter-grid,.form-grid-4,.form-grid-6)>div{min-width:0;max-width:100%;}
+.mobile-layout :is(.form-grid-4,.form-grid-6){grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;}
+.mobile-layout :is(.form-card,.cfg-card,.modal-box) :is(input:not([type=checkbox]):not([type=radio]),select,textarea){min-width:0;max-width:100%;font-family:inherit;font-size:16px!important;min-height:44px;}
+.mobile-layout :is(.form-card,.cfg-card,.modal-box) label{font-size:12px;line-height:1.45;}
+.mobile-layout :is(.form-card,.cfg-card)>div[style*="display:flex"]{flex-wrap:wrap;min-width:0;max-width:100%;gap:10px!important;}
+.mobile-layout :is(.form-card,.cfg-card) input[type=file]{width:100%;}
+.mobile-layout :is(button.primary,button.secondary,button.danger,button.ghost){max-width:100%;min-height:40px;white-space:normal;overflow-wrap:anywhere;font-size:13px;line-height:1.4;}
+.mobile-layout :is(.form-card,.cfg-card) button{width:auto;}
+.mobile-layout .inline-add{width:100%;min-width:0;gap:10px;}
+.mobile-layout .inline-add :is(input,select,button){min-width:0;max-width:100%;}
+.mobile-layout .pagination-bar{max-width:100%;flex-wrap:wrap;gap:5px;}
+.mobile-layout .pagination-bar .pagination-info{flex-basis:100%;font-size:12px;}
+.mobile-layout .pagination-bar button{min-width:34px;min-height:40px;font-size:13px;padding:7px;}
+.mobile-layout .table-scroll{max-width:100%;min-width:0;width:100%;overflow-x:auto!important;overscroll-behavior-x:contain;scrollbar-gutter:auto;}
+.mobile-layout .table-scroll.has-horizontal-scroll:before{content:'Vuốt ngang để xem đầy đủ bảng →';display:block;position:sticky;left:0;width:100%;padding:8px 10px;box-sizing:border-box;background:#edf6f1;color:#426853;font-size:11px;line-height:1.4;border-bottom:1px solid var(--line);}
+.mobile-layout .table-scroll table{min-width:640px;}
+.mobile-layout .main-content table,.mobile-layout .table-scroll table{font-size:12px!important;}
+.mobile-layout .main-content table th,.mobile-layout .table-scroll th{font-size:11px!important;padding:9px 10px!important;word-break:normal;line-height:1.4;}
+.mobile-layout .main-content table td,.mobile-layout .table-scroll td{font-size:12px!important;padding:9px 10px!important;word-break:normal;overflow-wrap:break-word;line-height:1.5;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table){display:block;width:100%!important;min-width:0!important;max-width:100%!important;background:transparent;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) thead{display:none;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody{display:grid;grid-template-columns:1fr;gap:12px;min-width:0;width:100%;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;padding:14px;margin:0;background:#fff;border:1px solid var(--line);border-radius:12px;min-width:0;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody td{display:block;min-width:0;width:auto!important;padding:0!important;border:0!important;font-size:13px!important;line-height:1.5;white-space:normal!important;overflow-wrap:anywhere;text-align:left!important;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody td:before{content:attr(data-label);display:block;font-size:11px;line-height:1.4;font-weight:600;color:var(--muted);margin-bottom:3px;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody td:after{content:none!important;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) td:is([data-label="Họ và Tên"],[data-label="Họ Tên"],[data-label="Họ và tên"],[data-label="Tên PG"],[data-label="Shop"],[colspan]){grid-column:1/-1;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) td:is([data-label="Họ và Tên"],[data-label="Họ Tên"],[data-label="Họ và tên"],[data-label="Tên PG"]){font-size:16px!important;font-weight:700;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) td:is([data-label="Họ và Tên"],[data-label="Họ Tên"],[data-label="Họ và tên"],[data-label="Tên PG"],[colspan]):before{display:none;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) td[data-label="STT"]{display:none;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) :is(select,input,button){max-width:100%;min-width:0;min-height:40px;font-size:14px!important;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) :is(select,input){font-size:16px!important;}
+.mobile-layout .table-scroll:has(>.mobile-record-table),.mobile-layout .table-scroll:has(>.pg-table),.mobile-layout .table-scroll:has(>.coaching-table){border:0;background:transparent;}
+.mobile-layout #pgsmProgressContent .pgsm-progress-filters{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.mobile-layout #pgsmProgressTable{min-width:0!important;}
+.mobile-layout #pgsmProgressTable tbody td{padding:0!important;}
+.mobile-layout :is(.pgsm-system-field,.pgsm-filter-grid label){min-width:0;max-width:100%;}
+.mobile-layout .pgsm-target-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+.mobile-layout :is(.modal-overlay,#homeDetailOverlay){padding:10px;}
+.mobile-layout .modal-box{width:100%!important;min-width:0!important;max-width:100%!important;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);overflow:auto;overscroll-behavior:contain;padding:18px!important;border-radius:16px;}
+.mobile-layout .modal-text{font-size:14px;line-height:1.6;overflow-wrap:anywhere;}
+.mobile-layout .modal-actions{flex-wrap:wrap;gap:10px;}
+.mobile-layout .modal-actions button{flex:1 1 110px;min-height:44px;}
+.mobile-layout .modal-box .form-row{min-width:0;max-width:100%;}
+.mobile-layout #homeDetailOverlay .home-popup-card{width:100%!important;max-width:100%!important;max-height:calc(100vh - 20px)!important;max-height:calc(100dvh - 20px)!important;min-width:0;}
+.mobile-layout #homeDetailOverlay .home-popup-header{min-height:0!important;padding:18px 16px!important;}
+.mobile-layout #homeDetailOverlay .home-popup-header>div{min-width:0;max-width:100%;flex-wrap:wrap;gap:10px;}
+.mobile-layout #homeDetailOverlay .popup-olie-avatar{width:62px;height:62px;}
+.mobile-layout #homeDetailOverlay #homeDetailName{font-size:20px!important;overflow-wrap:anywhere;}
+.mobile-layout #homeDetailOverlay .popup-daily-quote{margin:12px 0 0!important;font-size:12px!important;padding:10px!important;}
+.mobile-layout #homeDetailOverlay .home-popup-body{min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain;padding:14px!important;}
+.mobile-layout #homeDetailOverlay .home-catcard{min-width:0;padding:12px!important;}
+.mobile-layout #homeDetailOverlay .home-subrow{flex-wrap:wrap;gap:8px;}
+.mobile-layout #homeDetailOverlay .home-subname{min-width:0;font-size:13px;}
+.mobile-layout .home-popup-close{min-width:40px;min-height:40px;}
+.mobile-layout .login-box{padding:24px 18px;min-width:0;}
+.mobile-layout .login-box :is(input,select){font-size:16px;min-height:46px;}
+@media(max-width:600px){
+ .mobile-layout .home-trainer-grid{grid-template-columns:1fr!important;}
+ .mobile-layout :is(.form-grid-4,.form-grid-6){grid-template-columns:1fr!important;}
+ .mobile-layout .pgsm-target-grid{grid-template-columns:1fr;}
+ .mobile-layout .so-filter-bar{position:relative;padding-bottom:28px;}
+ .mobile-layout .so-filter-bar:after{content:'Vuốt ngang để xem thêm bộ lọc →';position:absolute;left:12px;bottom:6px;white-space:nowrap;pointer-events:none;font-size:11px;line-height:1.4;color:#426853;}
+}
+@media(prefers-reduced-motion:reduce){.mobile-layout *{scroll-behavior:auto!important;transition:none!important;}}
+</style>
 </head>
 <body>
 
@@ -10513,7 +10643,7 @@ async function renderSaleFreqSection_(camp,kind){
     const list=filtered_(); const totalPages=Math.max(1,Math.ceil(list.length/pageSize));
     page=Math.max(1,Math.min(page,totalPages));
     const start=(page-1)*pageSize, pageRows=list.slice(start,start+pageSize);
-    let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
+    let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div class="mobile-filter-grid" style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Khu vực</label><select id="${pfx}FilterRegion"><option value="">Tất cả khu vực</option>${regions.map(r=>`<option value="${escapeHtml(r)}" ${fRegion===r?'selected':''}>${escapeHtml(r)}</option>`).join('')}</select></div>`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trạng thái</label><select id="${pfx}FilterStatus"><option value="incomplete" ${fStatus==='incomplete'?'selected':''}>Chưa đạt</option><option value="complete" ${fStatus==='complete'?'selected':''}>Đạt</option><option value="all" ${fStatus==='all'?'selected':''}>Tất cả</option></select></div></div></div>`;
     t+=`<div class="table-scroll"><table><thead><tr><th style="width:58px;">STT</th><th>Code</th><th>Họ và Tên</th><th>Khu vực</th><th>Số lần hoàn thành</th><th>Trạng thái</th></tr></thead><tbody>`;
@@ -10625,7 +10755,7 @@ async function renderFrequencyNoiboBody_(subtype){
       const list=filtered_(); const totalPages=Math.max(1,Math.ceil(list.length/pageSize));
       page=Math.max(1,Math.min(page,totalPages));
       const start=(page-1)*pageSize, pageRows=list.slice(start,start+pageSize);
-      let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
+      let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div class="mobile-filter-grid" style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
       t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trainer</label><select id="testOnlineFilterTrainer"><option value="">Tất cả Trainer</option>${allTrainerOptions.map(o=>`<option value="${o.id}" ${filterTrainer===o.id?'selected':''}>${o.name}</option>`).join('')}</select></div>`;
       t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Khu vực</label><select id="testOnlineFilterRegion"><option value="">Tất cả khu vực</option>${allRegions.map(r=>`<option value="${r}" ${filterRegion===r?'selected':''}>${r}</option>`).join('')}</select></div>`;
       t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trạng thái</label><select id="testOnlineFilterStatus"><option value="incomplete" ${filterStatus==='incomplete'?'selected':''}>Chưa đạt</option><option value="complete" ${filterStatus==='complete'?'selected':''}>Đạt</option><option value="all" ${filterStatus==='all'?'selected':''}>Tất cả</option></select></div></div></div>`;
@@ -10755,7 +10885,7 @@ async function renderFrequencyNoiboBody_(subtype){
     const list=filtered_(); const totalPages=Math.max(1,Math.ceil(list.length/pageSize));
     page=Math.max(1,Math.min(page,totalPages));
     const start=(page-1)*pageSize,pageRows=list.slice(start,start+pageSize);
-    let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
+    let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div class="mobile-filter-grid" style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trainer</label><select id="aiCheckFilterTrainer"><option value="">Tất cả Trainer</option>${trainersOpt.map(o=>`<option value="${o.id}" ${filterTrainer===o.id?'selected':''}>${o.name}</option>`).join('')}</select></div>`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Khu vực</label><select id="aiCheckFilterRegion"><option value="">Tất cả khu vực</option>${regionsOpt.map(r=>`<option value="${r}" ${filterRegion===r?'selected':''}>${r}</option>`).join('')}</select></div>`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trạng thái Tư vấn AI</label><select id="aiCheckFilterAiStatus"><option value="" ${filterAiStatus===''?'selected':''}>Tất cả</option><option value="pass" ${filterAiStatus==='pass'?'selected':''}>Đạt</option><option value="fail" ${filterAiStatus==='fail'?'selected':''}>Chưa đạt</option></select></div>`;
@@ -16231,12 +16361,37 @@ renderAuthScreen();
 /* ============ RESPONSIVE: bọc mọi bảng để cuộn ngang trên mobile ============
    Dùng MutationObserver thay vì chạy 1 lần lúc tải trang — vì tuyệt đại đa số bảng trong app
    được tạo SAU KHI đăng nhập/đổi tab (qua innerHTML), nếu chỉ chạy 1 lần sẽ bỏ sót gần hết bảng. */
+function syncMobileLayout_(){
+  const root=document.documentElement;
+  const enabled=root.classList.contains('ui-force-mobile')||(!root.classList.contains('ui-force-desktop')&&window.matchMedia('(max-width:860px)').matches);
+  if(root.classList.contains('mobile-layout')!==enabled)root.classList.toggle('mobile-layout',enabled);
+}
+syncMobileLayout_();
+const mobileLayoutMedia_=window.matchMedia('(max-width:860px)');
+if(mobileLayoutMedia_.addEventListener)mobileLayoutMedia_.addEventListener('change',syncMobileLayout_);
+else mobileLayoutMedia_.addListener(syncMobileLayout_);
+new MutationObserver(syncMobileLayout_).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+function syncResponsiveTable_(tbl){
+  const wrap=tbl.parentElement;if(!wrap?.classList.contains('table-scroll'))return;
+  const heads=Array.from(tbl.querySelectorAll('thead th')).map(th=>th.textContent.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,''));
+  const record=heads.some(h=>['code','codepg','codepgs'].includes(h))&&heads.some(h=>['hovaten','hoten','tenpg','tenpgs'].includes(h))&&!tbl.querySelector('thead [colspan],thead [rowspan]')&&!tbl.closest('#pgsmProgressContent');
+  if(tbl.classList.contains('mobile-record-table')!==record)tbl.classList.toggle('mobile-record-table',record);
+  const wide=tbl.getBoundingClientRect().width>wrap.clientWidth+2;
+  if(wrap.classList.contains('has-horizontal-scroll')!==wide)wrap.classList.toggle('has-horizontal-scroll',wide);
+  if(wide){wrap.setAttribute('tabindex','0');wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Bảng dữ liệu. Vuốt ngang để xem đầy đủ các cột.');}
+  else{wrap.removeAttribute('tabindex');wrap.removeAttribute('role');wrap.removeAttribute('aria-label');}
+}
+const responsiveTablesSeen_=new WeakSet();
+const responsiveTableObserver_=typeof ResizeObserver==='undefined'?null:new ResizeObserver(entries=>entries.forEach(entry=>{
+  const table=entry.target.tagName==='TABLE'?entry.target:entry.target.querySelector(':scope > table');
+  if(table)syncResponsiveTable_(table);
+}));
 function wrapTableForScroll_(tbl){
-  if(!tbl.parentElement || tbl.parentElement.classList.contains('table-scroll')) return;
-  const wrap=document.createElement('div');
-  wrap.className='table-scroll';
-  tbl.parentNode.insertBefore(wrap, tbl);
-  wrap.appendChild(tbl);
+  if(!tbl.parentElement)return;
+  let wrap=tbl.parentElement;
+  if(!wrap.classList.contains('table-scroll')){wrap=document.createElement('div');wrap.className='table-scroll';tbl.parentNode.insertBefore(wrap,tbl);wrap.appendChild(tbl);}
+  syncResponsiveTable_(tbl);
+  if(responsiveTableObserver_&&!responsiveTablesSeen_.has(tbl)){responsiveTablesSeen_.add(tbl);responsiveTableObserver_.observe(tbl);responsiveTableObserver_.observe(wrap);}
 }
 document.querySelectorAll('table').forEach(wrapTableForScroll_);
 let tableWrapRaf_=0;
