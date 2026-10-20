@@ -1558,14 +1558,22 @@ html.mobile-layout body{min-width:0;font-size:14px;}
 .mobile-layout .home-tcard-region{font-size:12px!important;}
 .mobile-layout .home-kpilabel{font-size:12px;}
 .mobile-layout .home-btn-detail{min-height:44px;font-size:14px;}
-.mobile-layout .scope-filters:not(.so-filter-bar):not(.pgsm-progress-filters){flex-wrap:wrap!important;overflow:visible;gap:8px;padding:12px;min-width:0;}
-.mobile-layout .scope-filters:not(.so-filter-bar):not(.pgsm-progress-filters)>div:not(.so-filter-fields){min-width:0;max-width:100%;flex-wrap:wrap;}
-.mobile-layout .scope-filters:not(.so-filter-bar):not(.pgsm-progress-filters) :is(input,select){flex:1 1 135px!important;min-width:0!important;width:auto!important;max-width:100%;min-height:44px;font-size:16px!important;padding:9px 10px!important;}
-.mobile-layout .scope-filters:not(.so-filter-bar)>.scope-label[id]{display:block;flex-basis:100%;font-size:12px;white-space:normal;}
+.mobile-layout .scope-filters:not(.so-filter-bar):not(.pgsm-progress-filters){flex-direction:row!important;flex-wrap:nowrap!important;align-items:center;overflow-x:auto;overscroll-behavior-x:contain;gap:6px;padding:8px;min-width:0;max-width:100%;}
+.mobile-layout .scope-filters:not(.so-filter-bar):not(.pgsm-progress-filters)>div:not(.so-filter-fields){min-width:0;max-width:none;flex:0 0 auto;flex-wrap:nowrap!important;}
+.mobile-layout .scope-filters:not(.so-filter-bar):not(.pgsm-progress-filters) :is(input,select){flex:0 0 112px!important;min-width:0!important;width:112px!important;max-width:140px;height:32px;min-height:32px;font-size:11px!important;padding:5px 7px!important;}
+.mobile-layout .scope-filters .scope-label{flex:0 0 auto;font-size:10px;white-space:nowrap;}
+.mobile-layout .scope-filters:not(.so-filter-bar)>.scope-label[id]{display:block;flex:0 0 auto;font-size:10px;white-space:nowrap;}
+.mobile-layout .scope-filters .subnav{flex:0 0 auto;max-width:none;overflow:visible;padding-bottom:0;}
+.mobile-layout .scope-filters :is(button,.subnav button){flex:0 0 auto;width:auto;min-height:32px;padding:5px 8px;font-size:11px;white-space:nowrap;}
 .mobile-layout .so-filter-bar{min-width:0;max-width:100%;overscroll-behavior-x:contain;}
-.mobile-layout .so-filter-bar .so-filter-field :is(select,input){height:44px;min-height:44px;font-size:16px!important;}
-.mobile-layout .so-filter-bar .so-filter-field .scope-label{font-size:12px;}
-.mobile-layout .mobile-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+.mobile-layout .so-filter-bar .so-filter-fields{min-width:540px!important;gap:6px;}
+.mobile-layout .so-filter-bar .so-filter-field :is(select,input){height:32px;min-height:32px;font-size:11px!important;padding:5px 7px!important;}
+.mobile-layout .so-filter-bar .so-filter-field .scope-label{font-size:10px;}
+.mobile-layout .so-filter-bar{padding:8px!important;gap:6px;}
+.mobile-layout .mobile-filter-grid{display:flex!important;flex-flow:row nowrap!important;gap:6px!important;overflow-x:auto;overscroll-behavior-x:contain;}
+.mobile-layout .mobile-filter-grid>div{flex:0 0 112px;}
+.mobile-layout .mobile-filter-grid label{font-size:10px!important;margin-bottom:3px!important;}
+.mobile-layout .mobile-filter-grid :is(input,select){width:100%;height:32px;min-height:32px!important;font-size:11px!important;padding:5px 7px!important;}
 .mobile-layout :is(.mobile-filter-grid,.form-grid-4,.form-grid-6)>div{min-width:0;max-width:100%;}
 .mobile-layout :is(.form-grid-4,.form-grid-6){grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;}
 .mobile-layout :is(.form-card,.cfg-card,.modal-box) :is(input:not([type=checkbox]):not([type=radio]),select,textarea){min-width:0;max-width:100%;font-family:inherit;font-size:16px!important;min-height:44px;}
@@ -1574,8 +1582,9 @@ html.mobile-layout body{min-width:0;font-size:14px;}
 .mobile-layout :is(.form-card,.cfg-card) input[type=file]{width:100%;}
 .mobile-layout :is(button.primary,button.secondary,button.danger,button.ghost){max-width:100%;min-height:40px;white-space:normal;overflow-wrap:anywhere;font-size:13px;line-height:1.4;}
 .mobile-layout :is(.form-card,.cfg-card) button{width:auto;}
-.mobile-layout .inline-add{width:100%;min-width:0;gap:10px;}
-.mobile-layout .inline-add :is(input,select,button){min-width:0;max-width:100%;}
+.mobile-layout .inline-add{width:100%;min-width:0;max-width:100%;flex-flow:row nowrap!important;align-items:center;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;}
+.mobile-layout .inline-add :is(input,select,button){flex:0 0 auto;min-width:0;max-width:100%;min-height:32px;height:32px;font-size:11px!important;padding:5px 7px!important;white-space:nowrap;}
+.mobile-layout .inline-add :is(input,select){width:120px!important;}
 .mobile-layout .pagination-bar{max-width:100%;flex-wrap:wrap;gap:5px;}
 .mobile-layout .pagination-bar .pagination-info{flex-basis:100%;font-size:12px;}
 .mobile-layout .pagination-bar button{min-width:34px;min-height:40px;font-size:13px;padding:7px;}
@@ -1587,19 +1596,23 @@ html.mobile-layout body{min-width:0;font-size:14px;}
 .mobile-layout .main-content table td,.mobile-layout .table-scroll td{font-size:12px!important;padding:9px 10px!important;word-break:normal;overflow-wrap:break-word;line-height:1.5;}
 .mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table){display:block;width:100%!important;min-width:0!important;max-width:100%!important;background:transparent;}
 .mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) thead{display:none;}
-.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody{display:grid;grid-template-columns:1fr;gap:12px;min-width:0;width:100%;}
-.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;padding:14px;margin:0;background:#fff;border:1px solid var(--line);border-radius:12px;min-width:0;}
-.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody td{display:block;min-width:0;width:auto!important;padding:0!important;border:0!important;font-size:13px!important;line-height:1.5;white-space:normal!important;overflow-wrap:anywhere;text-align:left!important;}
-.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody td:before{content:attr(data-label);display:block;font-size:11px;line-height:1.4;font-weight:600;color:var(--muted);margin-bottom:3px;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody{display:grid;grid-template-columns:1fr;gap:8px;min-width:0;width:100%;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:5px 10px;padding:9px 10px;margin:0;background:#fff;border:1px solid var(--line);border-radius:10px;min-width:0;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody td{display:block;min-width:0;width:auto!important;padding:0!important;border:0!important;font-size:12px!important;line-height:1.35;white-space:normal!important;overflow-wrap:anywhere;text-align:left!important;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody td:before{content:attr(data-label);display:inline;font-size:10px;line-height:1.35;font-weight:600;color:var(--muted);margin-right:5px;}
 .mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) tbody td:after{content:none!important;}
 .mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) td:is([data-label="Họ và Tên"],[data-label="Họ Tên"],[data-label="Họ và tên"],[data-label="Tên PG"],[data-label="Shop"],[colspan]){grid-column:1/-1;}
-.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) td:is([data-label="Họ và Tên"],[data-label="Họ Tên"],[data-label="Họ và tên"],[data-label="Tên PG"]){font-size:16px!important;font-weight:700;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) td:is([data-label="Họ và Tên"],[data-label="Họ Tên"],[data-label="Họ và tên"],[data-label="Tên PG"]){order:-1;font-size:14px!important;font-weight:700;line-height:1.35;}
 .mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) td:is([data-label="Họ và Tên"],[data-label="Họ Tên"],[data-label="Họ và tên"],[data-label="Tên PG"],[colspan]):before{display:none;}
 .mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) td[data-label="STT"]{display:none;}
-.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) :is(select,input,button){max-width:100%;min-width:0;min-height:40px;font-size:14px!important;}
-.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) :is(select,input){font-size:16px!important;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) :is(select,input,button){max-width:100%;min-width:0;min-height:32px;font-size:12px!important;padding:5px 7px!important;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) :is(select,input){font-size:12px!important;}
+.mobile-layout :is(.pg-table,.pgmoi-table,.coaching-table,.mobile-record-table) input[type=checkbox]{width:18px;min-height:18px;height:18px;padding:0!important;}
 .mobile-layout .table-scroll:has(>.mobile-record-table),.mobile-layout .table-scroll:has(>.pg-table),.mobile-layout .table-scroll:has(>.coaching-table){border:0;background:transparent;}
-.mobile-layout #pgsmProgressContent .pgsm-progress-filters{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.mobile-layout #pgsmProgressContent .pgsm-progress-filters{display:flex!important;flex-flow:row nowrap!important;align-items:end;gap:6px;padding:8px;overflow-x:auto;overscroll-behavior-x:contain;}
+.mobile-layout #pgsmProgressContent .pgsm-progress-filters label{flex:0 0 108px!important;min-width:0;max-width:none;gap:3px;font-size:10px;}
+.mobile-layout #pgsmProgressContent .pgsm-progress-filters :is(input,select,button){height:32px;min-height:32px;font-size:11px!important;padding:5px 7px!important;}
+.mobile-layout #pgsmProgressContent .pgsm-progress-filters button{flex:0 0 auto;width:auto;}
 .mobile-layout #pgsmProgressTable{min-width:0!important;}
 .mobile-layout #pgsmProgressTable tbody td{padding:0!important;}
 .mobile-layout :is(.pgsm-system-field,.pgsm-filter-grid label){min-width:0;max-width:100%;}
@@ -1623,12 +1636,29 @@ html.mobile-layout body{min-width:0;font-size:14px;}
 .mobile-layout .home-popup-close{min-width:40px;min-height:40px;}
 .mobile-layout .login-box{padding:24px 18px;min-width:0;}
 .mobile-layout .login-box :is(input,select){font-size:16px;min-height:46px;}
+
+/* Compact PG entry stays in one scrollable row without widening the page. */
+.mobile-layout #pgFormCard{display:flex;flex-flow:row nowrap;align-items:end;gap:7px;padding:9px!important;overflow-x:auto;overscroll-behavior-x:contain;}
+.mobile-layout #pgFormCard .form-grid-6{display:contents!important;}
+.mobile-layout #pgFormCard .form-row{flex:0 0 110px;min-width:0;margin:0;}
+.mobile-layout #pgFormCard label{font-size:10px;line-height:1.3;white-space:nowrap;margin-bottom:3px;}
+.mobile-layout #pgFormCard :is(input,select){width:100%;height:32px;min-height:32px;font-size:11px!important;padding:5px 7px;}
+.mobile-layout #pgFormCard>div[style*="display:flex"]{flex:0 0 auto;flex-flow:row nowrap!important;align-items:center!important;gap:6px!important;}
+.mobile-layout #pgFormCard button{flex:0 0 auto;width:auto;min-height:32px;padding:5px 8px;font-size:11px;white-space:nowrap;}
+.mobile-layout :is(#pgFormCard,.mobile-filter-grid,.pgsm-progress-filters,.inline-add):focus-visible{outline:2px solid #119557;outline-offset:2px;}
+.mobile-layout #pgsmProgressTable tbody{gap:8px;}
+.mobile-layout #pgsmProgressTable tbody tr{padding:9px;gap:5px 7px;border-radius:10px;}
+.mobile-layout #pgsmProgressTable tbody td{font-size:11px!important;line-height:1.3;}
+.mobile-layout #pgsmProgressTable tbody td:before{font-size:9px;margin-bottom:2px;}
+.mobile-layout #pgsmProgressTable .pgsm-person-name{font-size:13px!important;}
+.mobile-layout #pgsmProgressTable .pgsm-fm-stars{font-size:12px;}
+.mobile-layout #pgsmProgressTable .pgsm-fm-status{font-size:9px;padding:2px 3px;}
+.mobile-layout #pgsmProgressTable .pgsm-result-badge{font-size:9px;padding:3px 5px;}
 @media(max-width:600px){
  .mobile-layout .home-trainer-grid{grid-template-columns:1fr!important;}
  .mobile-layout :is(.form-grid-4,.form-grid-6){grid-template-columns:1fr!important;}
  .mobile-layout .pgsm-target-grid{grid-template-columns:1fr;}
- .mobile-layout .so-filter-bar{position:relative;padding-bottom:28px;}
- .mobile-layout .so-filter-bar:after{content:'Vuốt ngang để xem thêm bộ lọc →';position:absolute;left:12px;bottom:6px;white-space:nowrap;pointer-events:none;font-size:11px;line-height:1.4;color:#426853;}
+
 }
 @media(prefers-reduced-motion:reduce){.mobile-layout *{scroll-behavior:auto!important;transition:none!important;}}
 </style>
@@ -1835,7 +1865,7 @@ html.mobile-layout body{min-width:0;font-size:14px;}
         <p class="section-desc" style="margin-bottom:10px;">Import danh sách nhân sự đã được dời về tag <strong>DATA ▸ Nhân sự ▸ Nội bộ</strong> để gom import về 1 mối. Mục này chỉ còn hiển thị danh sách và form thêm/sửa thủ công.</p>
       </div>
 
-      <div class="form-card form-compact" style="max-width:none;margin-bottom:18px;" id="pgFormCard">
+      <div class="form-card form-compact" style="max-width:none;margin-bottom:18px;" id="pgFormCard" data-mobile-scroll tabindex="0" aria-label="Thêm hoặc sửa PGs">
         <div class="form-grid-6">
           <div class="form-row"><label>Mã PG (Code)</label><input type="text" id="pgCode"></div>
           <div class="form-row"><label>Họ và Tên</label><input type="text" id="pgName"></div>
@@ -2172,7 +2202,7 @@ html.mobile-layout body{min-width:0;font-size:14px;}
 
       <div id="dataSub-khuvuc" class="cfg-grid">
         <div class="cfg-card"><h3>Khu vực</h3><div id="regionList"></div>
-          <div class="inline-add">
+          <div class="inline-add" data-mobile-scroll tabindex="0">
             <input type="text" id="newRegionName" placeholder="Tên khu vực mới">
             <button class="secondary" id="addRegionBtn">+ Thêm</button>
             <button class="secondary" id="cancelEditRegionBtn" style="display:none;">Hủy sửa</button>
@@ -2182,7 +2212,7 @@ html.mobile-layout body{min-width:0;font-size:14px;}
 
       <div id="dataSub-trainer" class="cfg-grid" style="display:none;">
         <div class="cfg-card"><h3>Trainer</h3><div id="trainerList"></div>
-          <div class="inline-add">
+          <div class="inline-add" data-mobile-scroll tabindex="0">
             <input type="text" id="newTrainerName" placeholder="Tên Trainer mới">
             <select id="newTrainerRegion"></select>
             <button class="secondary" id="addTrainerBtn">+ Thêm</button>
@@ -10643,7 +10673,7 @@ async function renderSaleFreqSection_(camp,kind){
     const list=filtered_(); const totalPages=Math.max(1,Math.ceil(list.length/pageSize));
     page=Math.max(1,Math.min(page,totalPages));
     const start=(page-1)*pageSize, pageRows=list.slice(start,start+pageSize);
-    let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div class="mobile-filter-grid" style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
+    let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div class="mobile-filter-grid" data-mobile-scroll tabindex="0" style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Khu vực</label><select id="${pfx}FilterRegion"><option value="">Tất cả khu vực</option>${regions.map(r=>`<option value="${escapeHtml(r)}" ${fRegion===r?'selected':''}>${escapeHtml(r)}</option>`).join('')}</select></div>`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trạng thái</label><select id="${pfx}FilterStatus"><option value="incomplete" ${fStatus==='incomplete'?'selected':''}>Chưa đạt</option><option value="complete" ${fStatus==='complete'?'selected':''}>Đạt</option><option value="all" ${fStatus==='all'?'selected':''}>Tất cả</option></select></div></div></div>`;
     t+=`<div class="table-scroll"><table><thead><tr><th style="width:58px;">STT</th><th>Code</th><th>Họ và Tên</th><th>Khu vực</th><th>Số lần hoàn thành</th><th>Trạng thái</th></tr></thead><tbody>`;
@@ -10755,7 +10785,7 @@ async function renderFrequencyNoiboBody_(subtype){
       const list=filtered_(); const totalPages=Math.max(1,Math.ceil(list.length/pageSize));
       page=Math.max(1,Math.min(page,totalPages));
       const start=(page-1)*pageSize, pageRows=list.slice(start,start+pageSize);
-      let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div class="mobile-filter-grid" style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
+      let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div class="mobile-filter-grid" data-mobile-scroll tabindex="0" style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
       t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trainer</label><select id="testOnlineFilterTrainer"><option value="">Tất cả Trainer</option>${allTrainerOptions.map(o=>`<option value="${o.id}" ${filterTrainer===o.id?'selected':''}>${o.name}</option>`).join('')}</select></div>`;
       t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Khu vực</label><select id="testOnlineFilterRegion"><option value="">Tất cả khu vực</option>${allRegions.map(r=>`<option value="${r}" ${filterRegion===r?'selected':''}>${r}</option>`).join('')}</select></div>`;
       t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trạng thái</label><select id="testOnlineFilterStatus"><option value="incomplete" ${filterStatus==='incomplete'?'selected':''}>Chưa đạt</option><option value="complete" ${filterStatus==='complete'?'selected':''}>Đạt</option><option value="all" ${filterStatus==='all'?'selected':''}>Tất cả</option></select></div></div></div>`;
@@ -10885,7 +10915,7 @@ async function renderFrequencyNoiboBody_(subtype){
     const list=filtered_(); const totalPages=Math.max(1,Math.ceil(list.length/pageSize));
     page=Math.max(1,Math.min(page,totalPages));
     const start=(page-1)*pageSize,pageRows=list.slice(start,start+pageSize);
-    let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div class="mobile-filter-grid" style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
+    let t=`<div class="form-card" style="max-width:none;margin:0 0 12px;padding:12px 14px;"><div class="mobile-filter-grid" data-mobile-scroll tabindex="0" style="display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:10px;align-items:end;">`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trainer</label><select id="aiCheckFilterTrainer"><option value="">Tất cả Trainer</option>${trainersOpt.map(o=>`<option value="${o.id}" ${filterTrainer===o.id?'selected':''}>${o.name}</option>`).join('')}</select></div>`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Khu vực</label><select id="aiCheckFilterRegion"><option value="">Tất cả khu vực</option>${regionsOpt.map(r=>`<option value="${r}" ${filterRegion===r?'selected':''}>${r}</option>`).join('')}</select></div>`;
     t+=`<div><label style="display:block;font-size:var(--cap);font-weight:700;margin-bottom:5px;">Trạng thái Tư vấn AI</label><select id="aiCheckFilterAiStatus"><option value="" ${filterAiStatus===''?'selected':''}>Tất cả</option><option value="pass" ${filterAiStatus==='pass'?'selected':''}>Đạt</option><option value="fail" ${filterAiStatus==='fail'?'selected':''}>Chưa đạt</option></select></div>`;
@@ -17709,7 +17739,7 @@ async function pgsmDrawProgress_(camp){
    <div class="section-desc" style="margin-top:6px">Kết quả M1–M5 được cập nhật duy nhất từ OTraining. Không hỗ trợ nhập hoặc lưu tiến độ thủ công.</div>
  </section>
  <h3 class="pgsm-section-title" style="margin-top:22px">Danh sách PGs Master và tiến độ từng mốc</h3>
- <div class="pgsm-filter-grid pgsm-progress-filters">
+ <div class="pgsm-filter-grid pgsm-progress-filters" data-mobile-scroll tabindex="0" aria-label="Bộ lọc tiến độ PGs Master">
   <label>Khu vực<select id="pgsmProgressRegion"><option value="">Tất cả khu vực</option>${regions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}</select></label>
   <label>Trainer<select id="pgsmProgressTrainer"><option value="">Tất cả Trainer</option>${trainerIds.map(id=>`<option value="${escapeHtml(id)}">${escapeHtml(trainerOf(id)?.name||rows.find(r=>String(r.trainerId)===id)?.trainerName||id)}</option>`).join('')}</select></label>
   <label>Kênh<select id="pgsmProgressChannel"><option value="">Tất cả kênh</option></select></label>
