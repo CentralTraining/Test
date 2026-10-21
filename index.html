@@ -2019,6 +2019,19 @@ html body :is(nav.tabs,.subnav,.so-stats-pages,.mobile-home-chart-tabs)>button:f
 .mobile-layout .scope-filters.mobile-filter-two-rows input:is([type=checkbox],[type=radio]){width:16px!important;height:16px!important;min-height:16px!important;min-width:16px!important;padding:0!important;flex:0 0 16px!important;}
 .mobile-layout .scope-filters.mobile-filter-two-rows>label:has(input[type=checkbox]){grid-column:1/-1;display:flex!important;align-items:center;gap:6px;min-width:0;white-space:normal!important;font-size:10px!important;line-height:1.4;}
 </style>
+<style id="desktop-density-20261021">
+/* Match the desktop UI at 75% browser zoom while retaining the mobile layout.
+   Layout-aware zoom keeps fixed overlays, chart coordinates and document flow.
+   Screen-only: browser printing retains the original report dimensions. */
+@media screen and (min-width:861px){
+  html:not(.ui-force-mobile):not(.mobile-layout){zoom:.75;}
+  html:not(.ui-force-mobile):not(.mobile-layout) body,
+  html:not(.ui-force-mobile):not(.mobile-layout) #loginScreen{
+    min-height:calc(100vh / .75);
+    min-height:calc(100dvh / .75);
+  }
+}
+</style>
 </head>
 <body>
 
@@ -3020,6 +3033,7 @@ function loadScriptBackground_(src){
   await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
   const chartOk = await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js');
   if(chartOk){
+    registerDesktopDensityPointer_();
     const datalabelsOk = await loadScriptBackground_('https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js');
     // Đăng ký plugin NGAY SAU KHI cả 2 thư viện tải xong — đây mới là thời điểm Chart/ChartDataLabels
     // chắc chắn đã tồn tại. Đăng ký PHẢI xảy ra TRƯỚC lần renderAll() gọi lại bên dưới, nếu không các
@@ -17002,6 +17016,24 @@ function syncMobileDashboardDensity_(){
 }
 
 
+function registerDesktopDensityPointer_(){
+ if(typeof Chart==='undefined')return;
+ Chart.register({
+  id:'desktopDensityPointer',
+  beforeEvent(chart,args){
+    const {event}=args;
+    if(getComputedStyle(document.documentElement).zoom!=='0.75'||event.type==='mouseout')return;
+    const native=event.native,point=native?.touches?.[0]||native?.changedTouches?.[0]||native;
+    if(!Number.isFinite(point?.clientX)||!Number.isFinite(point?.clientY))return;
+    const bounds=chart.canvas.getBoundingClientRect();
+    if(!bounds.width||!bounds.height)return;
+    // Chart.js 4.4 reads physical offsetX/Y; map back into its logical canvas.
+    event.x=Math.round((point.clientX-bounds.left)*chart.width/bounds.width);
+    event.y=Math.round((point.clientY-bounds.top)*chart.height/bounds.height);
+    args.inChartArea=chart.isPointInArea(event);
+  }
+ });
+}
 if(typeof Chart!=='undefined')Chart.register({id:'mobileDensityLayout',afterInit(chart){requestAnimationFrame(()=>{if(chart.ctx&&chart.canvas?.isConnected)syncMobileDashboardDensity_();});}});
 
 function syncMobileLayout_(){
@@ -17019,7 +17051,7 @@ function syncResponsiveTable_(tbl){
   const record=mobileRecordType_(tbl)?.kind==='pg'&&tbl.id!=='pgsmProgressTable';
   if(tbl.classList.contains('mobile-record-table')!==record)tbl.classList.toggle('mobile-record-table',record);
   syncCompactPgRows_(tbl);
-  const wide=tbl.getBoundingClientRect().width>wrap.clientWidth+2;
+  const wide=tbl.offsetWidth>wrap.clientWidth+2;
   if(wrap.classList.contains('has-horizontal-scroll')!==wide)wrap.classList.toggle('has-horizontal-scroll',wide);
   if(wide){wrap.setAttribute('tabindex','0');wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Bảng dữ liệu. Vuốt ngang để xem đầy đủ các cột.');}
   else{wrap.removeAttribute('tabindex');wrap.removeAttribute('role');wrap.removeAttribute('aria-label');}
