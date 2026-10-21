@@ -1960,6 +1960,65 @@ html body :is(nav.tabs,.subnav,.so-stats-pages,.mobile-home-chart-tabs)>button:f
 .mobile-layout body .app .sidebar-col nav.tabs{gap:3px;padding:3px;}
 .mobile-layout body .mobile-home-chart-tabs{gap:3px;}
 </style>
+<style id="mobile-kpi-fixes-20261021">
+/* Compact lists retain their visible column headings. */
+.mobile-record-heading{display:none;}
+.mobile-layout .mobile-record-heading:not([hidden]){display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:4px;align-items:center;min-width:0;max-width:100%;width:100%;box-sizing:border-box;padding:5px 6px;margin:0 0 4px;border:1px solid #dce9e0;border-radius:7px;background:#eaf3ee;color:#28553e;}
+.mobile-layout .mobile-record-heading>span{min-width:0;font-size:8.5px;font-weight:750;line-height:11px;overflow-wrap:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
+.mobile-layout .table-scroll:has(>.mobile-record-heading):before{display:none!important;}
+.mobile-layout .mobile-inline-progress-row>td[data-mobile-inline-bar]>div{height:14px!important;}
+.mobile-layout .mobile-frequency-progress,.mobile-layout #mediaDoitacStatBox table{width:100%!important;max-width:100%!important;min-width:0!important;}
+.mobile-layout #mediaDoitacStatBox,.mobile-layout #mediaDoitacShopBox{min-width:0;max-width:100%;}
+/* Master update controls remain visible and aligned without a disclosure step. */
+.mobile-layout #pgsmSystemSection{padding:8px!important;margin:8px 0;border-radius:9px;}
+.mobile-layout #pgsmSystemSection .pgsm-system-top b{font-size:12px!important;line-height:1.3;}
+.mobile-layout #pgsmSystemSection .pgsm-system-tools{margin-top:6px!important;align-items:end!important;}
+.mobile-layout #pgsmSystemSection .pgsm-system-field:has(.mobile-campaign-id){flex:0 0 66px!important;max-width:66px!important;}
+.mobile-layout #pgsmSystemCampaignId{width:66px!important;flex:0 0 28px!important;min-height:28px!important;height:28px!important;padding:2px 4px!important;}
+.mobile-layout #pgsmSystemSection .pgsm-system-tools>button{height:28px!important;min-height:28px!important;padding:3px 5px!important;font-size:10px!important;line-height:12px;}
+.mobile-layout #pgsmUpdateSystemBtn{flex:1 1 116px;min-width:0;}
+.mobile-layout #pgsmSystemMsg{font-size:9px;line-height:1.4;margin-top:5px;overflow-wrap:anywhere;}
+/* Management forms use the phone width, including long links, files and account actions. */
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) :is(.cfg-grid,.cfg-card,.cfg-list-item,.form-row,.form-card){min-width:0;max-width:100%;box-sizing:border-box;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) .cfg-grid{grid-template-columns:minmax(0,1fr);gap:8px;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) :is(.cfg-card,.form-card){padding:10px!important;border-radius:10px;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) .cfg-card h3{font-size:13px;line-height:1.35;margin:0 0 8px;overflow-wrap:anywhere;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) .section-desc{font-size:10px;line-height:1.45;overflow-wrap:anywhere;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) :is(input:not([type=checkbox]):not([type=radio]),select,textarea){width:100%;max-width:100%!important;min-width:0!important;min-height:32px;height:auto;padding:5px 7px;box-sizing:border-box;font-size:16px!important;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) input[type=file]{font-size:10px!important;padding:4px;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) input[type=file]::file-selector-button{font-family:inherit;font-size:10px;padding:5px 7px;border:1px solid var(--line);border-radius:5px;background:#f1f6f3;color:#27583c;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) :is(.cfg-card,.form-card) :is(button.primary,button.secondary,button.danger,button.ghost){min-width:0;max-width:100%;min-height:30px;height:auto;padding:5px 7px;font-size:10px;line-height:1.25;white-space:normal;overflow-wrap:anywhere;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) :is(.cfg-card,.form-card) label{font-size:10px;line-height:1.3;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) :is(.cfg-card,.form-card)>div[style*="display:flex"]{flex-wrap:wrap!important;gap:6px!important;}
+.mobile-layout #tab-settings .inline-add{flex-wrap:wrap!important;overflow-x:visible;gap:5px!important;}
+.mobile-layout #tab-settings .inline-add :is(input,select){flex:1 1 110px!important;width:110px!important;min-width:0!important;max-width:100%;}
+.mobile-layout #tab-settings .inline-add button{flex:0 1 auto!important;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) .cfg-list-item{padding:7px 0;gap:5px!important;flex-wrap:wrap;overflow-wrap:anywhere;}
+.mobile-layout :is(#tab-settings,#tab-data,#tab-account) .cfg-list-item>span:first-child{flex:1 1 150px!important;min-width:0;font-size:11px;line-height:1.4;}
+.mobile-layout #accountList .cfg-list-item>span:last-child{flex:1 1 auto;min-width:0;max-width:100%;gap:4px!important;}
+.mobile-layout #tab-account .form-row{margin-bottom:8px;}
+.mobile-layout #tab-account :is(#curPass,#newPass,#newPass2,#newAccPass){height:34px;min-height:34px;}
+.mobile-layout #tab-account :is(.account-role-badge,.pill){font-size:8px;line-height:1.3;padding:2px 5px;}
+.mobile-layout .mobile-admin-wrap{overflow:visible!important;border:0;background:transparent;}
+.mobile-layout .mobile-admin-wrap:before{display:none!important;}
+.mobile-layout table.mobile-admin-table,.mobile-layout .mobile-admin-table tbody{display:block;width:100%!important;min-width:0!important;max-width:100%!important;}
+.mobile-layout .mobile-admin-table thead{display:none;}
+.mobile-layout .mobile-admin-table tbody{display:grid;gap:5px;}
+.mobile-layout .mobile-admin-table tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:5px 8px;padding:7px;border:1px solid var(--line);border-radius:7px;background:#fff;min-width:0;}
+.mobile-layout .main-content .mobile-admin-table tbody td{display:block;width:auto!important;min-width:0!important;padding:0!important;border:0!important;font-size:10px!important;line-height:1.4;overflow-wrap:anywhere;white-space:normal;}
+.mobile-layout .mobile-admin-table tbody td:before{content:attr(data-mobile-admin-label);display:block;font-size:8px;line-height:1.3;color:var(--muted);font-weight:650;margin-bottom:2px;}
+.mobile-layout .mobile-admin-table tbody td[colspan]{grid-column:1/-1;}
+.mobile-layout .mobile-admin-table tbody td[colspan]:before{display:none;}
+
+.mobile-layout :is(#tab-settings,#tab-data) :is(.form-grid-4,.form-grid-6){grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;}
+.mobile-layout #panel-set-campaign .form-row:has(#newCampaignName){grid-column:1/-1;}
+.mobile-layout #adminAccountCard,.mobile-layout #tab-account .cfg-grid>.cfg-card:first-child{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;align-content:start;}
+.mobile-layout #adminAccountCard>:not(.form-row),.mobile-layout #tab-account .cfg-grid>.cfg-card:first-child>:not(.form-row){grid-column:1/-1;}
+.mobile-layout #adminAccountCard>.form-row,.mobile-layout #tab-account .cfg-grid>.cfg-card:first-child>.form-row{margin:0;}
+.mobile-layout #newAccRegionRow,.mobile-layout #tab-account .form-row:has(#curPass){grid-column:1/-1;}
+.mobile-layout .scope-filters.mobile-filter-two-rows input:is([type=checkbox],[type=radio]){width:16px!important;height:16px!important;min-height:16px!important;min-width:16px!important;padding:0!important;flex:0 0 16px!important;}
+.mobile-layout .scope-filters.mobile-filter-two-rows>label:has(input[type=checkbox]){grid-column:1/-1;display:flex!important;align-items:center;gap:6px;min-width:0;white-space:normal!important;font-size:10px!important;line-height:1.4;}
+</style>
 </head>
 <body>
 
@@ -11036,7 +11095,7 @@ async function renderFrequencyNoiboBody_(subtype){
     let html=`<div class="campaign-context">Chiến dịch: <strong>${camp.name}</strong> — ${monthLabel(currentMonth)} · Chuẩn đạt: <strong>${x} lần / PG</strong></div>`;
     html+=`<div class="kpi-row"><div class="kpi-card"><div class="label">PG đạt chuẩn ${x} lần</div><div class="value ${statusClass(qp).status}">${qp}%</div><div class="frac">${sQualified} / ${sTarget} PG</div></div></div>`;
     html+=`<h3 class="kpi-section-title">Tiến độ ${label} — chỉ PG đủ ${x} lần mới tính hoàn thành</h3>`;
-    html+=`<table><thead><tr><th>Trainer</th><th>Khu vực</th><th>PG đạt chuẩn</th></tr></thead><tbody>`;
+    html+=`<table class="mobile-frequency-progress"><thead><tr><th>Trainer</th><th>Khu vực</th><th>PG đạt chuẩn</th></tr></thead><tbody>`;
     if(!trainerRows.length) html+=`<tr><td colspan="3" class="empty">Chưa có Trainer trong phạm vi đang xem.</td></tr>`;
     else trainerRows.sort((a,b)=>b.qualifiedPct-a.qualifiedPct).forEach(r=>{
       html+=`<tr><td><strong>${r.t.name}</strong></td><td>${r.t.region||'—'}</td><td style="min-width:190px;">${progressBarHtml_(`${r.qualified}/${r.targetPgs} PG · ${r.qualifiedPct}%`,r.qualifiedPct)}</td></tr>`;
@@ -11159,7 +11218,7 @@ async function renderFrequencyNoiboBody_(subtype){
     <div class="kpi-card"><div class="label">Check shop — PG đạt Pass</div><div class="value ${statusClass(checkPct).status}">${checkPct}%</div><div class="frac">${checkDoneTotal} / ${checkTargetTotal} PG</div></div>
   </div>`;
   html+=`<h3 class="kpi-section-title">Tiến độ ${label}</h3>`;
-  html+=`<table><thead><tr><th>Trainer</th><th>Khu vực</th><th>Tư vấn AI</th><th>Check shop</th></tr></thead><tbody>`;
+  html+=`<table class="mobile-frequency-progress"><thead><tr><th>Trainer</th><th>Khu vực</th><th>Tư vấn AI</th><th>Check shop</th></tr></thead><tbody>`;
   if(!trainerRows.length) html+=`<tr><td colspan="4" class="empty">Chưa có Trainer trong phạm vi đang xem.</td></tr>`;
   else trainerRows.sort((a,b)=>(b.aiPct+b.checkPct)-(a.aiPct+a.checkPct)).forEach(r=>{
     html+=`<tr><td><strong>${r.t.name}</strong></td><td>${r.t.region||'—'}</td><td style="min-width:190px;">${progressBarHtml_(`${r.aiQualified}/${r.aiTarget} PG · ${r.aiPct}%`,r.aiPct)}</td><td style="min-width:190px;">${progressBarHtml_(`${r.checkQualified}/${r.checkTarget} PG · ${r.checkPct}%`,r.checkPct)}</td></tr>`;
@@ -16711,8 +16770,26 @@ function mobileRecordType_(table){
  if(name>=0)return {kind:'shop',name,headers,keys};
  return null;
 }
+function syncMobileRecordHeading_(table,type,layout){
+ let heading=table._mobileRecordHeading;
+ if(!heading?.isConnected){heading=document.createElement('div');heading.className='mobile-record-heading';heading.setAttribute('aria-hidden','true');table.before(heading);table._mobileRecordHeading=heading;}
+ heading.hidden=!layout?.length;if(!layout?.length)return;
+ const labels={code:'Mã PG',codepg:'Mã PG',codepgs:'Mã PG',manv:'Mã NV',hovaten:'Họ tên',hoten:'Họ tên',solanhoanthanh:'Số lần',sokhaosat:'Khảo sát',hoanthanhtargetshop:'% Target',ketqualuyentv:'Luyện TV',trangthaiai:'Trạng thái AI',ketquacheckshop:'Check shop',tenworkshop:'Workshop'};
+ const spec=layout.map(slot=>({...slot,full:type.headers[slot.index]||'Thao tác',label:labels[type.keys[slot.index]]||type.headers[slot.index]||'Thao tác'})),signature=JSON.stringify(spec);
+ if(heading.dataset.signature===signature)return;heading.dataset.signature=signature;
+ heading.replaceChildren(...spec.map(slot=>{const cell=document.createElement('span');cell.textContent=slot.label;cell.title=slot.full;cell.style.gridColumn=slot.start+' / span '+slot.span;return cell;}));
+}
+function syncMobileAdminTables_(){
+ document.querySelectorAll('#tab-settings table,#tab-data table,#tab-account table').forEach(table=>{
+  if(mobileRecordType_(table)||table.classList.contains('mobile-progress-table')||!table.tHead)return;
+  const heads=mobileRecordHeaders_(table);table.classList.add('mobile-admin-table');
+  if(table.parentElement.classList.contains('table-scroll'))table.parentElement.classList.add('mobile-admin-wrap');
+  Array.from(table.tBodies).forEach(body=>Array.from(body.rows).forEach(row=>Array.from(row.cells).forEach((cell,i)=>{if(cell.colSpan===1)cell.dataset.mobileAdminLabel=heads[i]||'Thao tác';})));
+ });
+}
 function syncCompactPgRows_(table){
- const type=mobileRecordType_(table);if(!type){table.classList.remove('mobile-compact-pg');table.removeAttribute('data-mobile-record-kind');return;}
+ const type=mobileRecordType_(table);if(!type){table.classList.remove('mobile-compact-pg');table.removeAttribute('data-mobile-record-kind');table._mobileRecordHeading?.remove();return;}
+ let layout=null;
  table.classList.add('mobile-compact-pg');table.dataset.mobileRecordKind=type.kind;
  Array.from(table.tBodies).forEach(body=>Array.from(body.rows).forEach(row=>{
   if(row.querySelector('[colspan]'))return;
@@ -16731,13 +16808,17 @@ function syncCompactPgRows_(table){
   if(inline.length<3)add(items.find(x=>x.key==='khuvuc'||x.key==='kenh'));
   if(type.kind==='event'){inline.splice(0,inline.length,name);['kenh','hr','khaosat'].forEach(key=>add(items.find(x=>x.key===key)));}
   const order=x=>x===name?0:['code','codepg','codepgs','mapg','mapgs','manv','staffid','codeshop','storeid','idshop'].includes(x.key)?1:x.cell.querySelector('button,select,input')?3:2;
-  inline.sort((a,b)=>order(a)-order(b));items.forEach(x=>{if(!inline.includes(x))delete x.cell.dataset.mobileInline;});
-  const weight=x=>x===name?10:x.cell.querySelector('select')?5:3,total=inline.reduce((n,x)=>n+weight(x),0);let column=1,remaining=24;
-  inline.forEach((item,i)=>{const span=i===inline.length-1?remaining:Math.max(1,Math.min(remaining-(inline.length-i-1),Math.round(weight(item)/total*24)));item.cell.dataset.mobileInline='1';item.cell.style.setProperty('--pg-inline-start',column);item.cell.style.setProperty('--pg-inline-span',span);column+=span;remaining-=span;});
+  inline.sort((a,b)=>order(a)-order(b));
+  if(layout)inline.splice(0,inline.length,...layout.map(slot=>items[slot.index]).filter(Boolean));
+  items.forEach(x=>{if(!inline.includes(x))delete x.cell.dataset.mobileInline;});
+  if(!layout){const weight=x=>x===name?10:x.cell.querySelector('select')?5:3,total=inline.reduce((n,x)=>n+weight(x),0);let column=1,remaining=24;
+   layout=inline.map((item,i)=>{const span=i===inline.length-1?remaining:Math.max(1,Math.min(remaining-(inline.length-i-1),Math.round(weight(item)/total*24))),slot={index:items.indexOf(item),start:column,span};column+=span;remaining-=span;return slot;});}
+  layout.forEach(slot=>{const item=items[slot.index];if(!item)return;item.cell.dataset.mobileInline='1';item.cell.style.setProperty('--pg-inline-start',slot.start);item.cell.style.setProperty('--pg-inline-span',slot.span);});
   name.cell.classList.add('mobile-pg-name-cell');name.cell.dataset.mobileDetailTitle=name.cell.dataset.shopFull||name.cell.textContent.trim();
   if(document.documentElement.classList.contains('mobile-layout')){name.cell.setAttribute('role','button');name.cell.setAttribute('tabindex','0');name.cell.setAttribute('aria-label','Xem đầy đủ thông tin: '+name.cell.dataset.mobileDetailTitle);}
   else ['role','tabindex','aria-label'].forEach(attr=>name.cell.removeAttribute(attr));
  }));
+ syncMobileRecordHeading_(table,type,layout);
 }
 function syncCompactMobileFilters_(){
  document.querySelectorAll('.scope-filters:not(.so-filter-bar),.so-filter-fields,.mobile-filter-grid,.pgsm-progress-filters').forEach(bar=>{
@@ -16799,7 +16880,10 @@ function mobileRegionLabel_(name){
 function mobileProgressLabel_(label){
  const key=mobilePgKey_(label);
  if(key.includes('dophu'))return 'Độ phủ';
- if(key.includes('baithi')||key==='sobaiviet')return 'Bài';
+ if(key.includes('baithi')||key==='sobaiviet'||key.includes('baitt'))return 'Bài';
+ if(key==='pgdatchuan')return 'PG đạt';
+ if(key==='tuvanai')return 'AI';
+ if(key==='checkshop')return 'Check';
  if(key.includes('sobuoi'))return 'Buổi';
  if(key.includes('hocvien'))return 'HV';
  if(key.includes('tbkhaosat'))return 'TB KS';
@@ -16842,7 +16926,7 @@ function syncMobileCampaignControls_(){
  });
 }
 function syncMobileProgressTables_(){
- const selector='#noiboProgressTableBox table,#mediaProgressTableBox table,#mediaCampaignsOverviewBox table,#doitacProgressTableBox table,[id^="simpleProgressBox-"] table,[id^="partnerTrainingRegionProgressBox-"] table,#partnerWorkshopRegionProgressBox table';
+ const selector='.mobile-frequency-progress,#mediaDoitacStatBox table,#noiboProgressTableBox table,#mediaProgressTableBox table,#mediaCampaignsOverviewBox table,#doitacProgressTableBox table,[id^="simpleProgressBox-"] table,[id^="partnerTrainingRegionProgressBox-"] table,#partnerWorkshopRegionProgressBox table';
  document.querySelectorAll(selector).forEach(table=>{
   if(table.tHead?.rows.length!==1||mobileRecordType_(table))return;
   const heads=Array.from(table.tHead.rows[0].cells).map(c=>c.textContent.trim()),meta=heads.map(h=>['trainer','khuvuc','chiendich','kenh'].includes(mobilePgKey_(h)));
@@ -16856,7 +16940,7 @@ function syncMobileProgressTables_(){
     row.title=row.dataset.mobileProgressIdentity;
     let metrics=0;positions.forEach(({cell,col})=>{if(meta[col])cell.dataset.mobileProgressMeta='1';else{delete cell.dataset.mobileProgressMeta;cell.dataset.mobileProgressLabel=heads[col]||'';metrics++;}cell.dataset.mobileProgressWide=cell.querySelector('textarea,button,input')?'1':'';});
     row.style.setProperty('--mobile-progress-cols',Math.max(1,Math.min(3,metrics)));row.classList.add('mobile-progress-row');
-    if(table.closest('#mediaProgressTableBox,#mediaCampaignsOverviewBox,[id^="simpleProgressBox-"],[id^="partnerTrainingRegionProgressBox-"],#partnerWorkshopRegionProgressBox'))syncMobileInlineProgressRow_(row,positions,columns,heads,meta);
+    if(table.closest('.mobile-frequency-progress,#mediaDoitacStatBox,#mediaProgressTableBox,#mediaCampaignsOverviewBox,[id^="simpleProgressBox-"],[id^="partnerTrainingRegionProgressBox-"],#partnerWorkshopRegionProgressBox'))syncMobileInlineProgressRow_(row,positions,columns,heads,meta);
     if(table.closest('#doitacProgressTableBox')){
      row.classList.add('mobile-ftf-row');const channelColumn=heads.findIndex(h=>mobilePgKey_(h)==='kenh'),channel=columns[channelColumn];
      const person=[...new Set(columns.filter((_,i)=>meta[i]&&i!==channelColumn).map(c=>c.textContent.trim()).filter(Boolean))].join(' · ');row.dataset.mobileFtfPerson=person;
@@ -16898,6 +16982,7 @@ function syncAppNavigation_(){
 document.addEventListener('click',event=>{if(event.target.closest('nav.tabs button,.subnav button,.so-stats-pages button,.mobile-home-chart-tabs button'))queueMicrotask(syncAppNavigation_);});
 function syncMobileDashboardDensity_(){
  syncAppNavigation_();
+ syncMobileAdminTables_();
  syncMobileCampaignControls_();
  document.querySelectorAll('.section-desc,.pgsm-form-desc,.pgsm-target-sub,.banner-note').forEach(note=>{
   if(note.closest('[role="alert"],[role="status"],[aria-live]')||note.querySelector('input,select,textarea,button,[role="alert"],[role="status"],[aria-live]'))return;
@@ -16909,7 +16994,6 @@ function syncMobileDashboardDensity_(){
  const panels=document.querySelector('.home-panels');
  if(panels&&!document.getElementById('mobileHomeChartTabs')){const tabs=document.createElement('div');tabs.id='mobileHomeChartTabs';tabs.className='mobile-home-chart-tabs';tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Chọn biểu đồ tổng quan');const names=[['homePanelProgress','KPI'],['homePanelRegion','Khu vực'],['homePanelAttention','Cần chú ý']];panels.dataset.mobileChart=names[0][0];names.forEach(([id,label],index)=>{const button=document.createElement('button');button.type='button';button.textContent=label;button.setAttribute('aria-controls',id);button.setAttribute('aria-pressed',String(index===0));button.addEventListener('click',()=>{panels.dataset.mobileChart=id;tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));});tabs.append(button);});panels.before(tabs);}
 
- document.querySelectorAll('#pgsmSystemSection').forEach(section=>{let details=section.querySelector(':scope>.mobile-tool-details');if(!details){details=document.createElement('details');details.className='mobile-tool-details';const summary=document.createElement('summary');summary.textContent='Cập nhật tiến độ từ OTraining';details.append(summary);while(section.firstChild)details.append(section.firstChild);section.append(details);}const mobile=document.documentElement.classList.contains('mobile-layout');if(details.dataset.mobileMode!==String(mobile)){details.open=!mobile;details.dataset.mobileMode=String(mobile);}});
 
  document.querySelectorAll('.main-content canvas').forEach(canvas=>{const frame=canvas.parentElement;if(!frame||(!frame.matches('.chart-wrap')&&frame.childElementCount!==1))return;frame.classList.add('mobile-chart-frame');const chart=typeof Chart!=='undefined'?Chart.getChart(canvas):null;syncMobileChartOptions_(chart);const height=chart?.options.indexAxis==='y'?Math.min(330,Math.max(190,(chart.data.labels?.length||0)*18+55)):220;frame.style.setProperty('--mobile-chart-height',height+'px');});
  document.querySelectorAll('.ftf-summary-row').forEach(row=>{row.dataset.mobileChannel=row.querySelector('.label')?.textContent.match(/—\s*(K\.A|MWG)/)?.[1]||'';});
