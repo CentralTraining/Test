@@ -2032,6 +2032,18 @@ html body :is(nav.tabs,.subnav,.so-stats-pages,.mobile-home-chart-tabs)>button:f
   }
 }
 </style>
+<style id="sidebar-account-fit-20261021">
+/* Keep account details at their natural height; only the menu scrolls on short desktops. */
+@media screen and (min-width:861px){
+  html:not(.ui-force-mobile):not(.mobile-layout) body .sidebar-inner>.sidebar-brand,
+  html:not(.ui-force-mobile):not(.mobile-layout) body .sidebar-inner>.sidebar-scope,
+  html:not(.ui-force-mobile):not(.mobile-layout) body .sidebar-inner>div:last-child{flex-shrink:0;}
+  html:not(.ui-force-mobile):not(.mobile-layout) body .sidebar-inner>nav.tabs{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;}
+  html:not(.ui-force-mobile):not(.mobile-layout) body .sidebar-inner>nav.tabs>.nav-group{flex-shrink:0;}
+  html:not(.ui-force-mobile):not(.mobile-layout) body .sidebar-scope .scope-value,
+  html:not(.ui-force-mobile):not(.mobile-layout) body .sidebar-scope .scope-sub{white-space:normal;overflow-wrap:anywhere;}
+}
+</style>
 </head>
 <body>
 
