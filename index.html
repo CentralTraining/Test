@@ -5876,20 +5876,21 @@ async function processFtfWorkbook_(wb){
     return;
   }
   let skippedOtherRegion = 0;
+  let nextShops;
   if(isTrainer()){
     const totalBefore = shopArr.length;
     shopArr = shopArr.filter(s=> isRegionImportAllowed(s.region));
     skippedOtherRegion = totalBefore - shopArr.length;
     const otherRegionShops = ftfShopList.filter(s=> !isRegionImportAllowed(s.region));
-    ftfShopList = [...otherRegionShops, ...shopArr];
+    nextShops = [...otherRegionShops, ...shopArr];
   } else {
-    ftfShopList = shopArr;
+    nextShops = shopArr;
   }
-  await dbSet('ftfShopList:'+currentMonth, ftfShopList);
+  const nextRecords=JSON.parse(JSON.stringify(records));
 
   visibleTrainers().forEach(t=>{
-    const rec = trainerRecord(t.id);
-    const shopsOfTrainer = ftfShopList.filter(s=>s.trainerId===t.id);
+    const rec = nextRecords[t.id] || (nextRecords[t.id]=emptyRecord());
+    const shopsOfTrainer = nextShops.filter(s=>s.trainerId===t.id);
     rec.ftfShopTarget = shopsOfTrainer.length;
     rec.ftfShopActual = shopsOfTrainer.filter(s=>s.status==='DONE'||s.status==='COMPLETED'||(Number(s.hrActual)||0)>0).length;
     rec.ftfHrTarget = shopsOfTrainer.reduce((sum,s)=>sum+s.hrTarget,0);
@@ -5902,12 +5903,13 @@ async function processFtfWorkbook_(wb){
     rec.ftfKhaoSatActual = shopsOfTrainer.reduce((sum,s)=>sum+s.surveyDone,0);
     rec.updatedAt = new Date().toISOString();
   });
-  await dbSet('records:'+currentMonth, records);
+  await saveCampaignData_([['ftfShopList:'+currentMonth,nextShops],['records:'+currentMonth,nextRecords]]);
+  ftfShopList=nextShops;records=nextRecords;
   // QUAN TRỌNG: renderKpiCategory('doitac') dựng lại toàn bộ khung Đối tác — kể cả phần tử thông báo
   // #ftfImportMsg (bên trong renderFtfImportBox) — nên phải lấy lại phần tử MỚI SAU KHI render xong,
   // không dùng tham chiếu đã lấy ở đầu hàm (nếu không, thông báo bị ghi vào phần tử cũ đã bị gỡ khỏi
   // trang, không ai nhìn thấy).
-  renderKpiCategory('doitac');
+  await renderKpiCategory('doitac');
   const msg = document.getElementById('ftfImportMsg');
   if(msg){
     msg.style.display='block'; msg.style.color=unmatchedShop>0?'var(--orange, #b45309)':'var(--green-ok)';
@@ -5925,6 +5927,7 @@ async function loadMediaScope_(scopeKey){
   mediaScopeKey = scopeKey;
   // Gộp 3 key thành ĐÚNG 1 LẦN GỌI MẠNG (dbGetMulti) thay vì 3 lần riêng.
   const vals = await dbGetMulti(['mediaResponses:'+scopeKey, 'mediaNotes:'+scopeKey, 'mediaTargets:'+scopeKey]);
+  if(mediaScopeKey!==scopeKey)return;
   mediaResponses = vals['mediaResponses:'+scopeKey] || [];
   mediaNotes = vals['mediaNotes:'+scopeKey] || {};
   mediaTargets = vals['mediaTargets:'+scopeKey] || {};
@@ -5960,7 +5963,7 @@ function mediaNameSim_(a,b){
 }
 async function updateMediaFromOtraining_(){
   const msg=document.getElementById('mediaImportMsg');
-  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  const show=(t,c)=>campaignUpdateMessage_('mediaImportMsg',t,c);
   const camp = campaigns.find(c=>c.id===mediaScopeKey) || campaigns.find(c=>c.month===currentMonth&&c.group==='truyenthong'&&campaignSubtype(c)==='noibo');
   if(!camp){ show('Chưa chọn/không tìm thấy chiến dịch Truyền thông Nội bộ.','var(--red)'); return; }
   const idInput=document.getElementById('otrMediaCampaignId');
@@ -5968,6 +5971,7 @@ async function updateMediaFromOtraining_(){
   if(!campaignId){ show(isAdmin()?'Hãy nhập ID chiến dịch.':'Admin chưa thiết lập ID chiến dịch cho tháng này.','var(--red)'); if(idInput) idInput.focus(); return; }
   const progInput=document.getElementById('otrMediaProgramId');
   const programId=(progInput&&progInput.value||'').trim() || String((camp&&camp.programId)||''); // Trainer dùng programId đã lưu
+  const stillCurrent=campaignUpdateContext_(camp,'otrMediaCampaignId',mediaScopeKey);
   show('⏳ Đang lấy Truyền thông từ otraining...');
   try{
     const res=await fetch(OTRAINING_FN_URL_,{
@@ -5977,11 +5981,12 @@ async function updateMediaFromOtraining_(){
     });
     const out=await res.json();
     if(!res.ok||out.error){ throw new Error(out.error||('HTTP '+res.status)); }
+    if(!stillCurrent())return;
     const emps=Array.isArray(out.employees)?out.employees:[];
     if(!emps.length){ show('otraining trả 0 nhân sự. Kiểm tra lại ID chiến dịch.','var(--red)'); return; }
     // Với mỗi nhân sự: tìm program khớp tên chiến dịch (~90%), lấy approved; approved≥1 => hoàn thành.
     const matched=[];
-    let matchedProgName='';
+    let matchedProgName='',programMatches=0;
     emps.forEach(e=>{
       let progObj=null;
       if(programId){
@@ -5996,6 +6001,7 @@ async function updateMediaFromOtraining_(){
         progObj=best?best.p:null;
       }
       if(!progObj) return;
+      programMatches++;
       if(progObj.name) matchedProgName=progObj.name;
       const approved=Number(progObj.approved)||0;
       if(approved>=1){
@@ -6008,20 +6014,23 @@ async function updateMediaFromOtraining_(){
         }
       }
     });
+    if(!programMatches)throw Error('Không có chương trình khớp ID/tên chiến dịch. Dữ liệu cũ được giữ nguyên.');
     const totalApproved=matched.length;
     const uniquePg=new Set(matched.map(m=>normalizeCode_(m.code))).size;
     // Lưu (reset = tính lại từ đầu). Giữ bản ghi khu vực khác nếu là Trainer.
+    let nextResponses;
     if(isTrainer()){
       const otherRegionEntries=mediaResponses.filter(r=>{ const tr=trainerOf(r.trainerId); return !tr||tr.region!==session.region; });
-      mediaResponses=[...otherRegionEntries, ...matched];
+      nextResponses=[...otherRegionEntries, ...matched];
     } else {
-      mediaResponses=matched;
+      nextResponses=matched;
     }
-    if(camp){ if(!String(camp.otrId||'').trim()) camp.otrId=campaignId; if(programId && !String(camp.programId||'').trim()) camp.programId=programId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
-    await dbSet('mediaResponses:'+(mediaScopeKey||camp.id), mediaResponses);
+    await saveCampaignSourceIfMissing_(camp,campaignId,programId);
+    await saveCampaignData_([['mediaResponses:'+(mediaScopeKey||camp.id),nextResponses]]);
+    mediaResponses=nextResponses;invalidateMediaCampaignsDataCache_();
+    await renderKpiCategory('truyenthong');
     const srcTxt = programId ? ('Program ID '+programId) : ('khớp tên: "'+(matchedProgName||camp.name)+'"');
     show(`✅ Đã cập nhật: ${uniquePg} PG hoàn thành · ${totalApproved} bài hợp lệ (approved). Nguồn: ${srcTxt}.`,'var(--green-ok)');
-    try{ renderKpiCategory('truyenthong'); }catch(e){}
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
   }
@@ -6034,17 +6043,19 @@ function mediaShopSim_(a,b){ const na=_normShopKey(a),nb=_normShopKey(b); if(!na
   const ta=new Set(String(a).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)), tb=new Set(String(b).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)); let c=0; ta.forEach(t=>{if(tb.has(t))c++;}); return c/Math.max(ta.size,tb.size); }
 async function updateMediaDoitacFromOtraining_(){
   const msg=document.getElementById('mediaImportMsg');
-  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  const show=(t,c)=>campaignUpdateMessage_('mediaImportMsg',t,c);
   const camp=campaigns.find(c=>c.id===mediaScopeKey)||campaigns.find(c=>c.month===currentMonth&&c.group==='truyenthong'&&campaignSubtype(c)==='doitac');
   if(!camp){ show('Không tìm thấy chiến dịch Truyền thông Đối tác.','var(--red)'); return; }
   const campaignId=((document.getElementById('otrMediaCampaignId')?.value||'').trim()) || String((camp&&camp.otrId)||'').trim();
   const programId=((document.getElementById('otrMediaProgramId')?.value||'').trim()) || String((camp&&camp.programId)||'');
   if(!campaignId){ show(isAdmin()?'Hãy nhập ID chiến dịch.':'Admin chưa thiết lập ID chiến dịch cho tháng này.','var(--red)'); return; }
+  const stillCurrent=campaignUpdateContext_(camp,'otrMediaCampaignId',mediaScopeKey);
   show('⏳ Đang lấy Truyền thông Đối tác từ otraining...');
   try{
     const res=await fetch(OTRAINING_FN_URL_,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},body:JSON.stringify({campaignId, programId, type:'partnertt'})});
     const out=await res.json();
     if(!res.ok||out.error) throw new Error(out.error||('HTTP '+res.status));
+    if(!stillCurrent())return;
     const emps=Array.isArray(out.employees)?out.employees:[];
     if(!emps.length){ show('otraining trả 0 nhân viên.','var(--red)'); return; }
     // Với mỗi NV: chọn program theo Program ID (nếu nhập) hoặc khớp tên ~90%; lấy approved.
@@ -6059,10 +6070,10 @@ async function updateMediaDoitacFromOtraining_(){
       const links=(pr.links||[]).filter(l=>String(l.status||'').toLowerCase()==='approved'||!l.status).map(l=>({url:l.url,platform:l.platform}));
       list.push({ code:String(e.code||'').trim(), name:e.name||'', area:normalizeAreaVN(e.area||''), approved, links });
     });
-    mediaDoitacEmps_=list;
-    if(!String(camp.otrId||'').trim()) camp.otrId=campaignId; if(programId && !String(camp.programId||'').trim()) camp.programId=programId;
-    try{ await dbSet('campaigns',campaigns); }catch(e){}
-    await dbSet('mediaDoitacEmps:'+(mediaScopeKey||camp.id), list);
+    if(!list.length)throw Error('Không có chương trình khớp ID/tên chiến dịch. Dữ liệu cũ được giữ nguyên.');
+    await saveCampaignSourceIfMissing_(camp,campaignId,programId);
+    await saveCampaignData_([['mediaDoitacEmps:'+(mediaScopeKey||camp.id),list]]);
+    mediaDoitacEmps_=list;invalidateMediaCampaignsDataCache_();
     const totBai=list.reduce((s,x)=>s+x.approved,0);
     show(`✅ Đã cập nhật: ${list.filter(x=>x.approved>=1).length} NV có bài · ${totBai} bài hợp lệ.`,'var(--green-ok)');
     renderMediaDoitacShopList_();
@@ -6350,30 +6361,33 @@ async function processMediaWorkbook_(wb){
   });
 
   // Import lại = tính lại từ đầu cho đúng phạm vi vừa import, KHÔNG cộng dồn.
+  if(!matched.length)throw Error('Không có mã PGs phù hợp trong file. Dữ liệu cũ được giữ nguyên.');
+  let nextResponses;
   if(isTrainer()){
     // Trainer chỉ import 1 phần — chỉ thay thế đúng phần dữ liệu của khu vực mình, giữ nguyên khu vực khác
     const otherRegionEntries = mediaResponses.filter(m=>{ const tr=trainerOf(m.trainerId); return !tr || tr.region!==session.region; });
-    mediaResponses = [...otherRegionEntries, ...matched];
+    nextResponses = [...otherRegionEntries, ...matched];
   } else {
-    mediaResponses = matched;
+    nextResponses = matched;
   }
-  await dbSet('mediaResponses:'+mediaScopeKey, mediaResponses);
-  invalidateMediaCampaignsDataCache_();
+  const entries=[['mediaResponses:'+mediaScopeKey,nextResponses]],nextRecords=JSON.parse(JSON.stringify(records));
 
   if(!mediaScopeKey || mediaScopeKey===currentMonth){
     // Chế độ fallback theo tháng (chưa tạo chiến dịch Truyền thông riêng) — vẫn đồng bộ ttActual cũ
     visibleTrainers().forEach(t=>{
-      const rec = trainerRecord(t.id);
-      rec.ttActual = mediaResponses.filter(m=>m.trainerId===t.id).length;
+      const rec = nextRecords[t.id]||(nextRecords[t.id]=emptyRecord());
+      rec.ttActual = nextResponses.filter(m=>m.trainerId===t.id).length;
       rec.updatedAt = new Date().toISOString();
     });
-    await dbSet('records:'+currentMonth, records);
+    entries.push(['records:'+currentMonth,nextRecords]);
   }
-  renderKpiCategory('truyenthong');
+  await saveCampaignData_(entries);
+  mediaResponses=nextResponses;records=nextRecords;invalidateMediaCampaignsDataCache_();
+  await renderKpiCategory('truyenthong');
 
   const uniqueMatched = new Set(matched.map(m=>normalizeCode_(m.code))).size;
-  msg.style.display='block'; msg.style.color='var(--green-ok)';
-  msg.textContent=`Đã quét ${dataRows.length} dòng${codeColIdx>=0?` (dùng đúng cột "${allRows[0][codeColIdx]}")`:''} — Tổng bài khớp mã Code: ${matched.length}, Số PGs khác nhau (đã bỏ trùng): ${uniqueMatched}${skippedOtherRegion?`, bỏ qua ${skippedOtherRegion} dòng ngoài khu vực bạn phụ trách`:''}.`;
+  const message=`Đã quét ${dataRows.length} dòng${codeColIdx>=0?` (dùng đúng cột "${allRows[0][codeColIdx]}")`:''} — Tổng bài khớp mã Code: ${matched.length}, Số PGs khác nhau (đã bỏ trùng): ${uniqueMatched}${skippedOtherRegion?`, bỏ qua ${skippedOtherRegion} dòng ngoài khu vực bạn phụ trách`:''}.`;
+  campaignUpdateMessage_('mediaImportMsg',message,'var(--green-ok)');
 }
 /* Tính 2 trường: Độ phủ PGs (dedup theo Code) và Tổng bài thi, cho 1 Trainer hoặc 1 Khu vực */
 function mediaCoverageStats_(scopeType, scopeValue){
@@ -10482,6 +10496,7 @@ function campaignsForGroupMonth(group){
 let kpiSubtype = { noibo:'pgsdev', doitac:'ftf', truyenthong:'noibo' };
 function renderKpiCategory(catKey){
   const outerContainer=document.getElementById('kpi-'+catKey);
+  let renderTask;
   const subOptions = CAMPAIGN_SUBTYPE_OPTIONS[catKey]||[];
   const activeSub = kpiSubtype[catKey] || CAMPAIGN_SUBTYPE_DEFAULT[catKey];
   const subnavHtml = subOptions.length>1
@@ -10503,12 +10518,13 @@ function renderKpiCategory(catKey){
   } else if(catKey==='noibo' && (activeSub==='cvtv' || activeSub==='pgs3sao')){
     renderCourseClassBody_(activeSub);
   } else if(activeSub==='pgsdev' || activeSub==='ftf' || catKey==='truyenthong'){
-    renderKpiCategoryLegacyBody_(catKey);
+    renderTask=renderKpiCategoryLegacyBody_(catKey);
   } else {
     renderKpiSimpleSubtypeBody_(catKey, activeSub);
   }
   updateOlieQrWidgetVisibility_();
   queueOtrLockRefresh_();
+  return renderTask;
 }
 /* Thanh % hoàn thành dùng chung — cùng kiểu màu/hiển thị với bảng Tiến độ Truyền thông (WAVE) trước đây. */
 function progressBarHtml_(valueText, pctVal){
@@ -10637,9 +10653,8 @@ async function processTestOnlineWorkbook_(wb,camp){
     progress[frequencyPgKey_(p)]=n;
     if(n>=x) qualified++; else incomplete++;
   });
-  await dbSet('frequencyProgress:'+camp.id,progress);
-  frequencyProgressCache_[camp.id] = progress; // cập nhật luôn cache — không cần tải lại mạng để thấy data mới
-  const saleInfo=await saveSaleFreqFromRows_(rows,camp,'test'); // cùng file: tách dòng Sale
+  const saleInfo=await saveSaleFreqFromRows_(rows,camp,'test',[['frequencyProgress:'+camp.id,progress]]);
+  frequencyProgressCache_[camp.id] = progress; // cùng file: tách dòng Sale
 
   // Render lại ngay để PG đạt đủ X biến mất khỏi danh sách chưa hoàn thành.
   if(!frequencyCampaignViewMatches_(camp))return;
@@ -10682,6 +10697,42 @@ function bindTestOnlineImportControls_(camp){
 }
 
 /* ==== Gọi otraining qua Edge Function -> chuyển JSON thành workbook -> tái dùng logic import ==== */
+function campaignUpdateMessage_(id,text,color){
+  const el=document.getElementById(id);
+  if(el){el.style.display='block';el.style.color=color||'var(--muted)';el.textContent=text;}
+}
+function campaignUpdateContext_(camp,inputId,scope){
+  const month=currentMonth,owner=JSON.stringify([session?.userId,session?.username,session?.role,session?.region]);
+  const input=document.getElementById(inputId),value=input?.value;
+  return ()=>currentMonth===month && owner===JSON.stringify([session?.userId,session?.username,session?.role,session?.region])
+    && (!camp || campaigns.some(c=>c.id===camp.id && c.month===month))
+    && (!scope || mediaScopeKey===scope)
+    && (!document.getElementById(inputId) || document.getElementById(inputId).value===value);
+}
+async function saveCampaignData_(entries){
+  if(!SUPABASE_URL){
+    const before=entries.map(([key])=>[key,localStorage.getItem(key)]);
+    try{entries.forEach(([key,value])=>localStorage.setItem(key,JSON.stringify(value)));}
+    catch(e){before.forEach(([key,value])=>value===null?localStorage.removeItem(key):localStorage.setItem(key,value));throw Error('Không lưu được dữ liệu chiến dịch. Hãy thử lại.');}
+  }else{
+    const updated_at=new Date().toISOString();
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`,{
+      method:'POST',headers:{...SUPA_HEADERS_,Prefer:'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify(entries.map(([key,value])=>({key,value,updated_at})))
+    });
+    if(!res.ok)throw Error('Không lưu được dữ liệu chiến dịch lên Supabase (HTTP '+res.status+'). Dữ liệu cũ được giữ nguyên; hãy thử lại.');
+  }
+  if(typeof invalidateHomeSnapshot_==='function')invalidateHomeSnapshot_();
+}
+async function saveCampaignSourceIfMissing_(camp,campaignId,programId){
+  if(!camp)return;
+  const patch={};
+  if(!String(camp.otrId||'').trim())patch.otrId=campaignId;
+  if(programId && !String(camp.programId||'').trim())patch.programId=programId;
+  if(!Object.keys(patch).length)return;
+  await saveCampaignData_([['campaigns',campaigns.map(c=>c.id===camp.id?{...c,...patch}:c)]]);
+  Object.assign(camp,patch);
+}
 const OTRAINING_FN_URL_='https://qruxqlsbhyhwiqjdkyyc.supabase.co/functions/v1/otraining-testonline';
 const OTRAINING_ANON_KEY_='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFydXhxbHNiaHlod2lxamRreXljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODc0ODYsImV4cCI6MjEwNTQ2MzQ4Nn0.ii1MU0E9CPx3t_DhaPdCqczBgoPtSZUsQ7pYTjB6aSI';
 function otrMonthRange_(month){
@@ -10726,14 +10777,16 @@ async function fetchFtfRows_(campaignId, month){
 }
 async function updateFtfFromOtraining_(){
   const msg=document.getElementById('ftfImportMsg');
-  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  const show=(t,c)=>campaignUpdateMessage_('ftfImportMsg',t,c);
   const idInput=document.getElementById('otrFtfCampaignId');
   const _ftfCamp=campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf');
   const campaignId=((idInput&&idInput.value||'').trim()) || String((_ftfCamp&&_ftfCamp.otrId)||'').trim();
   if(!campaignId){ show(isAdmin()?'Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).':'Admin chưa thiết lập ID chiến dịch FTF cho tháng này.','var(--red)'); if(idInput) idInput.focus(); return; }
+  const stillCurrent=campaignUpdateContext_(_ftfCamp,'otrFtfCampaignId');
   show('⏳ Đang lấy FTF từ otraining (ID '+campaignId+')...');
   try{
     const {data:arr, detail}=await fetchFtfRows_(campaignId, currentMonth);
+    if(!stillCurrent())return;
     if(!arr.length){
       show('otraining trả 0 dòng tổng hợp (không ghi đè data cũ). Kiểm tra lại ID chiến dịch.','var(--red)');
       return;
@@ -10765,7 +10818,7 @@ async function updateFtfFromOtraining_(){
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fakeDetail.length?fakeDetail:[{}]), 'Chi Tiet Check-in');
     // Lưu ID chiến dịch.
     const camp=campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf');
-    if(camp){ if(!String(camp.otrId||'').trim()) camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
+    await saveCampaignSourceIfMissing_(camp,campaignId);
     await processFtfWorkbook_(wb);
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
@@ -10791,17 +10844,19 @@ async function fetchWsDoitacRows_(campaignId, month){
 }
 async function updateTestOnlineFromOtraining_(camp){
   const msg=document.getElementById('testOnlineImportMsg');
-  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  const show=(t,c)=>campaignUpdateMessage_('testOnlineImportMsg',t,c);
   const idInput=document.getElementById('otrCampaignId');
   const campaignId=((idInput&&idInput.value||'').trim()) || String((typeof camp!=='undefined'&&camp&&camp.otrId)||'').trim();
   if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
+  const stillCurrent=campaignUpdateContext_(camp,'otrCampaignId');
   show('⏳ Đang lấy Test Online từ otraining (ID '+campaignId+')...');
   try{
     const arr=await fetchOtrainingRows_(campaignId, camp&&camp.month, 'test');
+    if(!stillCurrent())return;
     if(!arr.length){ show('otraining trả về 0 dòng. Kiểm tra lại ID chiến dịch hoặc khoảng ngày.','var(--red)'); return; }
     const ws=XLSX.utils.json_to_sheet(arr);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'TestOnline');
-    if(camp){ if(!String(camp.otrId||'').trim()) camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
+    await saveCampaignSourceIfMissing_(camp,campaignId);
     await processTestOnlineWorkbook_(wb,camp);
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
@@ -10809,19 +10864,21 @@ async function updateTestOnlineFromOtraining_(camp){
 }
 async function updateAiCheckFromOtraining_(camp){
   const msg=document.getElementById('aiCheckImportMsg');
-  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  const show=(t,c)=>campaignUpdateMessage_('aiCheckImportMsg',t,c);
   const idInput=document.getElementById('otrAiCampaignId');
   const campaignId=((idInput&&idInput.value||'').trim()) || String((typeof camp!=='undefined'&&camp&&camp.otrId)||'').trim();
   if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
+  const stillCurrent=campaignUpdateContext_(camp,'otrAiCampaignId');
   show('⏳ Đang lấy Tư vấn AI từ otraining (ID '+campaignId+')...');
   try{
     const arr=await fetchOtrainingRows_(campaignId, camp&&camp.month, 'ai');
+    if(!stillCurrent())return;
     if(!arr.length){ show('otraining trả về 0 dòng. Kiểm tra lại ID chiến dịch hoặc khoảng ngày.','var(--red)'); return; }
     // Dung sai tên cột: nếu otraining không có 'Kết quả Check', thêm cột rỗng để không bị chặn.
     arr.forEach(r=>{ if(!('Kết quả Check' in r)) r['Kết quả Check']=''; });
     const ws=XLSX.utils.json_to_sheet(arr);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'TuVanAI');
-    if(camp){ if(!String(camp.otrId||'').trim()) camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
+    await saveCampaignSourceIfMissing_(camp,campaignId);
     await processAiCheckWorkbook_(wb,camp);
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
@@ -10843,6 +10900,7 @@ async function updateWorkshopFromOtraining_(camp){
     const arr=await fetchWorkshopNoibo_(camp,campaignId);
     if(currentMonth!==month || owner!==String(session?.userId||session?.username||'') || !campaigns.some(c=>c.id===camp.id && c.month===month)) return;
     if(String(document.getElementById('otrWsCampaignId')?.value||camp.otrId||'').trim()!==campaignId) return;
+    if(!arr.length){show('Otraining trả về 0 lớp. Dữ liệu cũ được giữ nguyên; kiểm tra ID chiến dịch và khoảng ngày.','var(--red)');return;}
     const ws=XLSX.utils.json_to_sheet(arr);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Data');
     await processWorkshopActualWorkbook_(wb,camp,{allowEmpty:true,sourceCampaignId:campaignId,scopeRegion:isTrainer()?session.region:''});
@@ -10947,7 +11005,7 @@ async function processAiCheckWorkbook_(wb,camp){
     if(code) pgByCode.set(code,p);
   });
 
-  const data=await loadAiCheckProgress_(camp);
+  const data={...await loadAiCheckProgress_(camp)};
   const imported=new Map();
   let blank=0;
   rows.forEach(row=>{
@@ -10974,9 +11032,8 @@ async function processAiCheckWorkbook_(wb,camp){
     if(v.checkPass) checkQualified++;
     if(v.aiCount>=x && v.checkPass) bothQualified++;
   });
-  await dbSet('aiCheckProgress:'+camp.id,data);
-  aiCheckProgressCache_[camp.id] = data; // cập nhật luôn cache — không cần tải lại mạng để thấy data mới
-  const saleInfo=await saveSaleFreqFromRows_(rows,camp,'ai'); // cùng file: tách dòng Sale
+  const saleInfo=await saveSaleFreqFromRows_(rows,camp,'ai',[['aiCheckProgress:'+camp.id,data]]);
+  aiCheckProgressCache_[camp.id] = data; // cùng file: tách dòng Sale
   if(!frequencyCampaignViewMatches_(camp))return;
   await renderFrequencyNoiboBody_('tuvanai_checkshop');
   if(!frequencyCampaignViewMatches_(camp))return;
@@ -11084,7 +11141,7 @@ async function loadSaleFreq_(camp,kind){
   return data;
 }
 /* Ghi số lần của Sale từ file chung (Test Online / Tư vấn AI). Trả về thống kê cho thông báo import. */
-async function saveSaleFreqFromRows_(rows,camp,kind){
+async function saveSaleFreqFromRows_(rows,camp,kind,entries=[]){
   const K=SALE_FREQ_KINDS_[kind];
   const roster=(await loadSaleRoster_()).list;
   const saleKeys=new Set(roster.map(s=>s.key));
@@ -11096,7 +11153,7 @@ async function saveSaleFreqFromRows_(rows,camp,kind){
   });
   const data={counts,importedAt:new Date().toISOString()};
   const ck=K.key+camp.id;
-  await dbSet(ck,data);
+  await saveCampaignData_([...entries,[ck,data]]);
   saleFreqCache_[ck]=data;
   const x=campaignFrequencyX_(camp);
   return {total:roster.length, matched:Object.keys(counts).length, done:roster.filter(s=>(counts[s.key]||0)>=x).length};
@@ -11458,7 +11515,7 @@ function partnerTrainingDone_(v){
   const s=String(v??'').trim().toLowerCase();
   return s==='done' || s==='hoàn thành' || s==='hoan thanh' || s==='completed';
 }
-async function processPartnerTrainingActualWorkbook_(wb,camp){
+async function processPartnerTrainingActualWorkbook_(wb,camp,options={}){
   if(!camp || camp.group!=='doitac' || !['workshop','hub'].includes(campaignSubtype(camp))) throw new Error('Chiến dịch hiện tại không phải Workshop / Hub Đối tác.');
   // Tự tìm sheet có cột status (file gồm nhiều tab: Tong Hop Workshop, Chi Tiet Hoc Vien).
   const hasStatusCol = r => { const k=Object.keys(r||{}); return k.includes('status')||k.includes('Trạng thái')||k.includes('Trang thai'); };
@@ -11469,6 +11526,7 @@ async function processPartnerTrainingActualWorkbook_(wb,camp){
   }
   if(!rows){ const first=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}); rows=first; }
   if(!rows.length) throw new Error('File không có dữ liệu.');
+  if(!hasStatusCol(rows[0]))throw Error('Thiếu cột Trạng thái/status. Dữ liệu cũ được giữ nguyên.');
   const agg={}; let doneRows=0, skippedRows=0, unmatched=0;
   const unmatchedNames=new Set();
   rows.forEach(row=>{
@@ -11491,14 +11549,16 @@ async function processPartnerTrainingActualWorkbook_(wb,camp){
   Object.entries(agg).forEach(([r,a])=>{
     full[r]={sessions:Math.round(a.sessions),students:Math.round(a.students),surveyAvg:a.surveyCount?a.surveySum/a.surveyCount:null,surveyCount:a.surveyCount,updatedAt:now};
   });
-  await dbSet(partnerTrainingActualKey_(camp),full);
-  await dbSet('partnerTrainingActualRows:'+camp.id,rows);
+  const entries=[[partnerTrainingActualKey_(camp),full],['partnerTrainingActualRows:'+camp.id,rows]];
+  if(Array.isArray(options.participants))entries.push(['wsDoitacParticipants:'+camp.id,options.participants]);
+  await saveCampaignData_(entries);
+  if(Array.isArray(options.participants))delete wsDoitacCache_[camp.id];
+  await renderPartnerTrainingRegionProgress_(campaignSubtype(camp));
   const msg=document.getElementById('partnerTrainingActualImportMsg-'+campaignSubtype(camp));
   if(msg){
     msg.style.display='block'; msg.style.color=unmatched?'var(--amber)':'var(--green-ok)';
     msg.textContent=`✅ Đã cập nhật ${campaignSubtype(camp)==='hub'?'Hub':'Workshop'}: ${doneRows} buổi Done · ${Object.values(agg).reduce((x,a)=>x+a.students,0)} học viên thực tế${skippedRows?` · Bỏ qua ${skippedRows} dòng chưa Done`:''}${unmatched?` · ${unmatched} dòng chưa khớp khu vực${unmatchedNames.size?' ('+[...unmatchedNames].slice(0,4).join(', ')+(unmatchedNames.size>4?'…':'')+')':''}`:''}.`;
   }
-  await renderPartnerTrainingRegionProgress_(campaignSubtype(camp));
 }
 function downloadPartnerTrainingActualSample_(){
   const bin=atob(PARTNER_TRAINING_ACTUAL_SAMPLE_B64), bytes=new Uint8Array(bin.length);
@@ -11638,21 +11698,20 @@ async function renderPartnerTrainingRegionProgress_(subtype){
 }
 async function updateWsDoitacFromOtraining_(camp){
   const msg=document.getElementById('partnerTrainingActualImportMsg-workshop');
-  const show=(t,c)=>{ if(msg){msg.style.display='block';msg.style.color=c||'var(--muted)';msg.textContent=t;} };
+  const show=(t,c)=>campaignUpdateMessage_('partnerTrainingActualImportMsg-workshop',t,c);
   const idInput=document.getElementById('otrWsDtCampaignId');
   const campaignId=((idInput&&idInput.value||'').trim()) || String((typeof camp!=='undefined'&&camp&&camp.otrId)||'').trim();
   if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
+  const stillCurrent=campaignUpdateContext_(camp,'otrWsDtCampaignId');
   show('⏳ Đang lấy Workshop Đối tác từ otraining (ID '+campaignId+')...');
   try{
     const {data:arr, detail}=await fetchWsDoitacRows_(campaignId, camp&&camp.month);
+    if(!stillCurrent())return;
     if(!arr.length){ show('otraining trả về 0 dòng Miền Trung. Kiểm tra lại ID chiến dịch.','var(--red)'); return; }
     const ws=XLSX.utils.json_to_sheet(arr);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
-    if(camp){ if(!String(camp.otrId||'').trim()) camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
-    // Lưu danh sách học viên đối tác để hiển thị bảng chi tiết bên dưới.
-    try{ await dbSet('wsDoitacParticipants:'+camp.id, detail||[]); }catch(e){}
-    delete wsDoitacCache_[camp.id];
-    await processPartnerTrainingActualWorkbook_(wb,camp);
+    await saveCampaignSourceIfMissing_(camp,campaignId);
+    await processPartnerTrainingActualWorkbook_(wb,camp,{participants:detail||[]});
     await renderWsDoitacParticipants_(camp);
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
@@ -11903,7 +11962,7 @@ function renderKpiSimpleSubtypeBody_(catKey, subtype){
     });
   }
 }
-function renderKpiCategoryLegacyBody_(catKey){
+async function renderKpiCategoryLegacyBody_(catKey){
   const activeSub = kpiSubtype[catKey] || CAMPAIGN_SUBTYPE_DEFAULT[catKey];
   if(catKey==='truyenthong') mediaActiveSubtype = activeSub;
   const metrics = catKey==='truyenthong' ? metricsOf(catKey) : metricsOf(catKey, activeSub);
@@ -12109,7 +12168,9 @@ function renderKpiCategoryLegacyBody_(catKey){
   }
 
   if(catKey==='truyenthong'){
-    ensureMediaScopeLoaded_().then(()=>{
+    await ensureMediaScopeLoaded_();
+    if(!container.isConnected || mediaActiveSubtype!==activeSub)return;
+    {
       const campSel = document.getElementById('mediaCampaignSelect');
       if(campSel) campSel.value = mediaScopeKey;
       renderMediaProgressTable(); renderMediaImportBox(); renderMediaNotDoneList();
@@ -12126,7 +12187,7 @@ function renderKpiCategoryLegacyBody_(catKey){
         renderMediaTopCampaignCards_();
         setTimeout(()=>{ try{ initOtrSaveButtons_(); }catch(e){} }, 50);
       });
-    });
+    }
   }
 
   if(isAdmin() && catKey!=='noibo' && catKey!=='doitac' && catKey!=='truyenthong'){
@@ -14507,6 +14568,7 @@ function workshopStatusDone_(v){
 }
 async function processWorkshopActualWorkbook_(wb, camp, options={}){
   const msg=document.getElementById('workshopActualImportMsg');
+  const stillCurrent=campaignUpdateContext_(camp,'otrWsCampaignId');
   const ws=wb.Sheets[wb.SheetNames[0]];
   if(!ws) throw new Error('Không tìm thấy sheet dữ liệu kết quả Workshop.');
   const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
@@ -14530,8 +14592,9 @@ async function processWorkshopActualWorkbook_(wb, camp, options={}){
     outsideRows=(Array.isArray(previous)?previous:[]).filter(r=>normalizeRegionLoose_(r.region)!==normalizeRegionLoose_(options.scopeRegion));
   }
 
+  if(!stillCurrent())throw Error('Đã đổi tháng hoặc tài khoản. Đã dừng cập nhật Workshop.');
   const agg={}; let matchedRows=0, unmatchedRows=0, blankRows=0, doneRows=0, planRows=0;
-  workshopActualRows=rows.map((row,idx)=>{
+  const incomingRows=rows.map((row,idx)=>{
     const trainerRaw=String(row['Trainer đứng lớp']||'').trim();
     const className=String(row['Tên lớp']||'').trim();
     if(!trainerRaw && !className){ blankRows++; return null; }
@@ -14568,27 +14631,28 @@ async function processWorkshopActualWorkbook_(wb, camp, options={}){
       updatedAt:new Date().toISOString()
     };
   }).filter(Boolean);
-  workshopActualRows=[...outsideRows,...workshopActualRows];
+  const nextRows=[...outsideRows,...incomingRows],nextRecords=JSON.parse(JSON.stringify(records));
 
   // File import được coi là trạng thái hiện tại đầy đủ của chiến dịch: Trainer không có lớp Done => Actual = 0.
   config.trainers.forEach(t=>{
     if(options.scopeRegion && normalizeRegionLoose_(t.region)!==normalizeRegionLoose_(options.scopeRegion))return;
     const a=agg[t.id]||{sessions:0,students:0};
-    const rec=trainerRecord(t.id);
+    const rec=nextRecords[t.id]||(nextRecords[t.id]=emptyRecord());
     rec.wsNbBuoiActual=Math.round(a.sessions);
     rec.wsNbHocVienActual=Math.round(a.students);
     rec.updatedAt=new Date().toISOString();
   });
-  if(!await dbSet('workshopActualRows:'+camp.id, workshopActualRows)) throw Error('Không lưu được danh sách Workshop lên Supabase. Hãy thử lại.');
-  if(!await dbSet('records:'+camp.month, records)) throw Error('Đã lưu danh sách lớp nhưng chưa lưu được tiến độ KPI. Hãy cập nhật lại.');
+  await saveCampaignData_([['workshopActualRows:'+camp.id,nextRows],['records:'+camp.month,nextRecords]]);
+  workshopActualRows=nextRows;records=nextRecords;
 
-  if(msg){
-    const totalStudents=Object.values(agg).reduce((sum,a)=>sum+a.students,0);
-    msg.style.display='block';
-    msg.style.color=unmatchedRows?'var(--amber)':'var(--green-ok)';
-    msg.textContent=`✅ Đã cập nhật kết quả Workshop: ${doneRows} buổi Done · ${Math.round(totalStudents)} học viên thực tế. Plan/chưa Done: ${planRows} dòng · Khớp Trainer: ${matchedRows}${unmatchedRows?` · Không khớp Trainer: ${unmatchedRows}`:''}${blankRows?` · Bỏ qua dòng trống: ${blankRows}`:''}.`;
-  }
   renderKpiCategory('noibo');
+  const liveMsg=document.getElementById('workshopActualImportMsg');
+  if(liveMsg){
+    const totalStudents=Object.values(agg).reduce((sum,a)=>sum+a.students,0);
+    liveMsg.style.display='block';
+    liveMsg.style.color=unmatchedRows?'var(--amber)':'var(--green-ok)';
+    liveMsg.textContent=`✅ Đã cập nhật kết quả Workshop: ${doneRows} buổi Done · ${Math.round(totalStudents)} học viên thực tế. Plan/chưa Done: ${planRows} dòng · Khớp Trainer: ${matchedRows}${unmatchedRows?` · Không khớp Trainer: ${unmatchedRows}`:''}${blankRows?` · Bỏ qua dòng trống: ${blankRows}`:''}.`;
+  }
 }
 function renderWorkshopActualImportBox_(){
   const box=document.getElementById('workshopActualImportBox');
@@ -18459,10 +18523,13 @@ function pgsmExtractFmRows_(out){
 async function pgsmImportFmReport_(camp,confirmedId,onMessage){
  if(!isAdmin())throw Error('Chỉ Admin được cập nhật kết quả PGs Master từ hệ thống.');
  if(!/^\d+$/.test(String(confirmedId||'')))throw Error('Campaign ID phải là số nguyên dương đã lưu.');
+ const stillCurrent=campaignUpdateContext_(camp,'pgsmSystemCampaignId');
  onMessage('⏳ Đang lấy báo cáo từ OTraining...');
  const source=await pgsmFetchFmReport_(confirmedId);
+ if(!stillCurrent())throw Error('Đã đổi tháng, tài khoản hoặc Campaign ID. Đã dừng cập nhật.');
  if(!source.length)throw Error('Báo cáo trả về 0 PGs. Dữ liệu cũ được giữ nguyên.');
- const d=await pgsmData_(camp,true);
+ const d=JSON.parse(JSON.stringify(await pgsmData_(camp,true)));
+ if(!stillCurrent())throw Error('Đã đổi tháng, tài khoản hoặc Campaign ID. Đã dừng cập nhật.');
  if(String(d.systemCampaignId||'').trim()!==String(confirmedId))throw Error('Campaign ID đã thay đổi. Tải lại trang trước khi cập nhật.');
  const members=new Map((d.registered||[]).map(r=>[pgsmCode_(r),r]));
  if(!members.size)throw Error('Chưa có danh sách PGs Master đã chốt.');
