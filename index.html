@@ -4264,6 +4264,7 @@ document.getElementById('loginBtn').addEventListener('click', async ()=>{
     session={userId:u.id,username:u.username,role:u.role,displayName:u.displayName,
       region:_loginTr?(_loginTr.region||''):(u.region||''),trainerId:u.trainerId||''};
     saveSessionLocal_(session);
+    try{await authorizeWorkshopNoibo_(uname,pass);}catch{} // Workshop checks permissions on the server; login remains usable if unavailable.
     recordLoginSession_(u);
     err.style.display='none';
     await renderAuthScreen();
@@ -4276,6 +4277,7 @@ document.getElementById('loginBtn').addEventListener('click', async ()=>{
   }
 });
 document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  try{sessionStorage.removeItem('workshop_private_session');workshopNoiboPeopleMemory_.clear();}catch{}
   session=null;
   saveSessionLocal_(null); // luôn ghi cục bộ (localStorage), không đụng tới auth_session dùng chung
   document.getElementById('loginUser').value='';
@@ -10829,17 +10831,62 @@ async function updateWorkshopFromOtraining_(camp){
   const idInput=document.getElementById('otrWsCampaignId');
   const campaignId=((idInput&&idInput.value||'').trim()) || String((typeof camp!=='undefined'&&camp&&camp.otrId)||'').trim();
   if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
-  show('⏳ Đang lấy Workshop từ otraining (ID '+campaignId+')...');
+  if(!camp || (!isAdmin() && !isTrainer()) || monthLocked) return;
+  const month=camp.month, button=document.getElementById('otrWorkshopBtn');
+  if(button?.disabled) return;
+  if(button) button.disabled=true;
+  show('⏳ Đang lấy danh sách Workshop từ hệ thống...');
   try{
-    const arr=await fetchOtrainingRows_(campaignId, camp&&camp.month, 'workshop');
-    if(!arr.length){ show('otraining trả về 0 dòng. Kiểm tra lại ID chiến dịch hoặc khoảng ngày.','var(--red)'); return; }
+    const arr=await fetchWorkshopNoibo_(camp,campaignId);
+    if(currentMonth!==month || !campaigns.some(c=>c.id===camp.id && c.month===month)) return;
+    if(String(document.getElementById('otrWsCampaignId')?.value||camp.otrId||'').trim()!==campaignId) return;
     const ws=XLSX.utils.json_to_sheet(arr);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Data');
-    if(camp){ if(!String(camp.otrId||'').trim()) camp.otrId=campaignId; try{ await dbSet('campaigns',campaigns); }catch(e){} }
-    await processWorkshopActualWorkbook_(wb,camp);
+    await processWorkshopActualWorkbook_(wb,camp,{allowEmpty:true,sourceCampaignId:campaignId,scopeRegion:isTrainer()?session.region:''});
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
-  }
+  }finally{if(button?.isConnected) button.disabled=false;}
+}
+
+const WORKSHOP_NOIBO_FN_='https://qruxqlsbhyhwiqjdkyyc.supabase.co/functions/v1/otraining-workshop-noibo';
+const workshopNoiboPeopleMemory_=new Map();
+async function authorizeWorkshopNoibo_(username,password){
+  const res=await fetch(WORKSHOP_NOIBO_FN_,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},signal:AbortSignal.timeout(15000),body:JSON.stringify({action:'authorize',username,password})});
+  const out=await res.json();
+  if(!res.ok || !out.token)throw Error(out.error||'Không xác thực được quyền Workshop.');
+  sessionStorage.setItem('workshop_private_session',JSON.stringify({token:out.token,expires:out.expires,userId:session?.userId}));
+  return out.token;
+}
+async function workshopNoiboToken_(){
+  let auth;try{auth=JSON.parse(sessionStorage.getItem('workshop_private_session')||'null');}catch{}
+  if(auth?.token && auth.userId===session?.userId && auth.expires>Date.now()+30000)return auth.token;
+  return new Promise((resolve,reject)=>{
+    const ov=document.createElement('div');ov.className='modal-overlay';ov.id='wsnbAuthOverlay';
+    ov.style.cssText='position:fixed;inset:0;z-index:240;background:rgba(8,51,31,.45);display:flex;align-items:center;justify-content:center;padding:16px;';
+    ov.innerHTML=`<form style="background:white;border-radius:14px;padding:20px;width:min(100%,380px);box-sizing:border-box;"><h3 style="margin-top:0;">Xác thực dữ liệu Workshop</h3><p class="section-desc">Nhập mật khẩu dashboard của bạn để mở dữ liệu theo quyền được cấp.</p><input id="wsnbAuthPassword" type="password" autocomplete="current-password" aria-label="Mật khẩu dashboard" placeholder="Mật khẩu dashboard" required style="width:100%;box-sizing:border-box;"><p id="wsnbAuthError" role="alert" style="color:var(--red);"></p><div style="display:flex;gap:8px;"><button type="submit" class="primary">Xác thực</button><button type="button" class="secondary" id="wsnbAuthCancel">Hủy</button></div></form>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#wsnbAuthCancel').onclick=()=>{ov.remove();reject(Error('Đã hủy xác thực Workshop.'));};
+    ov.querySelector('form').onsubmit=async e=>{
+      e.preventDefault();const input=ov.querySelector('#wsnbAuthPassword'),button=ov.querySelector('[type=submit]');button.disabled=true;
+      try{const token=await authorizeWorkshopNoibo_(session?.username,input.value);ov.remove();resolve(token);}
+      catch(err){ov.querySelector('#wsnbAuthError').textContent=err.message;button.disabled=false;}
+      finally{input.value='';}
+    };
+    ov.querySelector('#wsnbAuthPassword').focus();
+  });
+}
+async function fetchWorkshopNoibo_(camp,campaignId,classId,refresh=false){
+  const token=await workshopNoiboToken_();
+  const {start,end}=otrMonthRange_(camp.month);
+  const res=await fetch(WORKSHOP_NOIBO_FN_,{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},
+    body:JSON.stringify({action:classId?'attendees':'classes',workshopToken:token,refresh,campaignId:String(campaignId),...(classId?{classId:String(classId)}:{}),startDate:start,endDate:end})
+  });
+  const out=await res.json();
+  if(res.status===401)sessionStorage.removeItem('workshop_private_session');
+  if(!res.ok || out.error || !out.ok || !Array.isArray(out.data)) throw Error(out.error||'Không đọc được danh sách Workshop. Dữ liệu cũ được giữ nguyên.');
+  if(String(out.campaignId)!==String(campaignId) || (classId && String(out.classId)!==String(classId))) throw Error('Dữ liệu trả về không khớp chiến dịch/lớp đang xem.');
+  return classId?{people:out.data,updatedAt:out.updatedAt,campaignId:out.campaignId,classId:out.classId}:out.data;
 }
 
 function normalizeAiCheckCode_(v){
@@ -11782,6 +11829,7 @@ function renderKpiSimpleSubtypeBody_(catKey, subtype){
   if(isNoiboWorkshop){
     html += `<h3 class="kpi-section-title">Cập nhật kết quả Workshop — ${monthLabel(currentMonth)}</h3>`;
     html += `<div id="workshopActualImportBox"></div>`;
+    html += `<div id="workshopNoiboListBox"><div class="empty">Đang tải danh sách Workshop...</div></div>`;
   } else if(isPartnerWorkshop || isPartnerHub){
     const partnerLabel = isPartnerHub ? 'Hub' : 'Workshop';
     html += `<h3 class="kpi-section-title">Tiến độ ${partnerLabel} Đối tác theo Khu vực — ${monthLabel(currentMonth)}</h3>`;
@@ -11826,6 +11874,7 @@ function renderKpiSimpleSubtypeBody_(catKey, subtype){
 
   if(catKey==='noibo' && subtype==='workshop'){
     renderWorkshopActualImportBox_();
+    renderWorkshopNoiboList_();
   }
   if(catKey==='doitac' && subtype==='workshop'){
     renderPartnerWorkshopRegionProgress_();
@@ -14346,22 +14395,134 @@ function renderWorkshopTargetSection_(camp){
    - Số học viên Actual = tổng "HV thực tế" của các dòng Done.
    - Không dùng/không hiển thị chỉ tiêu Khảo sát ở tiến độ Workshop.
 */
+/* Workshop Nội bộ: lớp lưu theo chiến dịch; học viên lấy theo ID lớp, lưu khi tải thành công. */
+function workshopNoiboVisible_(row){
+  return !isTrainer() || (!!session.region && normalizeRegionLoose_(row.region)===normalizeRegionLoose_(session.region));
+}
+function workshopNoiboTime_(value){
+  const s=String(value||'').trim();
+  if(!/^\d{4}-\d{2}-\d{2}T/.test(s)) return s||'—';
+  const d=new Date(s);
+  return Number.isNaN(+d)?s:d.toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+async function renderWorkshopNoiboList_(){
+  const box=document.getElementById('workshopNoiboListBox'),month=currentMonth;
+  if(!box) return;
+  const camps=campaigns.filter(c=>c.month===month && c.group==='noibo' && campaignSubtype(c)==='workshop');
+  const snapshots=await dbGetMulti(camps.map(c=>'workshopActualRows:'+c.id));
+  if(!box.isConnected || currentMonth!==month) return;
+  const rows=camps.flatMap(c=>(Array.isArray(snapshots['workshopActualRows:'+c.id])?snapshots['workshopActualRows:'+c.id]:[]).map(r=>{
+    const tr=config.trainers.find(t=>t.id===r.trainerId);
+    return {...r,region:configuredRegionFromLoose_(r.region)||tr?.region||r.region||'',camp:c};
+  })).filter(workshopNoiboVisible_);
+  box.innerHTML=`<h3 class="kpi-section-title">Danh sách Workshop Nội bộ</h3><div id="workshopNoiboListInner"></div>`;
+  const inner=box.querySelector('#workshopNoiboListInner');
+  if(!rows.length){inner.innerHTML='<div class="empty">Chưa có Workshop trong phạm vi đang xem. Cập nhật từ hệ thống hoặc nhập file kết quả ở trên.</div>';return;}
+  const values=key=>[...new Set(rows.map(r=>String(r[key]||'')).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'vi'));
+  let region='',trainer='',status='',query='',page=1;
+  const pageSize=10;
+  const options=(list,selected)=>list.map(v=>`<option value="${escapeHtml(v)}" ${v===selected?'selected':''}>${escapeHtml(v)}</option>`).join('');
+  const render=()=>{
+    const list=rows.filter(r=>(!region || r.region===region) && (!trainer || r.trainerName===trainer) && (!status || (status==='done'?workshopStatusDone_(r.status):!workshopStatusDone_(r.status))) && (!query || normalizeVN([r.className,r.location,r.camp.name].join(' ')).toLowerCase().includes(normalizeVN(query).toLowerCase())));
+    const pages=Math.max(1,Math.ceil(list.length/pageSize));page=Math.min(page,pages);
+    const slice=list.slice((page-1)*pageSize,page*pageSize);
+    inner.innerHTML=`<div class="form-card" style="max-width:none;margin:0 0 12px;"><div class="scope-filters workshop-noibo-filters" style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="wsnbF-region" aria-label="Lọc khu vực"><option value="">Tất cả khu vực</option>${options(values('region'),region)}</select>
+      <select id="wsnbF-trainer" aria-label="Lọc Trainer"><option value="">Tất cả Trainer</option>${options(values('trainerName'),trainer)}</select>
+      <select id="wsnbF-status" aria-label="Lọc trạng thái"><option value="">Tất cả trạng thái</option><option value="done" ${status==='done'?'selected':''}>Hoàn thành</option><option value="plan" ${status==='plan'?'selected':''}>Chưa hoàn thành</option></select>
+      <input id="wsnbF-search" aria-label="Tìm Workshop" placeholder="Tìm Workshop / địa điểm" value="${escapeHtml(query)}">
+    </div></div><div class="table-scroll"><table id="workshopNoiboTable"><thead><tr><th>STT</th><th>Khu vực</th><th>Tên Workshop</th><th>Thời gian</th><th>Trainer</th><th>HV dự kiến</th><th>HR</th><th>Khảo sát</th><th>Trạng thái</th></tr></thead><tbody>${slice.map((r,i)=>{
+      const actual=Math.max(0,Number(r.actualStudents)||0),survey=r.surveyDone==null?'—':`${r.surveyDone}/${actual} · ${actual?Math.round(r.surveyDone/actual*100):0}%`;
+      return `<tr><td>${(page-1)*pageSize+i+1}</td><td>${escapeHtml(r.region||'—')}</td><td title="${escapeHtml([r.className,r.location].filter(Boolean).join(' · '))}"><strong>${escapeHtml(r.className||'—')}</strong></td><td>${escapeHtml(workshopNoiboTime_(r.time))}</td><td>${escapeHtml(r.trainerName||'—')}</td><td>${Number(r.expectedStudents)||0}</td><td><button type="button" class="secondary wsnb-people-btn" data-index="${i}" title="Xem PGs tham gia" aria-label="Xem PGs tham gia ${escapeHtml(r.className)}" style="padding:3px 10px;white-space:nowrap;">${actual} ↗</button></td><td style="white-space:nowrap;">${survey}</td><td><span class="pill ${workshopStatusDone_(r.status)?'pill-ok':'pill-warn'}">${escapeHtml(r.status||'Chưa rõ')}</span></td></tr>`;
+    }).join('')||'<tr><td colspan="9" class="empty">Không có Workshop phù hợp bộ lọc.</td></tr>'}</tbody></table></div>
+    <div class="pagination-bar" style="margin-top:10px;"><button class="wsnb-page" data-page="${page-1}" ${page===1?'disabled':''}>‹</button><span class="pagination-info">${list.length} workshop · Trang ${page}/${pages}</span><button class="wsnb-page" data-page="${page+1}" ${page===pages?'disabled':''}>›</button></div>`;
+    const bind=(id,fn)=>inner.querySelector('#'+id).onchange=e=>{fn(e.target.value);page=1;render();};
+    bind('wsnbF-region',v=>region=v);bind('wsnbF-trainer',v=>trainer=v);bind('wsnbF-status',v=>status=v);bind('wsnbF-search',v=>query=v);
+    inner.querySelectorAll('.wsnb-page').forEach(b=>b.onclick=()=>{page=Number(b.dataset.page);render();});
+    inner.querySelectorAll('.wsnb-people-btn').forEach(b=>b.onclick=()=>openWorkshopNoiboPeople_(slice[Number(b.dataset.index)]));
+  };
+  render();
+}
+async function openWorkshopNoiboPeople_(row){
+  if(!row || !workshopNoiboVisible_(row)) return;
+  document.getElementById('wsnbDetailOverlay')?.remove();
+  const ov=document.createElement('div');ov.id='wsnbDetailOverlay';ov.className='modal-overlay';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-labelledby','wsnbDetailTitle');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(8,51,31,.45);z-index:210;display:flex;align-items:center;justify-content:center;padding:12px;';
+  ov.innerHTML=`<div class="modal-box" style="background:#fff;border-radius:16px;max-width:820px;width:100%;min-width:0;max-height:86vh;overflow-y:auto;padding:16px;box-sizing:border-box;">
+    <div style="display:flex;gap:12px;justify-content:space-between;align-items:start;"><h3 id="wsnbDetailTitle" style="margin:0;overflow-wrap:anywhere;">${escapeHtml(row.className||'Workshop Nội bộ')}</h3><button type="button" id="wsnbDetailClose" aria-label="Đóng" style="flex-shrink:0;">×</button></div>
+    <p class="section-desc">${escapeHtml([row.region,workshopNoiboTime_(row.time),row.trainerName,row.location].filter(Boolean).join(' · '))}</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button type="button" id="wsnbPeopleRefresh" class="secondary">↻ Cập nhật PGs tham gia</button><span id="wsnbPeopleMsg" class="section-desc" role="status"></span></div><div id="wsnbPeopleData" style="margin-top:10px;"><div class="empty">Đang tải danh sách PGs...</div></div></div>`;
+  document.body.appendChild(ov);
+  const origin=document.activeElement, close=()=>{ov.remove();document.removeEventListener('keydown',onKey);origin?.focus();},onKey=e=>{if(e.key==='Escape')close();};
+  document.addEventListener('keydown',onKey);ov.querySelector('#wsnbDetailClose').onclick=close;ov.onclick=e=>{if(e.target===ov)close();};ov.querySelector('#wsnbDetailClose').focus();
+  const msg=ov.querySelector('#wsnbPeopleMsg'),dataBox=ov.querySelector('#wsnbPeopleData'),button=ov.querySelector('#wsnbPeopleRefresh');
+  const campaignId=String(row.sourceCampaignId||row.camp.otrId||''),classId=String(row.classId||'');
+  const key=String(session?.userId||session?.username)+':'+row.camp.id+':'+classId;
+  const active=()=>ov.isConnected && currentMonth===row.camp.month && workshopNoiboVisible_(row);
+  const render=payload=>{
+    if(!active())return;
+    const people=payload.people||[];
+    // Enrich only unique name/code matches in the authorized roster; Otraining user IDs are not PG codes.
+    const roster=(pgs||[]).filter(p=>!isTrainer()||normalizeRegionLoose_(p.area||p.region)===normalizeRegionLoose_(session.region));
+    const peopleRows=people.map(p=>{
+      const matches=roster.filter(pg=>p.code?String(pg.code)===String(p.code):normalizeWorkshopTrainerName_(pg.name)===normalizeWorkshopTrainerName_(p.name));
+      const pg=matches.length===1?matches[0]:{};
+      return {...p,code:p.code||pg.code||'',shop:p.shop||pg.shop||''};
+    });
+    dataBox.innerHTML=`<p class="section-desc" style="margin:0 0 8px;">${people.length} học viên · ${people.filter(p=>p.attended===true).length} đã tham gia · Cập nhật ${escapeHtml(workshopNoiboTime_(payload.updatedAt))}</p><div class="table-scroll"><table><thead><tr><th>STT</th><th>Mã PGs</th><th>Họ tên</th><th>Shop</th><th>Tham gia</th></tr></thead><tbody>${peopleRows.map((p,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(p.code||'—')}</td><td><strong>${escapeHtml(p.name||'—')}</strong></td><td>${escapeHtml(p.shop||'—')}</td><td>${p.attended===true?'Đã tham gia':p.attended===false?'Chưa tham gia':'Chưa rõ'}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Hệ thống chưa có học viên cho lớp này.</td></tr>'}</tbody></table></div><p class="section-desc">Mã PGs/Shop chỉ bổ sung khi khớp duy nhất với danh sách nhân sự. Khảo sát tổng hợp hiển thị ở danh sách Workshop; API học viên chưa cung cấp khảo sát từng người.</p>`;
+  };
+  let cached=workshopNoiboPeopleMemory_.get(key);
+  if(!active()) return;
+  if(!cached || String(cached.campaignId)!==campaignId || String(cached.classId)!==classId || !Array.isArray(cached.people)) cached=null;
+  if(cached)render(cached);
+  const canUpdate=(isAdmin()||isTrainer()) && !monthLocked && /^[1-9]\d*$/.test(classId) && /^[1-9]\d*$/.test(campaignId);
+  button.disabled=!canUpdate;
+  const refresh=async(force=true)=>{
+    if(!active() || !canUpdate || button.dataset.busy)return;
+    button.dataset.busy='1';button.disabled=true;msg.textContent='Đang lấy danh sách PGs...';
+    try{
+      const payload=await fetchWorkshopNoibo_(row.camp,campaignId,classId,force);
+      if(!active())return;
+      workshopNoiboPeopleMemory_.set(key,payload);
+      cached=payload;render(payload);msg.textContent='Đã cập nhật và lưu danh sách PGs.';
+    }catch(e){if(active()){msg.textContent=e.message||'Không tải được học viên. Hãy thử lại.';if(!cached)dataBox.innerHTML='<div class="empty">Chưa có dữ liệu học viên đã lưu.</div>';}}
+    finally{delete button.dataset.busy;button.disabled=!canUpdate;}
+  };
+  button.onclick=()=>refresh(true);
+  if(!cached){
+    if(canUpdate)await refresh(false);
+    else{dataBox.innerHTML='<div class="empty">Chưa có danh sách học viên đã lưu.</div>';msg.textContent=!classId?'Cập nhật Workshop từ hệ thống để bổ sung ID lớp.':monthLocked?'Tháng đã khóa.':'Chưa có quyền/kết nối để cập nhật lớp này.';}
+  }
+}
 let workshopActualRows=[];
 function workshopStatusDone_(v){
   const s=String(v||'').trim().toLowerCase();
   return s==='done' || s==='hoàn thành' || s==='hoan thanh' || s==='completed' || s==='complete';
 }
-async function processWorkshopActualWorkbook_(wb, camp){
+async function processWorkshopActualWorkbook_(wb, camp, options={}){
   const msg=document.getElementById('workshopActualImportMsg');
   const ws=wb.Sheets[wb.SheetNames[0]];
   if(!ws) throw new Error('Không tìm thấy sheet dữ liệu kết quả Workshop.');
   const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-  if(!rows.length) throw new Error('Sheet kết quả Workshop không có dữ liệu.');
+  if(!rows.length && !options.allowEmpty) throw new Error('Sheet kết quả Workshop không có dữ liệu.');
 
   const required=['Trainer đứng lớp','HV thực tế','Trạng thái'];
   const first=rows[0]||{};
-  const missing=required.filter(h=>!(h in first));
+  const missing=rows.length?required.filter(h=>!(h in first)):[];
   if(missing.length) throw new Error('Thiếu cột bắt buộc: '+missing.join(', ')+'.');
+
+  let outsideRows=[];
+  if(options.scopeRegion){
+    const key='workshopActualRows:'+camp.id;
+    let previous;
+    if(!SUPABASE_URL)previous=await dbGet(key);
+    else{
+      const res=await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?key=eq.${encodeURIComponent(key)}&select=value`,{headers:SUPA_HEADERS_});
+      if(!res.ok)throw Error('Không đọc được danh sách lớp hiện tại; chưa lưu cập nhật.');
+      const stored=await res.json();previous=stored[0]?.value||[];
+    }
+    outsideRows=(Array.isArray(previous)?previous:[]).filter(r=>normalizeRegionLoose_(r.region)!==normalizeRegionLoose_(options.scopeRegion));
+  }
 
   const agg={}; let matchedRows=0, unmatchedRows=0, blankRows=0, doneRows=0, planRows=0;
   workshopActualRows=rows.map((row,idx)=>{
@@ -14384,29 +14545,36 @@ async function processWorkshopActualWorkbook_(wb, camp){
     } else unmatchedRows++;
     return {
       row:idx+2,
+      classId:String(row['ID lớp']||row.class_id||row.training_class_id||'').trim(),
+      sourceCampaignId:String(options.sourceCampaignId||'').trim(),
       className,
       time:row['Thời gian']||'',
       location:String(row['Địa điểm']||'').trim(),
       trainerId:tr?tr.id:'',
       trainerName:tr?tr.name:trainerRaw,
-      region:String(row['Khu vực']||'').trim(),
+      region:configuredRegionFromLoose_(row['Khu vực']) || tr?.region || String(row['Khu vực']||'').trim(),
       expectedStudents:Math.max(0,workshopNumber_(row['HV dự kiến'])),
       actualStudents:hvActual,
       status:statusRaw,
-      done:isDone
+      done:isDone,
+      surveyDone:row['Số lượng Hoàn thành Khảo sát']==null || row['Số lượng Hoàn thành Khảo sát']===''?null:Math.max(0,workshopNumber_(row['Số lượng Hoàn thành Khảo sát'])),
+      surveyAvg:row['Điểm Trung bình Khảo sát']==null || row['Điểm Trung bình Khảo sát']===''?null:workshopNumber_(row['Điểm Trung bình Khảo sát']),
+      updatedAt:new Date().toISOString()
     };
   }).filter(Boolean);
+  workshopActualRows=[...outsideRows,...workshopActualRows];
 
   // File import được coi là trạng thái hiện tại đầy đủ của chiến dịch: Trainer không có lớp Done => Actual = 0.
   config.trainers.forEach(t=>{
+    if(options.scopeRegion && normalizeRegionLoose_(t.region)!==normalizeRegionLoose_(options.scopeRegion))return;
     const a=agg[t.id]||{sessions:0,students:0};
     const rec=trainerRecord(t.id);
     rec.wsNbBuoiActual=Math.round(a.sessions);
     rec.wsNbHocVienActual=Math.round(a.students);
     rec.updatedAt=new Date().toISOString();
   });
-  await dbSet('workshopActualRows:'+camp.id, workshopActualRows);
-  await dbSet('records:'+currentMonth, records);
+  if(!await dbSet('workshopActualRows:'+camp.id, workshopActualRows)) throw Error('Không lưu được danh sách Workshop lên Supabase. Hãy thử lại.');
+  if(!await dbSet('records:'+camp.month, records)) throw Error('Đã lưu danh sách lớp nhưng chưa lưu được tiến độ KPI. Hãy cập nhật lại.');
 
   if(msg){
     const totalStudents=Object.values(agg).reduce((sum,a)=>sum+a.students,0);
