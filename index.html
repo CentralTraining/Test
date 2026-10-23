@@ -1205,6 +1205,15 @@
     .so-filter-bar .so-filter-fields{min-width:620px;}
     .so-filter-bar .so-filter-count{display:none;}
   }
+
+/* Internal Workshop attendance and per-class export. */
+.wsnb-attendance{display:inline-block;padding:3px 8px;border-radius:5px;font-weight:700;white-space:nowrap;font-size:inherit;}
+.wsnb-attendance-attended{color:#15803d;background:#dcfce7;}
+.wsnb-attendance-pending{color:#a16207;background:#fef9c3;}
+.wsnb-attendance-unknown{color:#64748b;background:#f1f5f9;}
+#workshopNoiboTable .wsnb-export-btn{padding:4px 8px;font-size:var(--cap);white-space:nowrap;}
+.mobile-layout #workshopNoiboTable .wsnb-export-btn{padding:2px 4px;font-size:9px;border-radius:5px;min-width:0;max-width:100%;}
+.mobile-layout #wsnbDetailOverlay .wsnb-attendance{padding:2px 4px;font-size:10px;}
 </style>
 <style id="olie-theme">
 :root{--bg:#f4f8f6;--green:#07864a;--green-dark:#075d37;--line:#e3ece6;--radius:16px}
@@ -14471,6 +14480,85 @@ function workshopNoiboTime_(value){
   const d=new Date(s);
   return Number.isNaN(+d)?s:d.toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
+function workshopNoiboNameKey_(value,loose=false){
+  const name=String(value||'').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/_x[0-9a-f]{4}_/ig,'').trim().replace(/\s+/g,' ').toLocaleUpperCase('vi-VN');
+  return loose?normalizeVN(name):name;
+}
+function workshopNoiboEnrichPeople_(people){
+  const roster=(pgs||[]).filter(p=>!isTrainer()||normalizeRegionLoose_(p.area||p.region)===normalizeRegionLoose_(session.region));
+  return (people||[]).map(p=>{
+    let matches;
+    if(p.code)matches=roster.filter(pg=>normalizePgMatchCode_(pg.code)===normalizePgMatchCode_(p.code));
+    else{
+      const name=workshopNoiboNameKey_(p.name);
+      matches=name?roster.filter(pg=>workshopNoiboNameKey_(pg.name)===name):[];
+      if(!matches.length && name)matches=roster.filter(pg=>workshopNoiboNameKey_(pg.name,true)===workshopNoiboNameKey_(p.name,true));
+    }
+    const codes=[...new Set(matches.map(pg=>String(pg.code||'').trim()).filter(Boolean))];
+    const unique=matches.length===1 || (matches.length>1 && codes.length===1 && matches.every(pg=>String(pg.code||'').trim()===codes[0]));
+    let code=String(p.code||'').trim(),shop=String(p.shop||'').trim(),note='Thông tin từ hệ thống';
+    if(unique){
+      code=code||codes[0]||'';
+      const shops=[...new Set(matches.map(pg=>String(pg.shop||pg.shopName||'').trim()).filter(Boolean))];
+      if(!shop && shops.length===1)shop=shops[0];
+      if(!shop && !shops.length){
+        const ids=[...new Set(matches.map(pg=>String(pg.shopId||pg.storeId||'').trim()).filter(Boolean))];
+        if(ids.length===1){
+          const mapped=[...new Set((shopTrainerMap||[]).filter(s=>String(s.shopId||s.storeId||'').trim()===ids[0]).map(s=>String(s.shopName||s.storeName||'').trim()).filter(Boolean))];
+          if(mapped.length===1)shop=mapped[0];
+        }
+      }
+      note=code&&shop?'Khớp danh sách nhân sự':!code?'Chưa có mã NV trong danh sách nhân sự':shops.length>1?'Có nhiều shop cho mã NV này; cần đối chiếu':'Đã khớp mã NV; chưa có shop trong danh sách nhân sự';
+    }else if(!code || !shop){
+      note=matches.length?'Thông tin trùng; chưa xác định duy nhất mã NV/shop':p.code?'Mã NV chưa khớp danh sách nhân sự':'Tên chưa khớp danh sách nhân sự';
+    }
+    return {...p,code,shop,matchNote:note};
+  });
+}
+function workshopNoiboAttendance_(value){
+  return value===true?{text:'Đã tham gia',kind:'attended',font:'FF15803D',fill:'FFDCFCE7'}:
+    value===false?{text:'Chưa tham gia',kind:'pending',font:'FFA16207',fill:'FFFEF9C3'}:
+    {text:'Chưa rõ',kind:'unknown',font:'FF64748B',fill:'FFF1F5F9'};
+}
+async function exportWorkshopNoiboPeople_(row,button){
+  const owner=String(session?.userId||session?.username),month=currentMonth;
+  const allowed=()=>owner===String(session?.userId||session?.username) && currentMonth===month && row?.camp?.month===month && (isAdmin()||isTrainer()) && workshopNoiboVisible_(row);
+  if(!allowed())return;
+  if(button?.dataset.busy)return;
+  const campaignId=String(row.sourceCampaignId||row.camp.otrId||''),classId=String(row.classId||'');
+  const show=(t,c)=>campaignUpdateMessage_('wsnbExportMsg',t,c);
+  if(!/^[1-9]\d*$/.test(campaignId)||!/^[1-9]\d*$/.test(classId)){show('Cập nhật Workshop từ hệ thống để bổ sung ID lớp trước khi xuất Excel.','var(--red)');return;}
+  const label=button?.textContent;
+  if(button){button.dataset.busy='1';button.disabled=true;button.textContent='…';}
+  show('Đang chuẩn bị danh sách học viên...');
+  try{
+    // Read through the protected server even if the modal has a memory snapshot, so export rechecks account/region access.
+    const payload=await fetchWorkshopNoibo_(row.camp,campaignId,classId,false);
+    if(!allowed())return;
+    workshopNoiboPeopleMemory_.set(owner+':'+row.camp.id+':'+classId,payload);
+    const people=workshopNoiboEnrichPeople_(payload.people),excel=await pgsmLoadExcelJs_();
+    if(!allowed())return;
+    const workbook=new excel.Workbook(),sheet=workbook.addWorksheet('Học viên Workshop');
+    sheet.columns=[{key:'stt',width:7},{key:'code',width:17},{key:'name',width:28},{key:'shop',width:36},{key:'region',width:18},{key:'attendance',width:19},{key:'match',width:48}];
+    const metadata=[row.className||'Workshop Nội bộ',[row.region,workshopNoiboTime_(row.time),row.trainerName,row.location].filter(Boolean).join(' · '),`${people.length} học viên · Cập nhật ${workshopNoiboTime_(payload.updatedAt)}`];
+    metadata.forEach((text,i)=>{sheet.mergeCells(i+1,1,i+1,7);const cell=sheet.getCell(i+1,1);cell.value=text;cell.font={bold:i===0,size:i===0?14:10,color:{argb:'FF166534'}};cell.alignment={wrapText:true,vertical:'middle'};sheet.getRow(i+1).height=i===1?38:24;});
+    sheet.getRow(5).values=['STT','Mã NV','Họ tên','Shop','Khu vực Workshop','Trạng thái tham gia','Đối chiếu mã NV / Shop'];
+    sheet.getRow(5).height=30;sheet.getRow(5).eachCell(cell=>{cell.font={bold:true,color:{argb:'FFFFFFFF'}};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF166534'}};cell.alignment={wrapText:true,vertical:'middle'};});
+    people.forEach((p,i)=>{
+      const status=workshopNoiboAttendance_(p.attended),line=sheet.addRow({stt:i+1,code:p.code||'',name:p.name||'',shop:p.shop||'',region:row.region||'',attendance:status.text,match:p.matchNote});
+      line.alignment={wrapText:true,vertical:'middle'};line.height=32;
+      line.getCell('code').numFmt='@';line.getCell('attendance').font={bold:true,color:{argb:status.font}};line.getCell('attendance').fill={type:'pattern',pattern:'solid',fgColor:{argb:status.fill}};
+    });
+    sheet.views=[{state:'frozen',ySplit:5}];sheet.autoFilter={from:{row:5,column:1},to:{row:Math.max(5,sheet.rowCount),column:7}};
+    const bytes=await workbook.xlsx.writeBuffer();
+    if(!allowed())return;
+    const fileName='Workshop_Noi_Bo_'+row.camp.month+'_Lop_'+classId+'.xlsx';
+    const url=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})),link=document.createElement('a');
+    link.href=url;link.download=fileName;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+    show(`Đã xuất ${people.length} học viên của Workshop này.`,'var(--green-ok)');
+  }catch(e){if(allowed())show(e.message||'Không xuất được Excel. Hãy thử lại.','var(--red)');}
+  finally{if(button?.isConnected){delete button.dataset.busy;button.disabled=!(isAdmin()||isTrainer());button.textContent=label;}}
+}
 async function renderWorkshopNoiboList_(){
   const box=document.getElementById('workshopNoiboListBox'),month=currentMonth;
   if(!box) return;
@@ -14497,15 +14585,16 @@ async function renderWorkshopNoiboList_(){
       <select id="wsnbF-trainer" aria-label="Lọc Trainer"><option value="">Tất cả Trainer</option>${options(values('trainerName'),trainer)}</select>
       <select id="wsnbF-status" aria-label="Lọc trạng thái"><option value="">Tất cả trạng thái</option><option value="done" ${status==='done'?'selected':''}>Hoàn thành</option><option value="plan" ${status==='plan'?'selected':''}>Chưa hoàn thành</option></select>
       <input id="wsnbF-search" aria-label="Tìm Workshop" placeholder="Tìm Workshop / địa điểm" value="${escapeHtml(query)}">
-    </div></div><div class="table-scroll"><table id="workshopNoiboTable"><thead><tr><th>STT</th><th>Khu vực</th><th>Tên Workshop</th><th>Thời gian</th><th>Trainer</th><th>HV dự kiến</th><th>HR</th><th>Khảo sát</th><th>Trạng thái</th></tr></thead><tbody>${slice.map((r,i)=>{
+    </div></div><p id="wsnbExportMsg" class="save-msg" role="status" style="display:none;"></p><div class="table-scroll"><table id="workshopNoiboTable"><thead><tr><th>STT</th><th>Khu vực</th><th>Tên Workshop</th><th>Thời gian</th><th>Trainer</th><th>HV dự kiến</th><th>HR</th><th>Khảo sát</th><th>Trạng thái</th><th>Xuất Excel</th></tr></thead><tbody>${slice.map((r,i)=>{
       const actual=Math.max(0,Number(r.actualStudents)||0),survey=r.surveyDone==null?'—':`${r.surveyDone}/${actual} · ${actual?Math.round(r.surveyDone/actual*100):0}%`;
-      return `<tr><td>${(page-1)*pageSize+i+1}</td><td>${escapeHtml(r.region||'—')}</td><td title="${escapeHtml([r.className,r.location].filter(Boolean).join(' · '))}"><strong>${escapeHtml(r.className||'—')}</strong></td><td>${escapeHtml(workshopNoiboTime_(r.time))}</td><td>${escapeHtml(r.trainerName||'—')}</td><td>${Number(r.expectedStudents)||0}</td><td><button type="button" class="secondary wsnb-people-btn" data-index="${i}" title="Xem PGs tham gia" aria-label="Xem PGs tham gia ${escapeHtml(r.className)}" style="padding:3px 10px;white-space:nowrap;">${actual} ↗</button></td><td style="white-space:nowrap;">${survey}</td><td><span class="pill ${workshopStatusDone_(r.status)?'pill-ok':'pill-warn'}">${escapeHtml(r.status||'Chưa rõ')}</span></td></tr>`;
-    }).join('')||'<tr><td colspan="9" class="empty">Không có Workshop phù hợp bộ lọc.</td></tr>'}</tbody></table></div>
+      return `<tr><td>${(page-1)*pageSize+i+1}</td><td>${escapeHtml(r.region||'—')}</td><td title="${escapeHtml([r.className,r.location].filter(Boolean).join(' · '))}"><strong>${escapeHtml(r.className||'—')}</strong></td><td>${escapeHtml(workshopNoiboTime_(r.time))}</td><td>${escapeHtml(r.trainerName||'—')}</td><td>${Number(r.expectedStudents)||0}</td><td><button type="button" class="secondary wsnb-people-btn" data-index="${i}" title="Xem PGs tham gia" aria-label="Xem PGs tham gia ${escapeHtml(r.className)}" style="padding:3px 10px;white-space:nowrap;">${actual} ↗</button></td><td style="white-space:nowrap;">${survey}</td><td><span class="pill ${workshopStatusDone_(r.status)?'pill-ok':'pill-warn'}">${escapeHtml(r.status||'Chưa rõ')}</span></td><td><button type="button" class="secondary wsnb-export-btn" data-index="${i}" title="Xuất Excel học viên Workshop" aria-label="Xuất Excel học viên ${escapeHtml(r.className)}" ${isAdmin()||isTrainer()?'':'disabled'}>Excel</button></td></tr>`;
+    }).join('')||'<tr><td colspan="10" class="empty">Không có Workshop phù hợp bộ lọc.</td></tr>'}</tbody></table></div>
     <div class="pagination-bar" style="margin-top:10px;"><button class="wsnb-page" data-page="${page-1}" ${page===1?'disabled':''}>‹</button><span class="pagination-info">${list.length} workshop · Trang ${page}/${pages}</span><button class="wsnb-page" data-page="${page+1}" ${page===pages?'disabled':''}>›</button></div>`;
     const bind=(id,fn)=>inner.querySelector('#'+id).onchange=e=>{fn(e.target.value);page=1;render();};
     bind('wsnbF-region',v=>region=v);bind('wsnbF-trainer',v=>trainer=v);bind('wsnbF-status',v=>status=v);bind('wsnbF-search',v=>query=v);
     inner.querySelectorAll('.wsnb-page').forEach(b=>b.onclick=()=>{page=Number(b.dataset.page);render();});
     inner.querySelectorAll('.wsnb-people-btn').forEach(b=>b.onclick=()=>openWorkshopNoiboPeople_(slice[Number(b.dataset.index)]));
+    inner.querySelectorAll('.wsnb-export-btn').forEach(b=>b.onclick=()=>exportWorkshopNoiboPeople_(slice[Number(b.dataset.index)],b));
   };
   render();
 }
@@ -14529,14 +14618,9 @@ async function openWorkshopNoiboPeople_(row){
   const render=payload=>{
     if(!active())return;
     const people=payload.people||[];
-    // Enrich only unique name/code matches in the authorized roster; Otraining user IDs are not PG codes.
-    const roster=(pgs||[]).filter(p=>!isTrainer()||normalizeRegionLoose_(p.area||p.region)===normalizeRegionLoose_(session.region));
-    const peopleRows=people.map(p=>{
-      const matches=roster.filter(pg=>p.code?String(pg.code)===String(p.code):normalizeWorkshopTrainerName_(pg.name)===normalizeWorkshopTrainerName_(p.name));
-      const pg=matches.length===1?matches[0]:{};
-      return {...p,code:p.code||pg.code||'',shop:p.shop||pg.shop||''};
-    });
-    dataBox.innerHTML=`<p class="section-desc" style="margin:0 0 8px;">${people.length} học viên · ${people.filter(p=>p.attended===true).length} đã tham gia · Cập nhật ${escapeHtml(workshopNoiboTime_(payload.updatedAt))}</p><div class="table-scroll"><table><thead><tr><th>STT</th><th>Mã PGs</th><th>Họ tên</th><th>Shop</th><th>Tham gia</th></tr></thead><tbody>${peopleRows.map((p,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(p.code||'—')}</td><td><strong>${escapeHtml(p.name||'—')}</strong></td><td>${escapeHtml(p.shop||'—')}</td><td>${p.attended===true?'Đã tham gia':p.attended===false?'Chưa tham gia':'Chưa rõ'}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Hệ thống chưa có học viên cho lớp này.</td></tr>'}</tbody></table></div><p class="section-desc">Mã PGs/Shop chỉ bổ sung khi khớp duy nhất với danh sách nhân sự. Khảo sát tổng hợp hiển thị ở danh sách Workshop; API học viên chưa cung cấp khảo sát từng người.</p>`;
+    const peopleRows=workshopNoiboEnrichPeople_(people);
+    const missing=peopleRows.filter(p=>!p.code||!p.shop).length;
+    dataBox.innerHTML=`<p class="section-desc" style="margin:0 0 8px;">${people.length} học viên · ${people.filter(p=>p.attended===true).length} đã tham gia · Cập nhật ${escapeHtml(workshopNoiboTime_(payload.updatedAt))}</p><div class="table-scroll"><table><thead><tr><th>STT</th><th>Mã PGs</th><th>Họ tên</th><th>Shop</th><th>Tham gia</th></tr></thead><tbody>${peopleRows.map((p,i)=>`<tr><td>${i+1}</td><td title="${escapeHtml(p.matchNote)}">${escapeHtml(p.code||'Chưa khớp')}</td><td><strong>${escapeHtml(p.name||'—')}</strong></td><td title="${escapeHtml(p.matchNote)}">${escapeHtml(p.shop||'Chưa khớp')}</td><td><span class="wsnb-attendance wsnb-attendance-${workshopNoiboAttendance_(p.attended).kind}">${workshopNoiboAttendance_(p.attended).text}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Hệ thống chưa có học viên cho lớp này.</td></tr>'}</tbody></table></div><p class="section-desc">${missing?`${missing} học viên cần đối chiếu mã NV/shop với danh sách nhân sự. Rê chuột vào ô Chưa khớp để xem lý do.`:'Mã NV và shop đã được đối chiếu với danh sách nhân sự.'}</p>`;
   };
   let cached=workshopNoiboPeopleMemory_.get(key);
   if(!active()) return;
@@ -17095,7 +17179,7 @@ function syncMobileRecordHeading_(table,type,layout){
  let heading=table._mobileRecordHeading;
  if(!heading?.isConnected){heading=document.createElement('div');heading.className='mobile-record-heading';heading.setAttribute('aria-hidden','true');table.before(heading);table._mobileRecordHeading=heading;}
  heading.hidden=!layout?.length;if(!layout?.length)return;
- const labels={code:'Mã PG',codepg:'Mã PG',codepgs:'Mã PG',manv:'Mã NV',hovaten:'Họ tên',hoten:'Họ tên',solanhoanthanh:'Số lần',sokhaosat:'Khảo sát',sophone:'S.O Phone',mochoanthanhshop:'Mốc',hoanthanhtargetshop:'% Target',ketqualuyentv:'Luyện TV',trangthaiai:'Trạng thái AI',ketquacheckshop:'Check shop',tenworkshop:'Workshop'};
+ const labels={code:'Mã PG',codepg:'Mã PG',codepgs:'Mã PG',manv:'Mã NV',hovaten:'Họ tên',hoten:'Họ tên',solanhoanthanh:'Số lần',sokhaosat:'Khảo sát',sophone:'S.O Phone',mochoanthanhshop:'Mốc',hoanthanhtargetshop:'% Target',ketqualuyentv:'Luyện TV',trangthaiai:'Trạng thái AI',ketquacheckshop:'Check shop',tenworkshop:'Workshop',xuatexcel:'Excel'};
  const spec=layout.map(slot=>({...slot,full:type.headers[slot.index]||'Thao tác',label:labels[type.keys[slot.index]]||type.headers[slot.index]||'Thao tác'})),signature=JSON.stringify(spec);
  if(heading.dataset.signature===signature)return;heading.dataset.signature=signature;
  heading.replaceChildren(...spec.map(slot=>{const cell=document.createElement('span');cell.textContent=slot.label;cell.title=slot.full;cell.style.gridColumn=slot.start+' / span '+slot.span;return cell;}));
@@ -17122,13 +17206,13 @@ function syncCompactPgRows_(table){
   // Keep the primary status/checkbox available; less common controls remain in the detail card.
   const control=items.find(x=>x!==name&&x.cell.querySelector('select,input[type=checkbox],input[type=radio]'));
   add(control);
-  const resultKeys=['ketqua','sokhaosat','hoanthanhtargetshop','solanhoanthanh','training','hr','sloppo'];
+  const resultKeys=['ketqua','sokhaosat','thamgia','hoanthanhtargetshop','solanhoanthanh','training','hr','sloppo'];
   add(resultKeys.map(key=>items.find(x=>x.key===key&&x!==name)).find(Boolean)||items.find(x=>x.key==='trangthai'));
   if(inline.length<4)add(items.find(x=>x!==name&&x!==control&&x.cell.querySelector('button')&&x.cell.querySelectorAll('button').length===1));
   if(inline.length<4)add(items.find(x=>['code','codepg','codepgs','mapg','mapgs','manv','staffid','codeshop','storeid','idshop'].includes(x.key)&&x!==name));
   if(inline.length<3)add(items.find(x=>x!==name&&!['code','codepg','codepgs','mapg','mapgs','manv','staffid','codeshop','storeid','idshop','stt','ngayvao','thamnien'].includes(x.key)&&!x.cell.querySelector('input,select,button')&&/^[+-]?\d/.test(x.cell.textContent.trim())));
   if(inline.length<3)add(items.find(x=>x.key==='khuvuc'||x.key==='kenh'));
-  if(type.kind==='event'){inline.splice(0,inline.length,name);['kenh','hr','khaosat'].forEach(key=>add(items.find(x=>x.key===key)));}
+  if(type.kind==='event'){inline.splice(0,inline.length,name);['kenh','hr','khaosat',...(table.id==='workshopNoiboTable'?['xuatexcel']:[])].forEach(key=>add(items.find(x=>x.key===key)));}
   if(soList){inline.splice(0,inline.length,name);['sophone','hoanthanhtargetshop','mochoanthanhshop'].forEach(key=>add(items.find(x=>x.key===key)));}
   const order=x=>x===name?0:['code','codepg','codepgs','mapg','mapgs','manv','staffid','codeshop','storeid','idshop'].includes(x.key)?1:x.cell.querySelector('button,select,input')?3:2;
   inline.sort((a,b)=>order(a)-order(b));
