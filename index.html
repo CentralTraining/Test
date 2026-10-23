@@ -14484,14 +14484,20 @@ function workshopNoiboNameKey_(value,loose=false){
   const name=String(value||'').normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/_x[0-9a-f]{4}_/ig,'').trim().replace(/\s+/g,' ').toLocaleUpperCase('vi-VN');
   return loose?normalizeVN(name):name;
 }
-function workshopNoiboEnrichPeople_(people){
-  const roster=(pgs||[]).filter(p=>!isTrainer()||normalizeRegionLoose_(p.area||p.region)===normalizeRegionLoose_(session.region));
+function workshopNoiboEnrichPeople_(people,workshop={}){
+  const regionOf=p=>configuredRegionFromLoose_(p.area)||configuredRegionFromLoose_(p.region)||trainerOf(p.trainerId)?.region||p.area||p.region||'';
+  const roster=(pgs||[]).filter(p=>!isTrainer()||normalizeRegionLoose_(regionOf(p))===normalizeRegionLoose_(session.region));
+  const workshopRegion=normalizeRegionLoose_(workshop.region),regionalRoster=workshopRegion?roster.filter(p=>normalizeRegionLoose_(regionOf(p))===workshopRegion):[];
   return (people||[]).map(p=>{
-    let matches;
+    let matches,byWorkshopRegion=false;
     if(p.code)matches=roster.filter(pg=>normalizePgMatchCode_(pg.code)===normalizePgMatchCode_(p.code));
     else{
       const name=workshopNoiboNameKey_(p.name);
-      matches=name?roster.filter(pg=>workshopNoiboNameKey_(pg.name)===name):[];
+      const named=(source,loose)=>name?source.filter(pg=>workshopNoiboNameKey_(pg.name,loose)===workshopNoiboNameKey_(p.name,loose)):[];
+      matches=named(regionalRoster,false);
+      if(!matches.length)matches=named(regionalRoster,true);
+      byWorkshopRegion=matches.length>0;
+      if(!matches.length)matches=named(roster,false);
       if(!matches.length && name)matches=roster.filter(pg=>workshopNoiboNameKey_(pg.name,true)===workshopNoiboNameKey_(p.name,true));
     }
     const codes=[...new Set(matches.map(pg=>String(pg.code||'').trim()).filter(Boolean))];
@@ -14508,9 +14514,9 @@ function workshopNoiboEnrichPeople_(people){
           if(mapped.length===1)shop=mapped[0];
         }
       }
-      note=code&&shop?'Khớp danh sách nhân sự':!code?'Chưa có mã NV trong danh sách nhân sự':shops.length>1?'Có nhiều shop cho mã NV này; cần đối chiếu':'Đã khớp mã NV; chưa có shop trong danh sách nhân sự';
+      note=code&&shop?(byWorkshopRegion?'Khớp tên và khu vực Workshop':'Khớp danh sách nhân sự'):!code?'Chưa có mã NV trong danh sách nhân sự':shops.length>1?'Có nhiều shop cho mã NV này; cần đối chiếu':'Đã khớp mã NV; chưa có shop trong danh sách nhân sự';
     }else if(!code || !shop){
-      note=matches.length?'Thông tin trùng; chưa xác định duy nhất mã NV/shop':p.code?'Mã NV chưa khớp danh sách nhân sự':'Tên chưa khớp danh sách nhân sự';
+      note=matches.length?(byWorkshopRegion?'Trùng tên trong khu vực Workshop; cần đối chiếu mã NV':'Thông tin trùng; chưa xác định duy nhất mã NV/shop'):p.code?'Mã NV chưa khớp danh sách nhân sự':'Tên chưa khớp danh sách nhân sự';
     }
     return {...p,code,shop,matchNote:note};
   });
@@ -14536,7 +14542,7 @@ async function exportWorkshopNoiboPeople_(row,button){
     const payload=await fetchWorkshopNoibo_(row.camp,campaignId,classId,false);
     if(!allowed())return;
     workshopNoiboPeopleMemory_.set(owner+':'+row.camp.id+':'+classId,payload);
-    const people=workshopNoiboEnrichPeople_(payload.people),excel=await pgsmLoadExcelJs_();
+    const people=workshopNoiboEnrichPeople_(payload.people,row),excel=await pgsmLoadExcelJs_();
     if(!allowed())return;
     const workbook=new excel.Workbook(),sheet=workbook.addWorksheet('Học viên Workshop');
     sheet.columns=[{key:'stt',width:7},{key:'code',width:17},{key:'name',width:28},{key:'shop',width:36},{key:'region',width:18},{key:'attendance',width:19},{key:'match',width:48}];
@@ -14618,7 +14624,7 @@ async function openWorkshopNoiboPeople_(row){
   const render=payload=>{
     if(!active())return;
     const people=payload.people||[];
-    const peopleRows=workshopNoiboEnrichPeople_(people);
+    const peopleRows=workshopNoiboEnrichPeople_(people,row);
     const missing=peopleRows.filter(p=>!p.code||!p.shop).length;
     dataBox.innerHTML=`<p class="section-desc" style="margin:0 0 8px;">${people.length} học viên · ${people.filter(p=>p.attended===true).length} đã tham gia · Cập nhật ${escapeHtml(workshopNoiboTime_(payload.updatedAt))}</p><div class="table-scroll"><table><thead><tr><th>STT</th><th>Mã PGs</th><th>Họ tên</th><th>Shop</th><th>Tham gia</th></tr></thead><tbody>${peopleRows.map((p,i)=>`<tr><td>${i+1}</td><td title="${escapeHtml(p.matchNote)}">${escapeHtml(p.code||'Chưa khớp')}</td><td><strong>${escapeHtml(p.name||'—')}</strong></td><td title="${escapeHtml(p.matchNote)}">${escapeHtml(p.shop||'Chưa khớp')}</td><td><span class="wsnb-attendance wsnb-attendance-${workshopNoiboAttendance_(p.attended).kind}">${workshopNoiboAttendance_(p.attended).text}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Hệ thống chưa có học viên cho lớp này.</td></tr>'}</tbody></table></div><p class="section-desc">${missing?`${missing} học viên cần đối chiếu mã NV/shop với danh sách nhân sự. Rê chuột vào ô Chưa khớp để xem lý do.`:'Mã NV và shop đã được đối chiếu với danh sách nhân sự.'}</p>`;
   };
