@@ -4277,6 +4277,8 @@ document.getElementById('loginBtn').addEventListener('click', async ()=>{
   }
 });
 document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  document.getElementById('wsnbDetailOverlay')?.remove();
+  document.getElementById('wsnbAuthCancel')?.click();
   try{sessionStorage.removeItem('workshop_private_session');workshopNoiboPeopleMemory_.clear();}catch{}
   session=null;
   saveSessionLocal_(null); // luôn ghi cục bộ (localStorage), không đụng tới auth_session dùng chung
@@ -10833,12 +10835,13 @@ async function updateWorkshopFromOtraining_(camp){
   if(!campaignId){ show('Hãy nhập ID chiến dịch (xem trong URL báo cáo otraining).','var(--red)'); if(idInput) idInput.focus(); return; }
   if(!camp || (!isAdmin() && !isTrainer()) || monthLocked) return;
   const month=camp.month, button=document.getElementById('otrWorkshopBtn');
+  const owner=String(session?.userId||session?.username||'');
   if(button?.disabled) return;
   if(button) button.disabled=true;
   show('⏳ Đang lấy danh sách Workshop từ hệ thống...');
   try{
     const arr=await fetchWorkshopNoibo_(camp,campaignId);
-    if(currentMonth!==month || !campaigns.some(c=>c.id===camp.id && c.month===month)) return;
+    if(currentMonth!==month || owner!==String(session?.userId||session?.username||'') || !campaigns.some(c=>c.id===camp.id && c.month===month)) return;
     if(String(document.getElementById('otrWsCampaignId')?.value||camp.otrId||'').trim()!==campaignId) return;
     const ws=XLSX.utils.json_to_sheet(arr);
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Data');
@@ -10851,9 +10854,11 @@ async function updateWorkshopFromOtraining_(camp){
 const WORKSHOP_NOIBO_FN_='https://qruxqlsbhyhwiqjdkyyc.supabase.co/functions/v1/otraining-workshop-noibo';
 const workshopNoiboPeopleMemory_=new Map();
 async function authorizeWorkshopNoibo_(username,password){
+  const owner=session?.userId;
   const res=await fetch(WORKSHOP_NOIBO_FN_,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},signal:AbortSignal.timeout(15000),body:JSON.stringify({action:'authorize',username,password})});
   const out=await res.json();
   if(!res.ok || !out.token)throw Error(out.error||'Không xác thực được quyền Workshop.');
+  if(!owner || owner!==session?.userId)throw Error('Tài khoản đã thay đổi. Vui lòng mở lại Workshop.');
   sessionStorage.setItem('workshop_private_session',JSON.stringify({token:out.token,expires:out.expires,userId:session?.userId}));
   return out.token;
 }
@@ -14457,8 +14462,9 @@ async function openWorkshopNoiboPeople_(row){
   document.addEventListener('keydown',onKey);ov.querySelector('#wsnbDetailClose').onclick=close;ov.onclick=e=>{if(e.target===ov)close();};ov.querySelector('#wsnbDetailClose').focus();
   const msg=ov.querySelector('#wsnbPeopleMsg'),dataBox=ov.querySelector('#wsnbPeopleData'),button=ov.querySelector('#wsnbPeopleRefresh');
   const campaignId=String(row.sourceCampaignId||row.camp.otrId||''),classId=String(row.classId||'');
-  const key=String(session?.userId||session?.username)+':'+row.camp.id+':'+classId;
-  const active=()=>ov.isConnected && currentMonth===row.camp.month && workshopNoiboVisible_(row);
+  const owner=String(session?.userId||session?.username);
+  const key=owner+':'+row.camp.id+':'+classId;
+  const active=()=>ov.isConnected && owner===String(session?.userId||session?.username) && currentMonth===row.camp.month && workshopNoiboVisible_(row);
   const render=payload=>{
     if(!active())return;
     const people=payload.people||[];
