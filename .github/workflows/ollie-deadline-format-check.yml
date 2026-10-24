@@ -1,0 +1,27 @@
+name: Ollie deadline format verification
+
+on:
+  push:
+    branches: [ollie-deadline-compact-test-20261024]
+    paths:
+      - 'automation/ollie/**'
+      - '.github/workflows/ollie-deadline-format-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install -r automation/ollie/requirements-github.txt
+      - name: Verify compact deadline messages and delivery protection
+        working-directory: automation/ollie
+        run: python -m unittest test_tracker test_announcements test_kpi test_kpi_scheduler test_github_daily test_deadlines test_dashboard_publish test_group_capture
