@@ -1,19 +1,19 @@
-name: Ollie leader deadline preview
+name: One-off leader deadline preview
 
 on:
   push:
-    branches: [main]
-    paths: ['automation/ollie/deadline-preview-trigger.json']
+    branches: [ollie-oneoff-leader-preview-20261024-0150]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ollie-kpi-daily
   cancel-in-progress: false
 
 jobs:
-  leader-preview:
+  one-private-preview:
+    if: github.event.created == true && github.event.deleted == false && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -23,12 +23,12 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: python -m pip install -r automation/ollie/requirements-github.txt
-      - name: Check leader-only preview protections
+      - name: Check one-off leader-only safeguards
         working-directory: automation/ollie
         run: python -m unittest test_leader_deadline_preview
-      - name: Send exactly one private deadline preview to the leader
+      - name: Send the single requested private preview
         working-directory: automation/ollie
         env:
           GITHUB_TOKEN: ${{ github.token }}
           OLLIE_KPI_CONFIG_JSON: ${{ secrets.OLLIE_KPI_CONFIG_JSON }}
-        run: python leader_deadline_preview.py --request-file deadline-preview-trigger.json
+        run: python leader_deadline_preview.py

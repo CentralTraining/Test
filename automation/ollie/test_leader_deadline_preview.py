@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 import sqlite3
 from types import SimpleNamespace
 import unittest
@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from daily_digest import MarkdownMessage
 from github_daily import StateError
-from leader_deadline_preview import preview_content, send_once, validate_request
+from leader_deadline_preview import preview_content, send_preview_once, validate_oneoff_event
 from tracker import DeliveryError, Tracker, VIETNAM
 
 
@@ -17,16 +17,12 @@ class LeaderPreviewChecks(unittest.TestCase):
         self.tracker = Tracker(self.db, {'leader_staff_id': 'synthetic-leader', 'leader_name': 'Leader thử nghiệm',
                                         'conversation_id': 'synthetic-group', 'robot_code': 'synthetic-bot'})
 
-    def tearDown(self):
-        self.db.close()
+    def tearDown(self): self.db.close()
 
-    def test_valid_request_is_fresh_and_cannot_select_another_recipient(self):
-        request = {'request_id': '12345678-1234-1234-1234-123456789abc',
-                   'requested_at': datetime.fromtimestamp(self.now, timezone.utc).isoformat(),
-                   'source': 'leader-deadline-preview'}
-        self.assertEqual(validate_request(request, self.now), request['request_id'])
-        with self.assertRaises(StateError): validate_request({**request, 'target': 'another-person'}, self.now)
-        with self.assertRaises(StateError): validate_request(request, self.now + 3601)
+    def test_only_the_first_branch_creation_can_send(self):
+        validate_oneoff_event({'created': True, 'deleted': False}, '1')
+        for event, attempt in [({'created': True}, '2'), ({'created': False}, '1'), ({'created': True, 'deleted': True}, '1')]:
+            with self.assertRaises(StateError): validate_oneoff_event(event, attempt)
 
     def test_actual_pending_tasks_are_combined_without_creating_send_jobs(self):
         incoming = SimpleNamespace(sender_staff_id='synthetic-leader')
@@ -46,34 +42,30 @@ class LeaderPreviewChecks(unittest.TestCase):
         self.assertIn('không có công việc còn hạn', content)
         self.assertEqual(self.tracker.pending_tasks(), [])
 
-    def test_only_one_dm_to_leader_and_same_request_does_not_send_twice(self):
-        sender, store = Mock(), Mock()
-        sender.send.return_value = 'synthetic-receipt'
+    def test_only_one_dm_to_the_configured_leader(self):
+        sender = Mock(); sender.send.return_value = 'synthetic-receipt'
         content = MarkdownMessage('Synthetic preview')
-        result = send_once(self.db, self.tracker, sender, store, 'request', content, 2, self.now)
-        self.assertEqual(result['accepted'], 1)
+        result = send_preview_once(self.tracker, sender, content, 2)
         sender.send.assert_called_once_with('dm', 'synthetic-leader', content)
+        self.assertEqual(result['accepted'], 1)
+        self.assertTrue(result['receipt_confirmed'])
         self.assertEqual(result['group_accepted'], 0)
         self.assertEqual(result['trainer_accepted'], 0)
-        again = send_once(self.db, self.tracker, sender, store, 'request', content, 2, self.now)
-        self.assertEqual(again['accepted'], 1)
-        self.assertEqual(sender.send.call_count, 1)
+        self.assertNotIn('synthetic-receipt', str(result))
 
-    def test_unknown_send_is_never_retried(self):
-        sender, store = Mock(), Mock()
-        sender.send.side_effect = DeliveryError('timeout', ambiguous=True)
-        first = send_once(self.db, self.tracker, sender, store, 'uncertain', 'Preview', 2, self.now)
-        again = send_once(self.db, self.tracker, sender, store, 'uncertain', 'Preview', 2, self.now)
-        self.assertEqual(first['uncertain'], 1)
-        self.assertEqual(again['accepted'], 0)
-        self.assertEqual(sender.send.call_count, 1)
+    def test_unknown_send_is_not_retried(self):
+        sender = Mock(); sender.send.side_effect = DeliveryError('timeout', ambiguous=True)
+        result = send_preview_once(self.tracker, sender, 'Preview', 2)
+        self.assertEqual(result['uncertain'], 1)
+        self.assertEqual(result['accepted'], 0)
+        sender.send.assert_called_once()
 
-    def test_failed_guard_save_prevents_any_send(self):
-        sender, store = Mock(), Mock()
-        store.save.side_effect = StateError('synthetic-write-failure')
-        with self.assertRaises(StateError):
-            send_once(self.db, self.tracker, sender, store, 'save-failed', 'Preview', 2, self.now)
-        sender.send.assert_not_called()
+    def test_definite_rejection_is_not_reported_as_accepted(self):
+        sender = Mock(); sender.send.side_effect = DeliveryError('recipient_rejected')
+        result = send_preview_once(self.tracker, sender, 'Preview', 2)
+        self.assertEqual(result['failed'], 1)
+        self.assertEqual(result['accepted'], 0)
+        sender.send.assert_called_once()
 
 
 if __name__ == '__main__': unittest.main()
