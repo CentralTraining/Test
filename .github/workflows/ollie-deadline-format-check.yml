@@ -24,4 +24,4 @@ jobs:
         run: python -m pip install -r automation/ollie/requirements-github.txt
       - name: Verify compact deadline messages and delivery protection
         working-directory: automation/ollie
-        run: python -m unittest test_tracker test_announcements test_kpi test_kpi_scheduler test_github_daily test_deadlines test_dashboard_publish test_group_capture test_leader_deadline_preview
+        run: python -m unittest test_tracker test_announcements test_kpi test_kpi_scheduler test_github_daily test_deadlines test_dashboard_publish test_group_capture test_leader_deadline_preview test_findx10_notice_recovery
