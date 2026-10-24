@@ -2106,6 +2106,59 @@ html body :is(nav.tabs,.subnav,.so-stats-pages,.mobile-home-chart-tabs)>button:f
 @media print{.progress-capture-tools,#progressCaptureNotice{display:none!important;}}
 
 </style>
+<style id="trainer-channel-20261024">
+#tab-extensions{min-width:0;max-width:100%;--channel-teal:#168881;--channel-blue:#4e77b8;}
+.channel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+.channel-heading h2{margin:0 0 5px;}.channel-heading p{margin:0;color:var(--muted);font-size:13px;}
+.channel-toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0;}
+.channel-toolbar label{display:grid;gap:5px;font-size:11px;font-weight:700;color:var(--muted);min-width:125px;flex:1 1 130px;}
+.channel-toolbar input,.channel-toolbar select{width:100%;min-width:0;padding:7px 9px;font-size:12px;min-height:34px;}
+.channel-modes{display:flex;gap:3px;align-self:end;padding:3px;background:#edf3ef;border-radius:7px;}
+.channel-modes button{padding:8px 11px;border:0;border-radius:5px;background:transparent;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.channel-modes button[aria-pressed=true]{color:#fff;background:#0b5e36;}
+.channel-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0;}
+.channel-stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0;}
+.channel-stat>span{display:block;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
+.channel-stat strong{display:block;font-size:27px;color:var(--green-dark);line-height:1.35;margin:4px 0;}
+.channel-stat small{font-size:11px;color:var(--muted);line-height:1.4;display:block;}
+.channel-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:14px;margin:14px 0;}
+.channel-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0;}
+.channel-card h3{font-size:16px;margin:0 0 5px;color:var(--green-dark);}.channel-card p{font-size:11px;color:var(--muted);margin:0 0 14px;line-height:1.5;}
+.channel-chart-row{display:grid;grid-template-columns:minmax(100px,1fr) minmax(90px,2.1fr) 88px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #eff4f1;}
+.channel-chart-row:last-child{border-bottom:0;}.channel-chart-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700;}
+.channel-chart-name small{display:block;font-size:10px;font-weight:400;color:var(--muted);}
+.channel-track{position:relative;background:#edf4ef;border-radius:5px;height:12px;overflow:hidden;}.channel-track>i{display:block;height:100%;background:#0b7547;border-radius:5px;}
+.channel-track.unknown{background:repeating-linear-gradient(135deg,#f0f3f1,#f0f3f1 4px,#e1e7e3 4px,#e1e7e3 5px);}
+.channel-chart-value{text-align:right;font-size:11px;font-weight:700;white-space:nowrap;}.channel-chart-value small{display:block;font-size:10px;font-weight:400;color:var(--muted);}
+.channel-legend{display:flex;gap:14px;font-size:10px;color:var(--muted);margin:10px 0 4px;}.channel-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;background:#0b7547;margin-right:4px;}.channel-legend i.remaining{background:#e2ece5;}
+.channel-engagement .channel-track>i{background:var(--channel-teal);}.channel-engagement[data-metric=shares] .channel-track>i{background:var(--channel-blue);}
+.channel-compact-tabs{display:flex;gap:4px;margin-bottom:10px;}.channel-compact-tabs button{border:1px solid var(--line);background:#fff;color:var(--muted);padding:5px 9px;border-radius:5px;font-size:11px;cursor:pointer;}.channel-compact-tabs button.active{border-color:#168881;color:#096f67;background:#edf8f6;}
+.channel-timeline{height:170px;display:flex;align-items:stretch;gap:5px;padding:7px 0 0;overflow:hidden;}
+.channel-day{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:end;gap:4px;font-size:9px;color:var(--muted);}
+.channel-day-bar{width:65%;max-width:40px;background:#2e9e74;border-radius:4px 4px 0 0;min-height:2px;position:relative;}.channel-day-bar span{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);font-weight:700;font-size:10px;color:#17633c;}
+.channel-day>small{font-size:8px;white-space:nowrap;}.channel-timeline.no-values{align-items:center;justify-content:center;color:var(--muted);font-size:12px;}
+.channel-banner{border:1px solid #cce0d3;background:#f1f8f3;padding:12px 14px;border-radius:9px;font-size:12px;line-height:1.6;}.channel-banner button{margin-left:8px;}
+.channel-status{font-size:11px;color:var(--muted);margin:10px 0;min-height:17px;}.channel-status[data-error=true]{color:#b33529;}
+.channel-detail-table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px;}.channel-detail-table th,.channel-detail-table td{padding:9px 8px;vertical-align:middle;overflow-wrap:anywhere;border-bottom:1px solid var(--line);}
+.channel-detail-table th{font-size:11px;background:#eaf4ed;color:#0b5e36;text-align:left;}.channel-detail-table th:first-child{width:20%;}.channel-detail-table a{color:#075e38;text-decoration:none;}
+.channel-detail-table small{display:block;font-size:10px;color:var(--muted);}.channel-detail-table button{font-size:10px;padding:4px 6px;white-space:nowrap;}
+.channel-tag{display:inline-block;font-size:10px;padding:3px 5px;background:#eef3f0;border-radius:4px;color:var(--muted);}.channel-tag.good{background:#e3f3e9;color:#09623a;}.channel-tag.wait{background:#fff4dd;color:#946000;}
+.channel-overlay{position:fixed;inset:0;z-index:250;background:#123b2570;display:flex;align-items:center;justify-content:center;padding:16px;}
+.channel-dialog{width:min(760px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:12px;padding:20px;box-shadow:0 15px 70px #07391f2b;}.channel-dialog h3{margin:0 0 14px;color:#075e38;}.channel-dialog .channel-close{float:right;border:1px solid var(--line);background:#fff;padding:3px 9px;border-radius:5px;cursor:pointer;}
+.channel-dialog label{display:grid;gap:6px;margin:12px 0;font-size:12px;font-weight:700;}.channel-dialog input,.channel-dialog select{width:100%;font-size:13px;}.channel-dialog ol{padding-left:20px;font-size:13px;line-height:1.8;}.channel-dialog code{overflow-wrap:anywhere;font-size:11px;white-space:normal;}.channel-dialog button{margin-right:5px;}.channel-video{padding:11px 0;border-bottom:1px solid var(--line);font-size:12px;line-height:1.6;}.channel-video a{color:#075e38;}.channel-video small{display:block;color:var(--muted);}
+.channel-empty{padding:25px 15px;text-align:center;color:var(--muted);font-size:12px;}.channel-note{font-size:10px;color:var(--muted);line-height:1.6;margin:12px 0;}
+.mobile-layout #tab-extensions .channel-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:8px;gap:7px;}.mobile-layout #tab-extensions .channel-toolbar label{min-width:0;font-size:9px;}.mobile-layout #tab-extensions .channel-toolbar :is(input,select){font-size:10px;min-height:29px;padding:4px;}.mobile-layout .channel-modes{grid-column:1/-1;justify-content:stretch;}.mobile-layout .channel-modes button{flex:1;padding:6px;font-size:10px;}
+.mobile-layout .channel-heading{gap:7px;align-items:start;}.mobile-layout .channel-heading h2{font-size:19px;}.mobile-layout .channel-heading p{font-size:10px;}.mobile-layout .channel-heading button{font-size:10px;padding:6px;}
+.mobile-layout .channel-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}.mobile-layout .channel-stat{padding:9px;}.mobile-layout .channel-stat strong{font-size:22px;margin:1px 0;}.mobile-layout .channel-stat>span{font-size:9px;}.mobile-layout .channel-stat small{font-size:9px;}
+.mobile-layout .channel-grid{grid-template-columns:minmax(0,1fr);gap:8px;}.mobile-layout .channel-card{padding:11px;}.mobile-layout .channel-card h3{font-size:14px;}.mobile-layout .channel-card p{font-size:10px;margin-bottom:7px;}.mobile-layout .channel-chart-row{grid-template-columns:minmax(76px,1fr) minmax(72px,1.5fr) 68px;gap:6px;padding:7px 0;}.mobile-layout .channel-chart-name{font-size:10px;}.mobile-layout .channel-chart-name small,.mobile-layout .channel-chart-value small{font-size:9px;}.mobile-layout .channel-chart-value{font-size:10px;}.mobile-layout .channel-track{height:9px;}
+.mobile-layout .channel-banner{font-size:10px;padding:9px;}.mobile-layout .channel-banner button{font-size:10px;padding:4px 6px;}.mobile-layout .channel-timeline{height:125px;}.mobile-layout .channel-day>small{font-size:7px;}
+.mobile-layout .channel-detail-table th,.mobile-layout .channel-detail-table td{padding:7px 4px;font-size:9px;}.mobile-layout .channel-detail-table small{font-size:8px;}.mobile-layout .channel-detail-table th:nth-child(2),.mobile-layout .channel-detail-table td:nth-child(2){display:none;}.mobile-layout .channel-detail-table th:first-child{width:31%;}.mobile-layout .channel-detail-table th:last-child{width:24%;}.mobile-layout .channel-detail-table button{font-size:8px;padding:3px 4px;}.mobile-layout .channel-dialog{padding:14px;}.mobile-layout .channel-dialog :is(input,select){min-width:0;font-size:12px;}
+.mobile-layout #tab-extensions .channel-detail-table{min-width:0!important;width:100%!important;max-width:100%!important;table-layout:fixed;}
+.mobile-layout #tab-extensions .table-scroll:has(.channel-detail-table){overflow:visible!important;border:0;max-width:100%;}
+.mobile-layout #tab-extensions .table-scroll:has(.channel-detail-table):before{display:none!important;}
+.mobile-layout .channel-detail-table :is(button,.channel-tag){max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:8px;}
+
+</style>
 </head>
 <body>
 
@@ -2195,6 +2248,7 @@ html body :is(nav.tabs,.subnav,.so-stats-pages,.mobile-home-chart-tabs)>button:f
     <div class="nav-group">
       <button data-tab="settings" data-title="Cài đặt" id="navSettingsBtn"><span class="nav-ic">⚙</span><span class="nav-label">Cài đặt</span><span class="nav-short">Cài đặt</span></button>
       <button data-tab="data" data-title="DATA" id="navDataBtn"><span class="nav-ic">🗄</span><span class="nav-label">DATA</span><span class="nav-short">DATA</span></button>
+      <button data-tab="extensions" data-title="Mở rộng" id="navExtensionsBtn"><span class="nav-ic">▧</span><span class="nav-label">Mở rộng</span><span class="nav-short">Mở rộng</span></button>
       <button data-tab="account" data-title="Tài khoản"><span class="nav-ic">👤</span><span class="nav-label">Tài khoản</span><span class="nav-short">T.Khoản</span></button>
     </div>
   </nav>
@@ -2803,6 +2857,7 @@ html body :is(nav.tabs,.subnav,.so-stats-pages,.mobile-home-chart-tabs)>button:f
   </section>
 
   <!-- ============ DATA (Admin) — Gom tất cả Import về 1 mối ============ -->
+  <section id="tab-extensions" class="maintab"><div class="subnav" role="group" aria-label="Ứng dụng mở rộng"><button type="button" class="active" aria-pressed="true">▥ Xây kênh</button></div><div id="channelTool"></div></section>
   <section id="tab-data" class="maintab">
     <div class="olie-all-pages-banner" aria-label="Olie đồng hành - Data">
       <div class="olie-all-pages-banner-copy"><span>OPPO TRAINER HUB · MIỀN TRUNG</span><strong>Data</strong><small>Gắn Kết · Phát Triển</small></div>
@@ -16264,6 +16319,7 @@ function renderTabContent_(tabId){
     case 'settings': renderSettingsConfig(); break;
     case 'so': renderSoActiveTab_(); break;
     case 'data': renderSettingsConfig();if(document.getElementById('panel-data-so')?.classList.contains('active'))loadSoData_().then(loaded=>{if(loaded)renderSoSummary_();});break;
+    case 'extensions': renderChannelTool_(); break;
     case 'account': if(isAdmin()){ renderAccountList(); renderLoginStatsBox_(); } break;
   }
   applyPermissionLocks();
@@ -19398,6 +19454,164 @@ async function pgsmRenderTrainerChangePanel_(camp,d){
  const root=document.getElementById('tab-kpi');
  if(root){new MutationObserver(schedule).observe(root,{childList:true,subtree:true});root.addEventListener('change',schedule);sync();}
 })();
+
+</script>
+<script id="trainer-channel-20261024-script">
+/* Date ranges use Vietnam calendar days. TikTok engagement is the latest total
+   on videos PUBLISHED in that range, not engagement gained during that range. */
+const ChannelModel=(()=>{
+ const DAY=86400000,iso=d=>d.toISOString().slice(0,10),date=s=>new Date(s+'T00:00:00Z');
+ const valid=s=>/^\d{4}-\d{2}-\d{2}$/.test(String(s))&&!Number.isNaN(+date(s))&&iso(date(s))===s;
+ const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const add=(s,n)=>iso(new Date(+date(s)+n*DAY));
+ function period(f){
+  let from,to;
+  if(f.mode==='week'){if(!valid(f.anchor))throw Error('Chọn ngày thuộc tuần cần xem.');const d=date(f.anchor);from=add(f.anchor,-((d.getUTCDay()+6)%7));to=add(from,6);}
+  else if(f.mode==='month'){if(!/^\d{4}-\d{2}$/.test(f.month))throw Error('Chọn tháng cần xem.');from=f.month+'-01';if(!valid(from))throw Error('Tháng không hợp lệ.');const d=date(from);to=iso(new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)));}
+  else{from=f.from;to=f.to;}
+  if(!valid(from)||!valid(to)||from>to||(+date(to)-+date(from))/DAY>365)throw Error('Khoảng ngày hợp lệ tối đa 366 ngày.');
+  return {from,to,days:Math.round((+date(to)-+date(from))/DAY)+1};
+ }
+ const goal=(t,p)=>{const from=t.trackingFrom&&t.trackingFrom>p.from?t.trackingFrom:p.from;return from>p.to?0:Math.ceil((Math.round((+date(p.to)-+date(from))/DAY)+1)*3/7);};
+ const day=v=>iso(new Date(Date.parse(v.createdAt)+7*3600000));
+ function report(trainers,p){
+  const rows=trainers.map(t=>{const videos=(t.videos||[]).filter(v=>day(v)>=p.from&&day(v)<=p.to);const target=goal(t,p),known=!!t.known;return {...t,videos,target,actual:known?videos.length:null,likes:known?videos.reduce((n,v)=>n+v.likes,0):null,shares:known?videos.reduce((n,v)=>n+v.shares,0):null,pct:known&&target?Math.round(videos.length/target*1000)/10:null};});
+  const totals=rows.reduce((a,t)=>({target:a.target+t.target,actual:a.actual+(t.actual||0),likes:a.likes+(t.likes||0),shares:a.shares+(t.shares||0),known:a.known+Number(t.known)}),{target:0,actual:0,likes:0,shares:0,known:0});
+  const binSize=p.days>35?7:1,bins=[];for(let start=p.from;start<=p.to;start=add(start,binSize))bins.push({from:start,to:add(start,binSize-1)>p.to?p.to:add(start,binSize-1),count:0});
+  for(const t of rows.filter(t=>t.known))for(const v of t.videos){const i=Math.floor((+date(day(v))-+date(p.from))/DAY/binSize);if(bins[i])bins[i].count++;}
+  return {rows,totals,bins,complete:rows.length>0&&totals.known===rows.length};
+ }
+ return {today,period,goal,report,day,add};
+})();
+
+/* Extensions / Channel building. All TikTok calls go through the authenticated
+   Edge Function. No account tokens, API secrets, or scraped content in HTML. */
+let channelView_={filters:{mode:'week',anchor:ChannelModel.today(),month:ChannelModel.today().slice(0,7),from:ChannelModel.today(),to:ChannelModel.today(),region:'',trainer:''},data:null,metric:'likes',owner:'',configured:false,busy:false,load:0,request:0,timer:null};
+const channelEscape_=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const channelNumber_=n=>n===null||n===undefined?'—':Number(n).toLocaleString('vi-VN');
+const channelShort_=s=>String(s||'').trim().split(/\s+/).slice(-2).join(' ');
+function channelOwner_(){return session?JSON.stringify([session.userId,session.role,session.region,session.trainerId]):'';}
+function channelUrl_(){return SUPABASE_URL+'/functions/v1/'+(location.pathname.startsWith('/Test/')?'trainer-channel-test':'trainer-channel');}
+function channelMessage_(text,error=false){const box=document.getElementById('channelStatus');if(box){box.textContent=text;box.dataset.error=String(error);}}
+async function channelApi_(action,extra={}){
+ const owner=channelOwner_();const token=action==='status'?null:await workshopNoiboToken_();
+ const res=await fetch(channelUrl_(),{method:'POST',headers:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY},body:JSON.stringify({action,...extra,...(token?{dashboardToken:token}:{})}),signal:AbortSignal.timeout(115000)});
+ let out;try{out=await res.json();}catch{throw Error('Chưa nhận được phản hồi Xây kênh. Hãy thử lại.');}
+ if(owner!==channelOwner_())throw Error('Tài khoản đã thay đổi. Hãy mở lại Xây kênh.');
+ if(res.status===401)sessionStorage.removeItem('workshop_private_session');
+ if(!res.ok||!out.ok)throw Error(out.error||'Không đọc được dữ liệu Xây kênh.');return out;
+}
+function channelInitial_(){
+ const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[Đđ]/g,'d').toLowerCase().replace(/[^a-z0-9]/g,'');
+ return (config.trainers||[]).filter(t=>isAdmin()||isTrainer()&&norm(session.region)&&norm(t.region)===norm(session.region)).map(t=>({...t,id:String(t.id),known:false,connected:false,handle:'',videos:[]}));
+}
+async function renderChannelTool_(){
+ const root=document.getElementById('channelTool');if(!root)return;
+ const owner=channelOwner_();if(owner!==channelView_.owner){clearTimeout(channelView_.timer);channelView_.data=null;channelView_.owner=owner;channelView_.filters.region='';channelView_.filters.trainer='';channelView_.busy=false;}
+ channelDraw_();if(!isAdmin()&&!isTrainer())return;
+ const load=++channelView_.load;
+ try{
+  const status=await channelApi_('status');if(load!==channelView_.load||owner!==channelOwner_())return;channelView_.configured=status.configured;
+  await channelLoad_(false);if(load!==channelView_.load||owner!==channelOwner_())return;channelDraw_();
+  if(channelView_.configured){channelSync_(false);}
+ }catch(error){channelDraw_();channelMessage_(error.message,true);}
+ if(location.hash.startsWith('#channel-connect=')){
+  const ok=location.hash==='#channel-connect=ok';history.replaceState(null,'',location.pathname+location.search);channelMessage_(ok?'Đã kết nối TikTok. Đang đọc video…':'Chưa kết nối được. Hãy dùng đúng tài khoản TikTok được gán và đồng ý đủ quyền.',!ok);
+ }
+}
+async function channelLoad_(draw=true){
+ const owner=channelOwner_(),period=ChannelModel.period(channelView_.filters),version=++channelView_.request;
+ const data=await channelApi_('overview',{from:period.from,to:period.to});
+ if(owner!==channelOwner_()||version!==channelView_.request)return;
+ channelView_.data=data;if(draw)channelDraw_();
+}
+// Date filters are independent from monthly KPI data and never write to KPI records.
+function channelDraw_(){
+ const root=document.getElementById('channelTool');if(!root)return;
+ if(!isAdmin()&&!isTrainer()){root.innerHTML='<div class="channel-empty">Mục Xây kênh dành cho Admin và Trainer.</div>';return;}
+ const f=channelView_.filters,list=channelView_.data?.trainers||channelInitial_();let period;
+ try{period=ChannelModel.period(f);}catch(e){channelMessage_(e.message,true);return;}
+ const regions=[...new Set(list.map(t=>t.region).filter(Boolean))],trainers=list.filter(t=>!f.region||t.region===f.region);
+ const selected=trainers.filter(t=>!f.trainer||String(t.id)===f.trainer),report=ChannelModel.report(selected,period),e=channelEscape_,num=channelNumber_;
+ const choices=(rows,value)=>rows.map(([v,label])=>`<option value="${e(v)}" ${v===value?'selected':''}>${e(label)}</option>`).join('');
+ const videoText=report.totals.known?num(report.totals.actual):'—',pct=report.complete&&report.totals.target?Math.round(report.totals.actual/report.totals.target*1000)/10:null;
+ root.innerHTML=`<div class="channel-heading"><div><h2>Xây kênh TikTok</h2><p>Mỗi tuần 3 video · Theo dõi nhất quán, phát triển từng ngày</p></div><button type="button" class="secondary" id="channelSync" ${channelView_.busy||!channelView_.configured?'disabled':''}>↻ Đồng bộ TikTok</button></div>
+ ${!channelView_.configured?`<div class="channel-banner"><strong>Chưa cấu hình ứng dụng TikTok.</strong> Admin gán trang cho Trainer, sau đó hoàn tất Login Kit và Display API để tự lấy video, like/share. <button type="button" class="secondary" id="channelSetup">Hướng dẫn kết nối</button></div>`:''}
+ <div class="channel-toolbar" aria-label="Bộ lọc tiến độ xây kênh">
+  <div class="channel-modes" role="group" aria-label="Kỳ báo cáo">${[['week','Tuần'],['month','Tháng'],['range','Khoảng ngày']].map(([v,label])=>`<button type="button" data-channel-mode="${v}" aria-pressed="${f.mode===v}">${label}</button>`).join('')}</div>
+  ${f.mode==='week'?`<label>Chọn tuần<input type="date" id="channelAnchor" value="${f.anchor}"></label>`:f.mode==='month'?`<label>Chọn tháng<input type="month" id="channelMonth" value="${f.month}"></label>`:`<label>Từ ngày<input type="date" id="channelFrom" value="${f.from}"></label><label>Đến ngày<input type="date" id="channelTo" value="${f.to}"></label>`}
+  <label>Khu vực<select id="channelRegion"><option value="">Tất cả khu vực</option>${choices(regions.map(r=>[r,r]),f.region)}</select></label>
+  <label>Trainer<select id="channelTrainer"><option value="">Tất cả Trainer</option>${choices(trainers.map(t=>[String(t.id),t.name]),f.trainer)}</select></label>
+ </div>
+ <div class="channel-status" id="channelStatus" role="status" aria-live="polite">${channelView_.busy?'Đang đồng bộ video từ TikTok…':`${period.from.split('-').reverse().join('/')} – ${period.to.split('-').reverse().join('/')} · Đã có dữ liệu ${report.totals.known}/${selected.length} Trainer`}</div>
+ <div class="channel-summary">
+  <div class="channel-stat"><span>Video đã đăng</span><strong>${videoText}<span style="font-size:14px;font-weight:500;color:var(--muted)"> / ${num(report.totals.target)}</span></strong><small>Target trong kỳ · 3 video/7 ngày</small></div>
+  <div class="channel-stat"><span>Tiến độ target</span><strong>${pct===null?'—':num(pct)+'%'}</strong><small>${report.complete?'Đã đủ dữ liệu trong phạm vi':`Chờ đồng bộ ${selected.length-report.totals.known} Trainer`}</small></div>
+  <div class="channel-stat"><span>♥ Lượt thích</span><strong>${report.totals.known?num(report.totals.likes):'—'}</strong><small>Video đăng trong kỳ đã chọn</small></div>
+  <div class="channel-stat"><span>↗ Lượt chia sẻ</span><strong>${report.totals.known?num(report.totals.shares):'—'}</strong><small>Số mới nhất từ TikTok</small></div>
+ </div>
+ <div class="channel-grid"><section class="channel-card"><h3>Tiến độ video theo Trainer</h3><p>Video đã đăng / target · Giữ nguyên số thực khi vượt target</p><div class="channel-legend"><span><i></i>Đã hoàn thành</span><span><i class="remaining"></i>Target còn lại</span></div>
+ ${report.rows.map(t=>`<div class="channel-chart-row" title="${e(t.name)} · ${t.actual===null?'Chưa đồng bộ':t.actual+'/'+t.target+' video'}"><div class="channel-chart-name" title="${e(t.name)}">${e(channelShort_(t.name))}<small>${e(t.region)}</small></div><div class="channel-track ${t.known?'':'unknown'}" role="img" aria-label="${e(t.name)}: ${t.actual===null?'chưa đồng bộ':t.actual+'/'+t.target+' video'}">${t.known?`<i style="width:${Math.min(100,t.pct||0)}%"></i>`:''}</div><div class="channel-chart-value">${t.known?num(t.actual)+'/'+num(t.target):'— / '+num(t.target)}<small>${t.pct===null?'Chưa đồng bộ':num(t.pct)+'%'}</small></div></div>`).join('')||'<div class="channel-empty">Chưa có Trainer trong phạm vi.</div>'}
+ </section><section class="channel-card"><h3>Tương tác video</h3><p>Tổng hiện tại của video đăng trong kỳ</p><div class="channel-compact-tabs" role="group" aria-label="Loại tương tác"><button type="button" data-channel-metric="likes" class="${channelView_.metric==='likes'?'active':''}">♥ Lượt thích</button><button type="button" data-channel-metric="shares" class="${channelView_.metric==='shares'?'active':''}">↗ Chia sẻ</button></div><div class="channel-engagement" data-metric="${channelView_.metric}">${channelEngagement_(report.rows)}</div>
+ <h3 style="margin-top:22px">Nhịp đăng video</h3><p>${period.days>35?'Theo từng nhóm 7 ngày':'Theo ngày'} · Giờ Việt Nam</p>${channelTimeline_(report)}
+ </section></div>
+ <section class="channel-card"><div class="channel-heading"><div><h3>Kênh của từng Trainer</h3><p>Số liệu chỉ tính video công khai; bấm Trainer để xem video</p></div>${isAdmin()?'<button type="button" class="secondary" id="channelAssign">＋ Gán trang TikTok</button>':''}</div>
+ <table class="channel-detail-table" aria-label="Tiến độ xây kênh TikTok"><thead><tr><th>Trainer</th><th>Trang TikTok</th><th>Video / Target</th><th>♥ Like</th><th>↗ Share</th><th>Kết nối</th></tr></thead><tbody>${report.rows.map(t=>`<tr><td><button type="button" class="secondary" data-channel-videos="${e(t.id)}" title="${e(t.name)}">${e(channelShort_(t.name))}</button><small>${e(t.region)}</small></td><td>${t.handle?`<a href="https://www.tiktok.com/@${e(t.handle)}" target="_blank" rel="noopener noreferrer">@${e(t.handle)}</a>`:'Chưa gán'}</td><td>${t.known?num(t.actual):'—'} / ${num(t.target)}<small>${t.pct===null?'Chưa đồng bộ':num(t.pct)+'%'}</small></td><td>${num(t.likes)}</td><td>${num(t.shares)}</td><td><span class="channel-tag ${t.known?'good':'wait'}">${t.known?'Đã đồng bộ':t.connected?'Đã kết nối':t.handle?'Chờ kết nối':'Chưa gán'}</span>${isAdmin()||String(t.id)===String(session.trainerId)?`<button type="button" class="secondary" data-channel-connect="${e(t.id)}" ${!t.handle||!channelView_.configured?'disabled':''} title="Đăng nhập đúng tài khoản TikTok đã gán">${t.connected?'Kết nối lại':'Kết nối'}</button>`:''}<small>${t.syncedAt?e(new Date(t.syncedAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})):''}</small></td></tr>`).join('')||'<tr><td colspan="6">Chưa có Trainer trong phạm vi.</td></tr>'}</tbody></table></section>
+ <p class="channel-note">Tuần: thứ Hai – Chủ nhật. Target tháng/khoảng ngày = 3 × số ngày theo dõi / 7, làm tròn lên. Like/share là tổng hiện tại của các video đăng trong kỳ, không phải lượt tương tác tăng riêng trong kỳ. Tự đồng bộ khi mở trang và mỗi 15 phút khi đang xem; TikTok có thể cập nhật số liệu chậm.</p>`;
+ root.querySelectorAll('[data-channel-mode]').forEach(b=>b.onclick=()=>{f.mode=b.dataset.channelMode;channelDraw_();channelChangePeriod_();});
+ const bind=(id,field,reset=false)=>{const el=root.querySelector('#'+id);if(el)el.onchange=()=>{const prev=f[field];f[field]=el.value;if(reset)f.trainer='';try{ChannelModel.period(f);if(['region','trainer'].includes(field))channelDraw_();else channelChangePeriod_();}catch(error){f[field]=prev;el.value=prev;channelMessage_(error.message,true);}};};
+ [['channelAnchor','anchor'],['channelMonth','month'],['channelFrom','from'],['channelTo','to'],['channelRegion','region',true],['channelTrainer','trainer']].forEach(args=>bind(...args));
+ root.querySelector('#channelSync').onclick=()=>channelSync_(true);root.querySelector('#channelSetup')?.addEventListener('click',channelSetup_);root.querySelector('#channelAssign')?.addEventListener('click',channelAssign_);
+ root.querySelectorAll('[data-channel-metric]').forEach(b=>b.onclick=()=>{channelView_.metric=b.dataset.channelMetric;channelDraw_();});
+ root.querySelectorAll('[data-channel-connect]').forEach(b=>b.onclick=()=>channelConnect_(b.dataset.channelConnect));
+ root.querySelectorAll('[data-channel-videos]').forEach(b=>b.onclick=()=>channelVideos_(report.rows.find(t=>t.id===b.dataset.channelVideos)));
+}
+async function channelChangePeriod_(){channelView_.data=null;channelDraw_();channelMessage_('Đang tải số liệu theo kỳ đã chọn…');try{await channelLoad_();}catch(error){channelMessage_(error.message,true);}}
+function channelEngagement_(rows){const k=channelView_.metric,max=Math.max(1,...rows.map(t=>t[k]||0)),e=channelEscape_;return rows.map(t=>`<div class="channel-chart-row"><div class="channel-chart-name" title="${e(t.name)}">${e(channelShort_(t.name))}</div><div class="channel-track ${t.known?'':'unknown'}" role="img" aria-label="${e(t.name)} ${k==='likes'?'lượt thích':'lượt chia sẻ'}: ${channelNumber_(t[k])}"><i style="width:${t.known?t[k]/max*100:0}%"></i></div><div class="channel-chart-value">${channelNumber_(t[k])}</div></div>`).join('')||'<div class="channel-empty">Chưa có dữ liệu.</div>';}
+function channelTimeline_(report){
+ if(!report.totals.known)return '<div class="channel-timeline no-values">Kết nối TikTok để xem nhịp đăng video</div>';
+ const max=Math.max(1,...report.bins.map(b=>b.count));return `<div class="channel-timeline" role="img" aria-label="Số video đăng theo thời gian">${report.bins.map((b,i)=>`<div class="channel-day" title="${b.from} – ${b.to}: ${b.count} video"><div class="channel-day-bar" style="height:${Math.max(1,b.count/max*110)}px">${b.count?`<span>${b.count}</span>`:''}</div><small>${report.bins.length>16&&i%3?'':b.from.slice(5).split('-').reverse().join('/')}</small></div>`).join('')}</div>`;
+}
+function channelDialog_(title,html){
+ document.querySelector('.channel-overlay')?.remove();const ov=document.createElement('div');ov.className='channel-overlay';ov.innerHTML=`<div class="channel-dialog" role="dialog" aria-modal="true" aria-label="${channelEscape_(title)}"><button type="button" class="channel-close" aria-label="Đóng">×</button><h3>${channelEscape_(title)}</h3>${html}</div>`;
+ const close=()=>ov.remove();ov.querySelector('.channel-close').onclick=close;ov.onclick=e=>{if(e.target===ov)close();};ov.onkeydown=e=>{if(e.key==='Escape')close();};document.body.append(ov);ov.querySelector('button')?.focus();return ov;
+}
+function channelSetup_(){
+ const slug=location.pathname.startsWith('/Test/')?'trainer-channel-test':'trainer-channel',redirect=SUPABASE_URL+'/functions/v1/'+slug+'/oauth/callback';
+ channelDialog_('Bật tự đồng bộ TikTok',`<ol><li>Mở <a href="https://developers.tiktok.com/" target="_blank" rel="noopener noreferrer">TikTok for Developers</a> → Manage apps → Create app, chọn Web.</li><li>Thêm <b>Login Kit</b> và <b>Display API</b>. Đăng ký quyền <code>user.info.basic</code>, <code>user.info.profile</code>, <code>video.list</code>.</li><li>Redirect URI: <code>${channelEscape_(redirect)}</code>. Website: <code>https://centraltraining.github.io/Dashboard/</code>.</li><li>Điền Privacy Policy và Terms of Service phù hợp thực tế của đơn vị; hoàn tất các yêu cầu xét duyệt của TikTok. Sandbox chỉ dùng thử với tài khoản thử nghiệm được cấp.</li><li>Trong Supabase → Edge Functions → Secrets, thêm <code>TIKTOK_CLIENT_KEY</code> và <code>TIKTOK_CLIENT_SECRET</code>. Không dán Client Secret vào chat, HTML hoặc GitHub.</li><li>Admin gán đúng @trang TikTok cho từng Trainer. Mỗi chủ kênh bấm <b>Kết nối</b>, đăng nhập đúng kênh và đồng ý các quyền để bắt đầu đồng bộ.</li></ol><p class="channel-note">Chưa có ứng dụng được cấp quyền thì chưa thể tự đọc video/like/share. Trang không tự tạo số liệu thay thế.</p>`);
+}
+function channelAssign_(){
+ if(!isAdmin())return;const list=channelView_.data?.trainers||channelInitial_(),e=channelEscape_;
+ const ov=channelDialog_('Gán trang TikTok cho Trainer',`<form id="channelAssignForm"><label>Trainer<select id="channelAssignTrainer">${list.map(t=>`<option value="${e(t.id)}">${e(t.name)} · ${e(t.region)}</option>`).join('')}</select></label><label>Trang TikTok<input id="channelHandle" placeholder="https://www.tiktok.com/@tenkenh hoặc @tenkenh" required autocomplete="off"></label><label>Bắt đầu tính target<input id="channelTracking" type="date" required></label><p class="channel-note">Mỗi Trainer có một kênh. Đổi trang TikTok sẽ yêu cầu chủ kênh kết nối lại; số liệu kênh cũ được thay sau khi xác thực đúng kênh mới.</p><p id="channelAssignError" role="alert" style="color:var(--red)"></p><button type="submit" class="primary">Lưu trang TikTok</button></form>`);
+ const select=ov.querySelector('#channelAssignTrainer'),fill=()=>{const t=list.find(t=>t.id===select.value);ov.querySelector('#channelHandle').value=t?.handle?'@'+t.handle:'';ov.querySelector('#channelTracking').value=t?.trackingFrom||ChannelModel.period(channelView_.filters).from;};select.onchange=fill;fill();
+ ov.querySelector('form').onsubmit=async event=>{event.preventDefault();const b=ov.querySelector('[type=submit]');b.disabled=true;try{await channelApi_('assign',{trainerId:select.value,handle:ov.querySelector('#channelHandle').value,trackingFrom:ov.querySelector('#channelTracking').value});ov.remove();await channelLoad_();channelMessage_('Đã gán trang TikTok. Chủ kênh cần bấm Kết nối để cho phép đọc video.');}catch(error){ov.querySelector('#channelAssignError').textContent=error.message;b.disabled=false;}};
+}
+async function channelConnect_(id){
+ try{const returnUrl=location.origin+location.pathname;if(!['https://centraltraining.github.io/Test/','https://centraltraining.github.io/Dashboard/'].includes(returnUrl))throw Error('Hãy mở dashboard trên website chính thức để kết nối.');const out=await channelApi_('connect',{trainerId:id,returnUrl});const u=new URL(out.url);if(u.origin!=='https://www.tiktok.com'||u.pathname!=='/v2/auth/authorize/')throw Error('Địa chỉ kết nối TikTok không hợp lệ.');location.assign(u.href);}catch(error){channelMessage_(error.message,true);}
+}
+function channelVideos_(t){
+ if(!t)return;const e=channelEscape_,n=channelNumber_;
+ channelDialog_(t.name+' · Video trong kỳ',t.known?t.videos.map(v=>`<div class="channel-video"><a href="https://www.tiktok.com/@${e(t.handle)}/video/${e(v.id)}" target="_blank" rel="noopener noreferrer">${e(v.title||'Video TikTok')}</a><small>${e(new Date(v.createdAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}))} · ♥ ${n(v.likes)} · ↗ ${n(v.shares)} · ${n(v.views)} lượt xem</small></div>`).join('')||'<p class="channel-empty">TikTok xác nhận chưa có video công khai trong kỳ này.</p>':'<p class="channel-empty">Chưa đồng bộ được dữ liệu kênh này.</p>');
+}
+async function channelSync_(force){
+ if(channelView_.busy||!channelView_.configured)return;channelView_.busy=true;const owner=channelOwner_();channelDraw_();
+ const list=(channelView_.data?.trainers||[]).filter(t=>t.connected&&(!channelView_.filters.region||t.region===channelView_.filters.region)&&(!channelView_.filters.trainer||t.id===channelView_.filters.trainer));
+ let done=0,failed=0,pending=0;
+ try{
+  for(const t of list){
+   if(owner!==channelOwner_()||currentTabId_()!=='extensions')break;
+   channelMessage_('Đang lấy video: '+t.name+' ('+(done+1)+'/'+list.length+')');
+   try{let out;for(let pass=0;pass<50;pass++){out=await channelApi_('sync',{trainerId:t.id,force:!!force&&pass===0});if(out.complete)break;if(currentTabId_()!=='extensions'||owner!==channelOwner_())break;}if(out?.complete)done++;else pending++;}catch{failed++;}
+  }
+  if(owner===channelOwner_()){await channelLoad_(false);channelView_.busy=false;channelDraw_();channelMessage_(list.length?`Đã đồng bộ ${done}/${list.length} kênh.${failed?' '+failed+' kênh chưa lấy được; giữ dữ liệu trước.':''}${pending?' '+pending+' kênh còn đang lấy trang video.':''}`:'Chưa có kênh TikTok đã kết nối trong phạm vi.',failed>0);}
+ }catch(error){channelMessage_(error.message,true);}
+ finally{channelView_.busy=false;clearTimeout(channelView_.timer);if(owner===channelOwner_())channelView_.timer=setTimeout(()=>{if(currentTabId_()==='extensions')channelSync_(false);},15*60000);const btn=document.getElementById('channelSync');if(btn)btn.disabled=!channelView_.configured;}
+}
+document.getElementById('logoutBtn').addEventListener('click',()=>{channelView_.data=null;channelView_.owner='';channelView_.load++;channelView_.request++;clearTimeout(channelView_.timer);document.querySelector('.channel-overlay')?.remove();const root=document.getElementById('channelTool');if(root)root.replaceChildren();});
+// OAuth return links reopen this extension after the existing dashboard boot completes.
+if(location.hash.startsWith('#channel-connect=')){
+ const watcher=setInterval(()=>{if(session&&config.trainers?.length&&document.querySelector('#mainApp:not(.hidden)')){clearInterval(watcher);document.querySelector('nav.tabs [data-tab="extensions"]')?.click();}},250);setTimeout(()=>clearInterval(watcher),30000);
+}
 
 </script>
 </body>
