@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; media-src blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Nén video trên máy · Team Training Central</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17392d;background:#f2f7f4}*{box-sizing:border-box}body{margin:0;padding:24px}main{max-width:900px;margin:auto}header{margin-bottom:22px}h1{font-size:clamp(24px,4vw,34px);margin:8px 0}p{line-height:1.65;color:#53695e}small{line-height:1.6;color:#53695e}.card{padding:24px;border:1px solid #dce8df;border-radius:16px;background:white;margin-bottom:18px}label{display:block;font-size:14px;font-weight:650;margin-bottom:7px}input,button,.download{font:inherit;border-radius:8px}input[type=file]{display:block;width:100%;padding:16px;background:#f4f8f5;border:1px dashed #9cbdaa}input[type=number]{width:100%;padding:11px;border:1px solid #cbdcd1}.range{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}.check{display:flex;align-items:center;gap:9px;font-weight:400}button,.download{display:inline-block;padding:12px 20px;border:0;background:#006341;color:white;font-weight:650;cursor:pointer;text-decoration:none}button:disabled{opacity:.45;cursor:default}button.secondary{background:#e8f0eb;color:#254b38;margin-left:8px}video{display:block;width:100%;max-height:400px;background:#101b15;border-radius:10px;margin:18px 0}progress{width:100%;height:15px;accent-color:#007548}#status{white-space:pre-wrap;overflow-wrap:anywhere}#status[data-error=true]{color:#b42318}#result{padding-top:14px}.muted{font-size:13px}canvas{display:none}[hidden]{display:none!important}@media(max-width:520px){body{padding:12px}.card{padding:16px}.range{gap:10px}button,.download{padding:12px 14px}}
+</style>
+</head>
+<body>
+<main>
+<header><small>TEAM TRAINING CENTRAL</small><h1>Nén video để gửi lại</h1><p>Chọn bản quay màn hình, tạo bản nhỏ hơn rồi gửi tệp mới vào cuộc trò chuyện. Video được xử lý trên thiết bị của bạn và không được tải lên máy chủ.</p></header>
+<section class="card">
+<label for="file">1. Chọn video MOV, MP4 hoặc WebM</label><input id="file" type="file" accept="video/*,.mov,.mp4,.webm">
+<p id="details" class="muted">Trên Mac, nên dùng Safari hoặc Chrome để mở tệp MOV.</p>
+<video id="video" controls playsinline preload="metadata" hidden></video>
+<div class="range"><div><label for="start">Bắt đầu ở giây</label><input id="start" type="number" min="0" step="0.1" value="0" disabled></div><div><label for="end">Kết thúc ở giây</label><input id="end" type="number" min="0.1" step="0.1" disabled></div></div>
+<label class="check"><input id="sound" type="checkbox" checked>Giữ âm thanh gốc</label>
+<p class="muted">Giữ đầy đủ các bước kết nối, cấp quyền và đồng bộ. Giữ tab này mở trong khi nén; thời gian xử lý gần bằng độ dài đoạn video.</p>
+<button id="compress" disabled>2. Nén và tạo tệp nhỏ</button><button id="cancel" class="secondary" hidden>Huỷ nén</button>
+</section>
+<section class="card" aria-live="polite"><progress id="progress" max="1" value="0"></progress><p id="status">Chưa chọn video.</p><div id="result" hidden><a id="download" class="download">3. Tải video đã nén</a><p class="muted">Gửi tệp vừa tải về vào cuộc trò chuyện để mình kiểm tra nội dung và xuất MP4 cuối cùng.</p></div></section>
+<canvas id="canvas"></canvas>
+</main>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),file=$('file'),video=$('video'),canvas=$('canvas'),ctx=canvas.getContext('2d',{alpha:false});
+let inputUrl='',outputUrl='',ready=false,busy=false,recorder=null,stream=null,raf=0,audioGraph=null,stopReason='',chunks=[],total=0,fileBase='video';
+const mb=n=>(n/1000000).toFixed(1)+' MB';
+const seconds=n=>Math.max(0,Math.round(n));
+const status=(message,error=false)=>{$('status').textContent=message;$('status').dataset.error=String(error);};
+function controls(on){file.disabled=on;$('start').disabled=on||!ready;$('end').disabled=on||!ready;$('sound').disabled=on;$('compress').disabled=on||!ready;$('cancel').hidden=!on;video.controls=!on;}
+function clearOutput(){if(outputUrl)URL.revokeObjectURL(outputUrl);outputUrl='';$('download').removeAttribute('href');$('result').hidden=true;}
+function finishResources(){cancelAnimationFrame(raf);video.pause();if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;recorder=null;busy=false;controls(false);}
+function stop(reason=''){if(!busy)return;if(reason)stopReason=reason;video.pause();if(recorder&&recorder.state!=='inactive')recorder.stop();}
+file.addEventListener('change',()=>{
+ clearOutput();ready=false;$('progress').value=0;controls(false);if(inputUrl)URL.revokeObjectURL(inputUrl);
+ const selected=file.files[0];if(!selected){video.hidden=true;status('Chưa chọn video.');return;}
+ fileBase=selected.name.replace(/\.[^.]+$/,'').replace(/[<>:"/\\|?*\u0000-\u001f]/g,'-').slice(0,100)||'video';
+ inputUrl=URL.createObjectURL(selected);video.src=inputUrl;video.hidden=false;video.load();status('Đang đọc video trên thiết bị…');
+});
+video.addEventListener('loadedmetadata',()=>{
+ if(!Number.isFinite(video.duration)||video.duration<=0||!video.videoWidth){status('Không đọc được thời lượng video. Hãy mở trang bằng Safari hoặc Chrome trên Mac.',true);return;}
+ ready=true;$('start').value='0';$('end').value=String(video.duration);$('start').max=String(video.duration);$('end').max=String(video.duration);
+ $('details').textContent=video.videoWidth+' × '+video.videoHeight+' px · '+seconds(video.duration)+' giây · '+mb(file.files[0].size);
+ status('Đã đọc video. Có thể giữ toàn bộ hoặc chọn đoạn cần gửi.');controls(false);
+});
+video.addEventListener('error',()=>{if(busy)stop('Không đọc được video trong khi nén.');else status('Trình duyệt chưa mở được video này. Hãy thử Safari hoặc Chrome trên Mac; hoặc xuất bản 720p từ QuickTime rồi chọn lại.',true);});
+video.addEventListener('ended',()=>stop());
+$('cancel').addEventListener('click',()=>stop('Đã huỷ. Video gốc vẫn được giữ nguyên.'));
+$('compress').addEventListener('click',async()=>{
+ if(!ready||busy)return;
+ const start=Number($('start').value),end=Number($('end').value),duration=end-start;
+ if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end>video.duration+.1||duration<.5){status('Chọn đoạn hợp lệ, dài ít nhất 0,5 giây.',true);return;}
+ if(!window.MediaRecorder||!canvas.captureStream){status('Trình duyệt chưa hỗ trợ nén video tại chỗ. Hãy mở bằng Safari hoặc Chrome mới.',true);return;}
+ clearOutput();busy=true;stopReason='';chunks=[];total=0;controls(true);$('progress').value=0;
+ try{
+  video.pause();video.playbackRate=1;
+  if(Math.abs(video.currentTime-start)>.03){await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Không chuyển được đến đoạn đã chọn.')),15000);video.addEventListener('seeked',()=>{clearTimeout(timer);resolve();},{once:true});video.currentTime=start;});}
+  const scale=Math.min(1920/video.videoWidth,1080/video.videoHeight,1);canvas.width=Math.max(2,Math.floor(video.videoWidth*scale/2)*2);canvas.height=Math.max(2,Math.floor(video.videoHeight*scale/2)*2);
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);stream=canvas.captureStream(30);
+  if($('sound').checked){
+   const Audio=window.AudioContext||window.webkitAudioContext;
+   if(!Audio)throw Error('Không thể giữ âm thanh trên trình duyệt này. Bỏ chọn Giữ âm thanh gốc rồi thử lại.');
+   if(!audioGraph){const context=new Audio(),source=context.createMediaElementSource(video),destination=context.createMediaStreamDestination();source.connect(destination);audioGraph={context,destination};}
+   await audioGraph.context.resume();for(const track of audioGraph.destination.stream.getAudioTracks())stream.addTrack(track.clone());
+  }
+  const candidates=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  const mime=candidates.find(type=>MediaRecorder.isTypeSupported(type));if(!mime)throw Error('Trình duyệt không có định dạng xuất phù hợp. Hãy thử Safari hoặc Chrome.');
+  const rate=Math.min(6000000,Math.floor(24000000*8/duration)-128000);if(rate<150000)throw Error('Đoạn quá dài để giữ chữ rõ trong tệp nhỏ. Hãy chọn đoạn ngắn hơn.');
+  recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:rate,audioBitsPerSecond:96000});
+  recorder.ondataavailable=event=>{if(event.data.size){chunks.push(event.data);total+=event.data.size;if(total>31000000)stop('Tệp vẫn quá lớn. Hãy chọn đoạn ngắn hơn rồi nén lại.');}};
+  recorder.onerror=()=>{stopReason='Trình duyệt không mã hoá được video này.';stop(stopReason);};
+  recorder.onstop=()=>{
+   const actualType=recorder.mimeType||mime;finishResources();
+   if(stopReason){chunks=[];status(stopReason,true);return;}
+   const blob=new Blob(chunks,{type:actualType});chunks=[];
+   if(!blob.size||blob.size>31000000){status('Tệp xuất chưa đạt giới hạn gửi. Chọn đoạn ngắn hơn và thử lại.',true);return;}
+   const extension=actualType.includes('mp4')?'mp4':'webm';outputUrl=URL.createObjectURL(blob);$('download').href=outputUrl;$('download').download=fileBase+'-ban-nho.'+extension;$('result').hidden=false;$('progress').value=1;
+   status('Đã tạo bản '+extension.toUpperCase()+': '+mb(blob.size)+' · '+canvas.width+' × '+canvas.height+' px. Video gốc không thay đổi.');
+  };
+  recorder.start(1000);await video.play();
+  function draw(){if(!busy)return;ctx.drawImage(video,0,0,canvas.width,canvas.height);const done=Math.max(0,video.currentTime-start);$('progress').value=Math.min(1,done/duration);status('Đang nén trên máy: '+seconds(done)+' / '+seconds(duration)+' giây. Giữ tab này mở.');if(video.currentTime>=end-.025){stop();return;}raf=requestAnimationFrame(draw);}
+  raf=requestAnimationFrame(draw);
+ }catch(error){stopReason=error.message||'Không xử lý được video.';if(recorder&&recorder.state!=='inactive')recorder.stop();else finishResources();status(stopReason,true);}
+});
+})();
+</script>
+</body>
+</html>
