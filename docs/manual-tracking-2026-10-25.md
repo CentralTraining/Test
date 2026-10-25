@@ -1,6 +1,6 @@
 # Xây kênh — cập nhật tiến độ thủ công
 
-Phiên bản **Test, 25/10/2026**. Website: https://centraltraining.github.io/Test/.
+Phiên bản **Test, 25/10/2026 — v2**. Website: https://centraltraining.github.io/Test/.
 Chưa áp dụng chức năng này lên Dashboard chính.
 
 ## Cách dùng
@@ -10,8 +10,16 @@ Chưa áp dụng chức năng này lên Dashboard chính.
 3. Chọn các kênh đã gán, hoặc chọn file Excel/CSV có cột `Url` như mẫu.
    File chỉ chọn đúng kênh theo username; không sửa ánh xạ Trainer hay mốc Admin.
 4. Bấm **Quét và cập nhật**. Danh sách cập nhật lần lượt, có kết quả riêng từng kênh.
-5. Xem báo cáo ở nguồn **Web tracking**, theo tuần, tháng hoặc khoảng ngày.
-   Có thể chuyển về **TikTok API** để xem dữ liệu kết nối trước đó.
+5. Bảng tự cập nhật từng kênh ngay khi quét thành công; nguồn mặc định **Tự động** ưu tiên dữ liệu Web tracking đã lưu. Xem theo tuần, tháng hoặc khoảng ngày.
+   Có thể chọn riêng **TikTok API** để đối chiếu dữ liệu kết nối trước đó. Nút làm mới TikTok API không tự đổi nguồn đang xem.
+
+## Thay đổi hiển thị v2
+
+- Cập nhật bảng ngay sau mỗi kênh, không chờ quét xong cả danh sách.
+- Kết quả vừa lưu vẫn hiển thị khi tải lại danh sách lỗi hoặc phản hồi cũ đến chậm.
+- Hiển thị tổng video, follower hiện tại và tổng like kênh đã quét; phân biệt với phần tăng trong kỳ.
+- Giữ nguyên mốc Admin và cách ghi nhận tăng/giảm theo ngày Việt Nam.
+- Không thay Edge Function phiên bản 8, dữ liệu lưu, Secrets hoặc Dashboard chính.
 
 ## Ý nghĩa số liệu
 

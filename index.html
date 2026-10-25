@@ -2252,6 +2252,10 @@ html:not(.ui-force-mobile):not(.mobile-layout) body .sidebar-inner>.sidebar-tagl
 .channel-day.has-decrease .channel-day-bar{background:#c45346;}
 .channel-metric-cell.down .channel-metric-number{color:#ba3f38;}
 .channel-metric-cell.down .channel-metric-track i{background:#ba3f38;}
+.channel-current-count{font-size:8px;font-weight:500;color:var(--muted);line-height:1.1;margin-left:4px;white-space:nowrap;}
+.channel-mobile-post-value .channel-current-count{display:block;margin:1px 0 0;font-size:7px;}
+.mobile-layout .channel-metric-number{flex-wrap:wrap;gap:0 2px;}
+.mobile-layout .channel-metric-number .channel-current-count{display:block;flex-basis:100%;margin:0;font-size:6px;line-height:1;}
 .channel-manual-dialog{width:min(840px,96vw);max-height:90dvh;overflow-y:auto;}
 .channel-manual-dialog h3{font-size:20px;line-height:1.3;margin-bottom:12px;}
 .channel-manual-intro{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:12px;}
@@ -19754,18 +19758,30 @@ const WebTrackingModel=(()=>{
   return {ids,issues,unique:seen.size};
  }
  function source(trainers,selected){return selected==='web_tracking'||selected==='tiktok_api'?selected:trainers.some(t=>t.webTracking?.ready)?'web_tracking':'tiktok_api';}
+ function applyScan(trainer,scan,period){
+  if(String(scan?.trainerId)!==String(trainer.id)||!scan.ready||!scan.current||!Number.isFinite(Date.parse(scan.asOf)))return trainer;
+  const old=trainer.webTracking||{};
+  if(Date.parse(old.asOf)>Date.parse(scan.asOf))return trainer;
+  const map=new Map((old.days||[]).map(d=>[d.day,d]));
+  for(const d of scan.days||[]){const before=map.get(d.day);if(!before||Date.parse(d.lastAt)>=Date.parse(before.lastAt))map.set(d.day,d);}
+  const days=[...map.values()].filter(d=>d.day>=period.from&&d.day<=period.to).sort((a,b)=>a.day.localeCompare(b.day));
+  const growth=days.length?days.reduce((sum,d)=>{for(const k of ['followers','videos','likes'])sum[k]+=d.growth[k];return sum;},{followers:0,videos:0,likes:0}):null;
+  const history=new Map((trainer.webFollowers?.history||[]).map(p=>[p.at,p]));
+  for(const d of scan.days||[])history.set(d.lastAt,{at:d.lastAt,count:d.current.followers,source:'web_tracking'});
+  return {...trainer,webTracking:{...old,...scan,startedAt:old.startedAt||scan.startedAt,days,growth},webFollowers:{...(trainer.webFollowers||trainer.followers),baseline:trainer.followers?.baseline,history:[...history.values()].sort((a,b)=>Date.parse(a.at)-Date.parse(b.at)),current:scan.current.followers,asOf:scan.asOf,status:'web_tracking'}};
+ }
  function report(trainers,period,goal,add){
   const rows=trainers.map(t=>{
    const tracking=t.webTracking||{},known=!!tracking.growth,actual=known?tracking.growth.videos:null,target=goal(t,period);
-   return {...t,known,target,actual,likes:known?tracking.growth.likes:null,views:null,shares:null,pct:known&&target?Math.round(actual/target*1000)/10:null,videos:[],followers:t.webFollowers||{baseline:t.followers?.baseline,status:'awaiting_web_scan',history:[],current:null},dataSource:'web_tracking',partial:!!tracking.startedAt&&new Date(Date.parse(tracking.startedAt)+7*3600000).toISOString().slice(0,10)>period.from,syncedAt:tracking.asOf||null};
+   return {...t,known,target,actual,likes:tracking.ready?tracking.current?.likes??null:null,likeGrowth:known?tracking.growth.likes:null,channelVideos:tracking.ready?tracking.current?.videos??null:null,views:null,shares:null,pct:known&&target?Math.round(actual/target*1000)/10:null,videos:[],followers:t.webFollowers||{baseline:t.followers?.baseline,status:'awaiting_web_scan',history:[],current:null},dataSource:'web_tracking',partial:!!tracking.startedAt&&new Date(Date.parse(tracking.startedAt)+7*3600000).toISOString().slice(0,10)>period.from,syncedAt:tracking.asOf||null};
   });
-  const totals=rows.reduce((a,t)=>({target:a.target+t.target,actual:a.actual+(t.actual||0),likes:a.likes+(t.likes||0),shares:0,known:a.known+Number(t.known)}),{target:0,actual:0,likes:0,shares:0,known:0});
+  const totals=rows.reduce((a,t)=>({target:a.target+t.target,actual:a.actual+(t.actual||0),likes:a.likes+(t.likes||0),likeGrowth:a.likeGrowth+(t.likeGrowth||0),currentKnown:a.currentKnown+Number(t.webTracking?.ready),shares:0,known:a.known+Number(t.known)}),{target:0,actual:0,likes:0,likeGrowth:0,currentKnown:0,shares:0,known:0});
   const size=period.days>35?7:1,bins=[];
   for(let from=period.from;from<=period.to;from=add(from,size))bins.push({from,to:add(from,size-1)>period.to?period.to:add(from,size-1),count:0});
   for(const row of rows)for(const d of row.webTracking?.days||[]){const bin=bins.find(b=>d.day>=b.from&&d.day<=b.to);if(bin)bin.count+=d.growth.videos;}
   return {rows,totals,bins,source:'web_tracking',complete:rows.length>0&&totals.known===rows.length&&!rows.some(t=>t.partial)};
  }
- return {profile,parseRows,source,report};
+ return {profile,parseRows,source,report,applyScan};
 })();
 
 /* Date ranges use Vietnam calendar days. TikTok engagement is the latest total
@@ -19826,7 +19842,7 @@ const FollowerModel=(()=>{
 
 /* Extensions / Channel building. All TikTok calls go through the authenticated
    Edge Function. No account tokens, API secrets, or scraped content in HTML. */
-let channelView_={filters:{mode:'week',anchor:ChannelModel.today(),month:ChannelModel.today().slice(0,7),from:ChannelModel.today(),to:ChannelModel.today(),region:'',trainer:'',source:'auto'},data:null,owner:'',configured:false,manualAvailable:false,managementOpen:false,busy:false,load:0,request:0,timer:null};
+let channelView_={filters:{mode:'week',anchor:ChannelModel.today(),month:ChannelModel.today().slice(0,7),from:ChannelModel.today(),to:ChannelModel.today(),region:'',trainer:'',source:'auto'},data:null,owner:'',configured:false,manualAvailable:false,managementOpen:false,busy:false,load:0,request:0,timer:null,scanResults:new Map()};
 const channelEscape_=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const channelNumber_=n=>n===null||n===undefined?'—':Number(n).toLocaleString('vi-VN');
 const channelShort_=s=>String(s||'').trim().split(/\s+/).slice(-2).join(' ');
@@ -19847,7 +19863,7 @@ function channelInitial_(){
 }
 async function renderChannelTool_(){
  const root=document.getElementById('channelTool');if(!root)return;
- const owner=channelOwner_();if(owner!==channelView_.owner){clearTimeout(channelView_.timer);channelView_.data=null;channelView_.owner=owner;channelView_.filters.region='';channelView_.filters.trainer='';channelView_.filters.source='auto';channelView_.managementOpen=false;channelView_.busy=false;}
+ const owner=channelOwner_();if(owner!==channelView_.owner){clearTimeout(channelView_.timer);channelView_.data=null;channelView_.scanResults.clear();channelView_.owner=owner;channelView_.filters.region='';channelView_.filters.trainer='';channelView_.filters.source='auto';channelView_.managementOpen=false;channelView_.busy=false;}
  channelDraw_();if(!isAdmin()&&!isTrainer())return;
  const load=++channelView_.load;
  try{
@@ -19863,7 +19879,7 @@ async function channelLoad_(draw=true){
  const owner=channelOwner_(),period=ChannelModel.period(channelView_.filters),version=++channelView_.request;
  const data=await channelApi_('overview',{from:period.from,to:period.to});
  if(owner!==channelOwner_()||version!==channelView_.request)return;
- channelView_.data=data;if(draw)channelDraw_();
+ data.trainers=data.trainers.map(t=>{const saved=channelView_.scanResults.get(String(t.id));if(saved&&saved.handle!==t.handle){channelView_.scanResults.delete(String(t.id));return t;}return saved?WebTrackingModel.applyScan(t,saved.result,period):t;});channelView_.data=data;if(draw)channelDraw_();
 }
 // Date filters are independent from monthly KPI data and never write to KPI records.
 function channelDraw_(){
@@ -19886,7 +19902,7 @@ function channelDraw_(){
  <div class="channel-status-row"><div class="channel-status" id="channelStatus" role="status" aria-live="polite">${channelView_.busy?'Đang đồng bộ video và chỉ số kênh…':`${period.from.split('-').reverse().join('/')} – ${period.to.split('-').reverse().join('/')} · Đã có dữ liệu ${report.totals.known}/${selected.length} Trainer`}</div>${channelSourceControl_(report.source)}</div>
  ${channelCompactSummary_(report,selected,period)}
  <div class="channel-grid channel-grid-compact"><section class="channel-card channel-posts-panel"><div class="channel-panel-title"><h3>${report.source==='web_tracking'?'Video tăng ghi nhận':'Tiến độ bài đăng'}</h3></div><p class="channel-panel-caption">${report.source==='web_tracking'?'Theo ngày quét · Không suy ra ngày đăng':'3 bài/tuần · Giữ số thực khi vượt target'}</p><div class="channel-posts-head"><span>Trainer</span><span>Tiến độ</span><span>Bài / Target</span></div>
- ${report.rows.map(t=>`<div class="channel-chart-row" title="${e(t.name)} · ${t.actual===null?'Chưa đồng bộ':t.actual+'/'+t.target+' video'}"><div class="channel-chart-name" title="${e(t.name)}">${e(channelShort_(t.name))}<small>${e(t.region)}</small></div><div class="channel-track ${t.known?'':'unknown'}" role="img" aria-label="${e(t.name)}: ${t.actual===null?'chưa đồng bộ':t.actual+'/'+t.target+' video'}">${t.known?`<i style="width:${Math.max(0,Math.min(100,t.pct||0))}%"></i>`:''}</div><div class="channel-chart-value ${t.actual<0?'negative':''}">${t.known?num(t.actual)+'/'+num(t.target):'— / '+num(t.target)}<small>${t.pct===null?'Chưa đồng bộ':num(t.pct)+'%'}</small></div></div>`).join('')||'<div class="channel-empty">Chưa có Trainer trong phạm vi.</div>'}
+ ${report.rows.map(t=>`<div class="channel-chart-row" title="${e(t.name)} · ${t.actual===null?'Chưa đồng bộ':t.actual+'/'+t.target+' video'}"><div class="channel-chart-name" title="${e(t.name)}">${e(channelShort_(t.name))}<small>${e(t.region)}</small></div><div class="channel-track ${t.known?'':'unknown'}" role="img" aria-label="${e(t.name)}: ${t.actual===null?'chưa đồng bộ':t.actual+'/'+t.target+' video'}">${t.known?`<i style="width:${Math.max(0,Math.min(100,t.pct||0))}%"></i>`:''}</div><div class="channel-chart-value ${t.actual<0?'negative':''}">${t.known?num(t.actual)+'/'+num(t.target):'— / '+num(t.target)}<small>${t.channelVideos!==null&&t.channelVideos!==undefined?num(t.channelVideos)+' video kênh · ':''}${t.pct===null?'Chưa có mốc trong kỳ':num(t.pct)+'%'}</small></div></div>`).join('')||'<div class="channel-empty">Chưa có Trainer trong phạm vi.</div>'}
  </section>${channelMetricsCard_(report,period)}</div>
  <section class="channel-card channel-rhythm-panel"><h3>${report.source==='web_tracking'?'Nhịp tăng video ghi nhận':'Nhịp đăng video'}</h3><p>${period.days>35?'Theo từng nhóm 7 ngày':'Theo ngày'} · Giờ Việt Nam${report.source==='web_tracking'?' · Ngày quét, không phải ngày đăng':''}</p>${channelTimeline_(report)}
  </section>
@@ -19931,7 +19947,7 @@ function channelVideos_(t){
  channelDialog_(t.name+' · Video trong kỳ',t.known?t.videos.map(v=>`<div class="channel-video"><a href="https://www.tiktok.com/@${e(t.handle)}/video/${e(v.id)}" target="_blank" rel="noopener noreferrer">${e(v.title||'Video TikTok')}</a><small>${e(new Date(v.createdAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}))} · ♥ ${n(v.likes)} · ↗ ${n(v.shares)} · ${n(v.views)} lượt xem</small></div>`).join('')||'<p class="channel-empty">TikTok xác nhận chưa có video công khai trong kỳ này.</p>':'<p class="channel-empty">Chưa đồng bộ được dữ liệu kênh này.</p>');
 }
 async function channelSync_(force){
- if(channelView_.busy||!channelView_.configured)return;if(!force&&WebTrackingModel.source(channelView_.data?.trainers||[],channelView_.filters.source)==='web_tracking')return;if(force)channelView_.filters.source='tiktok_api';channelView_.busy=true;const owner=channelOwner_();channelDraw_();
+ if(channelView_.busy||!channelView_.configured)return;if(!force&&WebTrackingModel.source(channelView_.data?.trainers||[],channelView_.filters.source)==='web_tracking')return;channelView_.busy=true;const owner=channelOwner_();channelDraw_();
  const list=(channelView_.data?.trainers||[]).filter(t=>t.connected&&(!channelView_.filters.region||t.region===channelView_.filters.region)&&(!channelView_.filters.trainer||t.id===channelView_.filters.trainer));
  let done=0,failed=0,pending=0;
  try{
@@ -19944,7 +19960,7 @@ async function channelSync_(force){
  }catch(error){channelMessage_(error.message,true);}
  finally{channelView_.busy=false;clearTimeout(channelView_.timer);if(owner===channelOwner_())channelView_.timer=setTimeout(()=>{if(currentTabId_()==='extensions')channelSync_(false);},15*60000);const btn=document.getElementById('channelSync');if(btn)btn.disabled=!channelView_.configured;}
 }
-document.getElementById('logoutBtn').addEventListener('click',()=>{channelView_.data=null;channelView_.owner='';channelView_.load++;channelView_.request++;clearTimeout(channelView_.timer);document.querySelector('.channel-overlay')?.remove();const root=document.getElementById('channelTool');if(root)root.replaceChildren();});
+document.getElementById('logoutBtn').addEventListener('click',()=>{channelView_.data=null;channelView_.scanResults.clear();channelView_.owner='';channelView_.load++;channelView_.request++;clearTimeout(channelView_.timer);document.querySelector('.channel-overlay')?.remove();const root=document.getElementById('channelTool');if(root)root.replaceChildren();});
 // OAuth return links reopen this extension after the existing dashboard boot completes.
 if(location.hash.startsWith('#channel-connect=')){
  const watcher=setInterval(()=>{if(session&&config.trainers?.length&&document.querySelector('#mainApp:not(.hidden)')){clearInterval(watcher);document.querySelector('nav.tabs [data-tab="extensions"]')?.click();}},250);setTimeout(()=>clearInterval(watcher),30000);
@@ -20005,7 +20021,7 @@ function channelBindFollowers_(root,trainers,period){
 function channelCompactSummary_(report,trainers,period){
  const follower=FollowerModel.report(report.rows,period),e=channelEscape_,known=report.totals.known;
  const progress=report.complete&&report.totals.target?channelNumber_(Math.round(report.totals.actual/report.totals.target*1000)/10)+'%':known+'/'+trainers.length+' kênh có dữ liệu';
- return `<div class="channel-summary channel-summary-compact"><div class="channel-stat"><span>${report.source==='web_tracking'?'Video tăng':'Bài đăng'}</span><strong>${channelFollowerCount_(known?report.totals.actual:null)}<em> / ${channelNumber_(report.totals.target)}</em></strong><small>${e(progress)}</small></div><div class="channel-stat"><span>↑ Tăng follow</span><strong>${channelFollowerCount_(follower.delta,true)}</strong><small>${follower.complete?channelFollowerSigned_(follower.growthPct,'%')+' · từ 01/10':follower.comparable+'/'+trainers.length+' kênh đủ mốc 01/10'} <button type="button" class="channel-stat-info" data-channel-follow-help title="Cách tính follower">ⓘ</button></small></div><div class="channel-stat"><span>${report.source==='web_tracking'?'♥ Like tăng':'♥ Like'}</span><strong>${channelFollowerCount_(known?report.totals.likes:null)}</strong><small>${report.source==='web_tracking'?'Ghi nhận trong kỳ':'Video trong kỳ'}</small></div><div class="channel-stat"><span>↗ Share</span><strong>${channelFollowerCount_(report.source==='web_tracking'?null:known?report.totals.shares:null)}</strong><small>Video trong kỳ</small></div></div>`;
+ return `<div class="channel-summary channel-summary-compact"><div class="channel-stat"><span>${report.source==='web_tracking'?'Video tăng':'Bài đăng'}</span><strong>${channelFollowerCount_(known?report.totals.actual:null)}<em> / ${channelNumber_(report.totals.target)}</em></strong><small>${e(progress)}</small></div><div class="channel-stat"><span>↑ Tăng follow</span><strong>${channelFollowerCount_(follower.delta,true)}</strong><small>${follower.complete?channelFollowerSigned_(follower.growthPct,'%')+' · từ 01/10':follower.comparable+'/'+trainers.length+' kênh đủ mốc 01/10'} <button type="button" class="channel-stat-info" data-channel-follow-help title="Cách tính follower">ⓘ</button></small></div><div class="channel-stat"><span>${report.source==='web_tracking'?'♥ Like kênh':'♥ Like'}</span><strong>${channelFollowerCount_((report.source==='web_tracking'?report.totals.currentKnown:known)?report.totals.likes:null)}</strong><small>${report.source==='web_tracking'?(report.totals.known?channelFollowerSigned_(report.totals.likeGrowth)+' ghi nhận trong kỳ':'Tổng tại lần quét gần nhất'):'Video trong kỳ'}</small></div><div class="channel-stat"><span>↗ Share</span><strong>${channelFollowerCount_(report.source==='web_tracking'?null:known?report.totals.shares:null)}</strong><small>Video trong kỳ</small></div></div>`;
 }
 function channelMetricCompact_(value,signed=false){return value===null||value===undefined?'—':(signed&&value>0?'+':'')+new Intl.NumberFormat('vi-VN',{notation:'compact',maximumFractionDigits:1}).format(value);}
 function channelMetricsCard_(report,period){
@@ -20013,10 +20029,10 @@ function channelMetricsCard_(report,period){
  const maxFollow=Math.max(1,...rows.map(x=>Math.abs(x.follower.delta||0))),maxView=Math.max(1,...rows.map(x=>x.trainer.views||0)),maxLike=Math.max(1,...rows.map(x=>Math.abs(x.trainer.likes||0))),maxShare=Math.max(1,...rows.map(x=>x.trainer.shares||0));
  function metric(value,max,kind,t,f){
   const unknown=value===null||value===undefined,tone=kind==='follow'?channelFollowerTone_(value):value<0?'down':kind,width=unknown?0:Math.abs(value)/max*(kind==='follow'?50:100),left=kind==='follow'?(value<0?50-width:50):0;
-  const full=kind==='follow'?channelFollowerSigned_(value):channelNumber_(value),tip=kind==='follow'?(f.comparable?full+' follower · '+channelFollowerSigned_(f.growthPct,'%')+' · '+channelFollowerPointDate_(f.first)+' → '+channelFollowerPointDate_(f.last):channelFollowerState_(f)):unknown?'Chưa có đủ số liệu '+({view:'lượt xem',like:'lượt thích',share:'lượt chia sẻ'}[kind]):full+' '+({view:'lượt xem',like:'lượt thích',share:'lượt chia sẻ'}[kind])+(report.source==='web_tracking'?' tăng/giảm ghi nhận trong kỳ':' của video đăng trong kỳ');
-  return `<div role="cell" class="channel-metric-cell ${tone}" title="${e(tip)}"><div class="channel-metric-number">${kind==='follow'?`<button type="button" class="channel-follow-detail" data-channel-followers="${e(t.id)}">${e(channelMetricCompact_(value,true))}</button>${f.comparable?`<small class="channel-inline-pct">${channelFollowerSigned_(f.growthPct,'%')}</small>`:''}`:e(channelMetricCompact_(value))}</div><div class="channel-metric-track ${kind} ${unknown?'unknown':''}" aria-hidden="true"><i style="left:${left}%;width:${width}%"></i></div></div>`;
+  const full=kind==='follow'?channelFollowerSigned_(value):channelNumber_(value),tip=kind==='follow'?(f.comparable?full+' follower · '+channelFollowerSigned_(f.growthPct,'%')+' · '+channelFollowerPointDate_(f.first)+' → '+channelFollowerPointDate_(f.last):channelFollowerState_(f)):unknown?'Chưa có đủ số liệu '+({view:'lượt xem',like:'lượt thích',share:'lượt chia sẻ'}[kind]):full+' '+({view:'lượt xem',like:'lượt thích',share:'lượt chia sẻ'}[kind])+(report.source==='web_tracking'?' toàn kênh tại '+channelFollowerDate_(t.webTracking?.asOf)+(t.likeGrowth===null||t.likeGrowth===undefined?'':' · '+channelFollowerSigned_(t.likeGrowth)+' trong kỳ'):' của video đăng trong kỳ');
+  return `<div role="cell" class="channel-metric-cell ${tone}" title="${e(tip)}"><div class="channel-metric-number">${kind==='follow'?`<button type="button" class="channel-follow-detail" data-channel-followers="${e(t.id)}">${e(channelMetricCompact_(value,true))}</button>${f.comparable?`<small class="channel-inline-pct">${channelFollowerSigned_(f.growthPct,'%')}</small>`:''}${report.source==='web_tracking'&&f.current!==null?`<small class="channel-current-count" title="Follower hiện tại: ${e(channelNumber_(f.current))}">${e(channelMetricCompact_(f.current))} hiện tại</small>`:''}`:e(channelMetricCompact_(value))}${kind==='like'&&report.source==='web_tracking'&&t.likeGrowth!==null&&t.likeGrowth!==undefined?`<small class="channel-current-count" title="Tăng/giảm like ghi nhận trong kỳ">${e(channelMetricCompact_(t.likeGrowth,true))}</small>`:''}</div><div class="channel-metric-track ${kind} ${unknown?'unknown':''}" aria-hidden="true"><i style="left:${left}%;width:${width}%"></i></div></div>`;
  }
- return `<section class="channel-card channel-metrics-card channel-interaction-panel"><div class="channel-panel-title"><h3>Follow · View · Like · Share</h3><button type="button" class="channel-chart-help" data-channel-follow-help title="Cách tính các chỉ số">ⓘ</button></div><p class="channel-panel-caption">${report.source==='web_tracking'?'Web tracking · Tăng theo ngày quét':'Hiển thị đồng thời · Follow từ 01/10/2026'}</p><div class="channel-metrics-table" role="table" aria-label="Bài đăng, tăng follower, view, like và share"><div class="channel-metrics-row channel-metrics-head" role="row"><div role="columnheader">Trainer</div><div role="columnheader" class="channel-mobile-posts">Bài đăng</div><div role="columnheader">↑ Follow</div><div role="columnheader">◉ View</div><div role="columnheader">♥ Like</div><div role="columnheader">↗ Share</div></div>${rows.map(({trainer:t,follower:f})=>`<div class="channel-metrics-row" role="row"><div role="rowheader" class="channel-metric-trainer"><strong title="${e(t.name)}">${e(channelShort_(t.name))}</strong><small>${e(t.region)}</small></div><div role="cell" class="channel-mobile-posts channel-mobile-post-value" title="${t.known?t.actual+'/'+t.target+' bài · '+channelNumber_(t.pct)+'%':'Chưa đồng bộ bài đăng'}">${t.known?channelMetricCompact_(t.actual)+'/'+channelMetricCompact_(t.target):'—'}</div>${metric(f.delta,maxFollow,'follow',t,f)}${metric(t.views,maxView,'view',t,f)}${metric(t.likes,maxLike,'like',t,f)}${metric(t.shares,maxShare,'share',t,f)}</div>`).join('')||'<div class="channel-empty">Chưa có Trainer trong phạm vi.</div>'}</div><details class="channel-metric-note"><summary>Cách đọc số liệu</summary><p>Follow: chênh lệch từ mốc thực tế ngày 01/10 đến mốc cuối đã ghi. Thiếu mốc/quyền hiển thị “—”. ${report.source==='web_tracking'?'Video/Like: chênh lệch ghi nhận vào ngày quét, không phải số bài đăng/lượt thích phát sinh chắc chắn trong ngày. View/Share chưa được API này cung cấp.':'View/Like/Share: tổng lượt xem, thích và chia sẻ mới nhất của video đăng trong kỳ; không phải lượt tăng riêng trong kỳ.'} Rê chuột vào số để xem đầy đủ; bấm số Follow để xem lịch sử.</p></details></section>`;
+ return `<section class="channel-card channel-metrics-card channel-interaction-panel"><div class="channel-panel-title"><h3>Follow · View · Like · Share</h3><button type="button" class="channel-chart-help" data-channel-follow-help title="Cách tính các chỉ số">ⓘ</button></div><p class="channel-panel-caption">${report.source==='web_tracking'?'Web tracking · Like tổng kênh · Tăng theo ngày quét':'Hiển thị đồng thời · Follow từ 01/10/2026'}</p><div class="channel-metrics-table" role="table" aria-label="Bài đăng, tăng follower, view, like và share"><div class="channel-metrics-row channel-metrics-head" role="row"><div role="columnheader">Trainer</div><div role="columnheader" class="channel-mobile-posts">Bài đăng</div><div role="columnheader">↑ Follow</div><div role="columnheader">◉ View</div><div role="columnheader">♥ Like</div><div role="columnheader">↗ Share</div></div>${rows.map(({trainer:t,follower:f})=>`<div class="channel-metrics-row" role="row"><div role="rowheader" class="channel-metric-trainer"><strong title="${e(t.name)}">${e(channelShort_(t.name))}</strong><small>${e(t.region)}</small></div><div role="cell" class="channel-mobile-posts channel-mobile-post-value" title="${t.known?t.actual+'/'+t.target+' bài · '+channelNumber_(t.pct)+'%':'Chưa đồng bộ bài đăng'}">${t.known?channelMetricCompact_(t.actual)+'/'+channelMetricCompact_(t.target):'—'}${t.channelVideos!==null&&t.channelVideos!==undefined?`<small class="channel-current-count" title="Tổng video toàn kênh tại lần quét">${e(channelMetricCompact_(t.channelVideos))} kênh</small>`:''}</div>${metric(f.delta,maxFollow,'follow',t,f)}${metric(t.views,maxView,'view',t,f)}${metric(t.likes,maxLike,'like',t,f)}${metric(t.shares,maxShare,'share',t,f)}</div>`).join('')||'<div class="channel-empty">Chưa có Trainer trong phạm vi.</div>'}</div><details class="channel-metric-note"><summary>Cách đọc số liệu</summary><p>Follow: chênh lệch từ mốc thực tế ngày 01/10 đến mốc cuối đã ghi. Thiếu mốc/quyền hiển thị “—”. ${report.source==='web_tracking'?'Video: phần tăng từ mốc quét, không tính tổng video cũ vào target. Like: tổng toàn kênh tại lần quét; số nhỏ là phần tăng trong kỳ. Follower hiện tại được hiển thị kèm mức tăng khi đủ mốc Admin. Các chênh lệch được ghi nhận vào ngày quét, không suy ra ngày đăng thực tế. View/Share chưa được API này cung cấp.':'View/Like/Share: tổng lượt xem, thích và chia sẻ mới nhất của video đăng trong kỳ; không phải lượt tăng riêng trong kỳ.'} Rê chuột vào số để xem đầy đủ; bấm số Follow để xem lịch sử.</p></details></section>`;
 }
 function channelBindCompact_(root){
  const details=root.querySelector('#channelManagement');
@@ -20029,7 +20045,15 @@ function channelReport_(trainers,period){
  const result=source==='web_tracking'?WebTrackingModel.report(trainers,period,ChannelModel.goal,ChannelModel.add):ChannelModel.report(trainers,period);
  result.source=source;return result;
 }
-function channelSourceControl_(source){return `<label class="channel-source-control">Nguồn <select id="channelSource" aria-label="Nguồn số liệu Xây kênh"><option value="tiktok_api" ${source==='tiktok_api'?'selected':''}>TikTok API</option><option value="web_tracking" ${source==='web_tracking'?'selected':''}>Web tracking</option></select></label>`;}
+function channelSourceControl_(source){const selected=channelView_.filters.source;return `<label class="channel-source-control">Nguồn <select id="channelSource" aria-label="Nguồn số liệu Xây kênh"><option value="auto" ${selected==='auto'?'selected':''}>Tự động · ${source==='web_tracking'?'Web tracking':'TikTok API'}</option><option value="tiktok_api" ${selected==='tiktok_api'?'selected':''}>TikTok API</option><option value="web_tracking" ${selected==='web_tracking'?'selected':''}>Web tracking</option></select></label>`;}
+function channelApplyScan_(trainer,out){
+ if(!channelView_.data)return;
+ channelView_.scanResults.set(String(trainer.id),{handle:trainer.handle,result:out});
+ channelView_.request++;channelView_.filters.source='auto';
+ const period=ChannelModel.period(channelView_.filters);
+ channelView_.data={...channelView_.data,trainers:channelView_.data.trainers.map(t=>String(t.id)===String(trainer.id)&&t.handle===trainer.handle?WebTrackingModel.applyScan(t,out,period):t)};
+ channelDraw_();
+}
 function channelBindManual_(root){
  root.querySelector('#channelManualUpdate')?.addEventListener('click',channelManualDialog_);
  root.querySelector('#channelSource')?.addEventListener('change',event=>{channelView_.filters.source=event.target.value;channelDraw_();});
@@ -20079,14 +20103,15 @@ async function channelManualDialog_(){
    for(const t of targets){
     if(cancelled||!ov.isConnected||owner!==channelOwner_())break;
     progress.textContent='Đang quét '+t.name+' · '+(done+failed+1)+'/'+targets.length+'…';
-    try{const out=await channelApi_('manual_scan',{trainerId:t.id});results.set(String(t.id),out);done++;}
+    try{const out=await channelApi_('manual_scan',{trainerId:t.id});results.set(String(t.id),out);channelApplyScan_(t,out);done++;}
     catch(error){results.set(String(t.id),{error:error.message});failed++;}
     if(ov.isConnected&&owner===channelOwner_())draw();
    }
    if(owner===channelOwner_()){
-    if(done)channelView_.filters.source='web_tracking';
-    await channelLoad_(false);channelView_.busy=false;channelDraw_();
-    const message=`Đã lưu ${done}/${targets.length} kênh.${failed?' '+failed+' kênh chưa lấy được; giữ dữ liệu cũ.':''}${cancelled?' Đã dừng các lượt còn lại.':''}`;
+    if(done)channelView_.filters.source='auto';
+    let reloadError=false;try{await channelLoad_(false);}catch{reloadError=true;}
+    channelView_.busy=false;channelDraw_();
+    const message=`Đã lưu ${done}/${targets.length} kênh${done?' và cập nhật bảng tiến độ':''}.${failed?' '+failed+' kênh chưa lấy được; giữ dữ liệu cũ.':''}${cancelled?' Đã dừng các lượt còn lại.':''}${reloadError?' Chưa tải lại được toàn bộ danh sách; bảng đang giữ các kết quả quét vừa lưu.':''}`;
     if(ov.isConnected)progress.textContent=message;
     channelMessage_(message,failed>0);
    }

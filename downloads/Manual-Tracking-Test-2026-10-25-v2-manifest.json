@@ -1,0 +1,41 @@
+{
+  "html": {
+    "name": "Dashboard-Test-2026-10-25-Manual-Tracking-v2.html",
+    "bytes": 2464583,
+    "sha256": "de95103d2f2fd905c3fd172a679f32c88c8f061f06254ea378b339cf68df20f4",
+    "git_blob_sha": "9783fc8086923178bbfc1c782d5f0e17c041549e"
+  },
+  "zip": {
+    "name": "Dashboard-Test-2026-10-25-Manual-Tracking-v2-Full-Source.zip",
+    "bytes": 1030243,
+    "sha256": "5af5c46ed800aaa60fdd1d5ac744938843beadc7587064d8a56ecd6c5f51f6d5",
+    "git_blob_sha": "f08ed551df0bd325b9510cde809a8621a5100e48"
+  },
+  "html_characters": 2401044,
+  "zip_entries": [
+    "README.md",
+    "channel-source/channel-model.js",
+    "channel-source/channel-tool.js",
+    "channel-source/channel-ui.js",
+    "channel-source/compact-ui.js",
+    "channel-source/follower-model.js",
+    "channel-source/manual-ui.css",
+    "channel-source/manual-ui.js",
+    "channel-source/web-model.js",
+    "index.html",
+    "privacy.html",
+    "supabase/functions/trainer-channel-test/access.ts",
+    "supabase/functions/trainer-channel-test/deno.json",
+    "supabase/functions/trainer-channel-test/followers.ts",
+    "supabase/functions/trainer-channel-test/index.ts",
+    "supabase/functions/trainer-channel-test/web-tracking.ts",
+    "terms.html",
+    "verification/build-verification.json",
+    "verification/live-update-verification.json",
+    "verification/manual-ui-verification.json",
+    "verification/model-verification.json",
+    "verification/ui-verification.json"
+  ],
+  "function_unchanged_version": 8,
+  "test_parent": "44af15f73ba5675f97959e741bcc0e9ae61dfc71"
+}
