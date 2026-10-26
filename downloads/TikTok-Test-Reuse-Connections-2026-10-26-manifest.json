@@ -1,0 +1,24 @@
+{
+  "name": "TikTok-Test-2026-10-26-Reuse-Connections-Full-Source.zip",
+  "bytes": 16269,
+  "sha256": "ac03c5599233a0d172b8f50c855d8e3dfa99dee7ad2ed6e0cccf1111fa5bad35",
+  "git_blob_sha": "c6c3e50e077b0d42e980c44e91ba6522d8acbc7a",
+  "files": [
+    "README.md",
+    "supabase/functions/trainer-channel-test/access.ts",
+    "supabase/functions/trainer-channel-test/deno.json",
+    "supabase/functions/trainer-channel-test/followers.ts",
+    "supabase/functions/trainer-channel-test/index.ts",
+    "supabase/functions/trainer-channel-test/oauth-route.ts",
+    "supabase/functions/trainer-channel-test/sandboxes.ts",
+    "verification/api-regression-verification.json",
+    "verification/connection-verification.json",
+    "verification/deployment-verification.json",
+    "verification/sandbox-verification.json"
+  ],
+  "function_version": 13,
+  "function_hash": "e2d1b8c62725b273bccf0e1a5d459c26a78ba9302aa09849f286f9f7e36ec328",
+  "html_changed": false,
+  "main_source_unchanged": true,
+  "active_tokens_not_copied": true
+}
