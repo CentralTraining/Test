@@ -1,0 +1,48 @@
+{
+  "html": {
+    "name": "Dashboard-Test-2026-10-26-TikTok-Sandboxes.html",
+    "bytes": 2442741,
+    "sha256": "0bd1f283600a92988b69c9a120f36dd5bd4c8c050d2d1ef0937aae6043b6cd0c",
+    "git_blob_sha": "6797be9bd8440693c973579bf141a5ee35f3fb5d"
+  },
+  "zip": {
+    "name": "Dashboard-Test-2026-10-26-TikTok-Sandboxes-Full-Source.zip",
+    "bytes": 1017201,
+    "sha256": "12959176bc46aa05dcadcec337b7764575b421a7420e18a101c29e5162afed37",
+    "git_blob_sha": "7926dcf65180d69fdc8f099b3774c5c498725065"
+  },
+  "html_characters": 2379793,
+  "files": [
+    "README.md",
+    "channel-source/channel-model.js",
+    "channel-source/channel-tool.js",
+    "channel-source/channel-ui.js",
+    "channel-source/compact-ui.js",
+    "channel-source/follower-model.js",
+    "channel-source/sandbox-ui.css",
+    "channel-source/sandbox-ui.js",
+    "index.html",
+    "privacy.html",
+    "supabase/functions/trainer-channel-test/access.ts",
+    "supabase/functions/trainer-channel-test/deno.json",
+    "supabase/functions/trainer-channel-test/followers.ts",
+    "supabase/functions/trainer-channel-test/index.ts",
+    "supabase/functions/trainer-channel-test/oauth-route.ts",
+    "supabase/functions/trainer-channel-test/sandboxes.ts",
+    "terms.html",
+    "verification/api-regression-verification.json",
+    "verification/build-verification.json",
+    "verification/deployment-verification.json",
+    "verification/live-verification.json",
+    "verification/sandbox-ui-verification.json",
+    "verification/sandbox-verification.json",
+    "verification/ui-verification.json"
+  ],
+  "function_version": 12,
+  "function_hash": "0b753809d00bb332034ed9113dd159c054e91b1d186e45a0186b4ca6872e3b4c",
+  "api_only": true,
+  "sandbox_1_configured": true,
+  "sandbox_2_configured": true,
+  "main_source_unchanged": true,
+  "real_trainer_logins_not_performed": true
+}

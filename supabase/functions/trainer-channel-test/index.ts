@@ -1,5 +1,5 @@
 import { relayMainOauth } from './oauth-route.ts';
-import { WEB_TRACKING_ENDPOINT, parseWebTracking, recordWebTracking, webTrackingView, webTrackingFollowers } from './web-tracking.ts';
+import { SANDBOX_IDS, sandboxId, sandboxCredentials } from './sandboxes.ts';
 import { authenticate, AccessError } from './access.ts';
 import { FOLLOWER_SCOPE, FOLLOWER_BASELINE_DATE, recordFollowers, followerView } from './followers.ts';
 // Official TikTok Display API only. Tokens never leave this function; no scraping.
@@ -11,17 +11,12 @@ const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').repl
 const clean=s=>String(s??'').trim();
 const b64=a=>{const bytes=new Uint8Array(a);let out='';for(let i=0;i<bytes.length;i+=32768)out+=String.fromCharCode(...bytes.subarray(i,i+32768));return btoa(out).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');};
 const unb64=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
-// Sandbox credentials are isolated to this Test function. Existing settings remain usable until Test credentials are supplied.
-const env=()=>{
- const testClient=Deno.env.get('TIKTOK_TEST_CLIENT_KEY'),testSecret=Deno.env.get('TIKTOK_TEST_CLIENT_SECRET');
- const useTest=testClient!==undefined||testSecret!==undefined;
- return {url:Deno.env.get('SUPABASE_URL'),secret:Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-  client:(useTest?testClient:Deno.env.get('TIKTOK_CLIENT_KEY'))?.trim(),
-  clientSecret:(useTest?testSecret:Deno.env.get('TIKTOK_CLIENT_SECRET'))?.trim(),
-  credentialSource:useTest?'test':'legacy'};
-};
+// Keep the original Sandbox credentials and route the second slot independently.
+const env=(id='primary')=>({url:Deno.env.get('SUPABASE_URL'),secret:Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),...sandboxCredentials(id,k=>Deno.env.get(k))});
 const callback=()=>env().url+'/functions/v1/'+ROOT+'/oauth/callback';
-const configured=()=>!!(env().client&&env().clientSecret);
+const configured=(id='primary')=>!!(env(id).client&&env(id).clientSecret);
+const sandboxList=()=>SANDBOX_IDS.map(id=>({id,label:id==='primary'?'Sandbox 1':'Sandbox 2',configured:configured(id)}));
+const channelSandbox=c=>{const id=sandboxId(c?.sandboxId);if(!id)failure('Sandbox của kênh không hợp lệ. Nhờ Admin kiểm tra.',409);return id;};
 const failure=(message,status=400)=>{throw new AccessError(message,status);};
 async function cryptKey(){return crypto.subtle.importKey('raw',await crypto.subtle.digest('SHA-256',te.encode('trainer-channel-private-v1:'+env().secret)),'AES-GCM',false,['encrypt','decrypt']);}
 async function seal(key,data){const iv=crypto.getRandomValues(new Uint8Array(12));return {v:1,iv:b64(iv),ciphertext:b64(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:te.encode(key)},await cryptKey(),te.encode(JSON.stringify(data))))};}
@@ -55,20 +50,21 @@ async function official(path,options,scopeProbe=false){
  }
  return out;
 }
-async function tokenCall(values){const e=env();return official('/v2/oauth/token/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_key:e.client,client_secret:e.clientSecret,...values}).toString()});}
-function tokenPayload(out,previous){
+async function tokenCall(values,id='primary'){const e=env(id);return official('/v2/oauth/token/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_key:e.client,client_secret:e.clientSecret,...values}).toString()});}
+function tokenPayload(out,previous,id='primary'){
  if(!out.access_token||!out.refresh_token||!out.open_id||!Number.isFinite(Number(out.expires_in)))failure('TikTok chưa cấp quyền đọc video.',502);
  if(!SCOPES.every(s=>String(out.scope||'').split(',').includes(s)))failure('Cần đồng ý đủ quyền hồ sơ và video để kết nối.',403);
  if(previous&&previous.openId!==out.open_id)failure('Tài khoản TikTok trả về không khớp kênh đã gán.',403);
- return {access:out.access_token,refresh:out.refresh_token,openId:out.open_id,expires:Date.now()+Number(out.expires_in)*1000,scopes:String(out.scope||'').split(',').filter(Boolean)};
+ return {sandboxId:id,clientKey:env(id).client,access:out.access_token,refresh:out.refresh_token,openId:out.open_id,expires:Date.now()+Number(out.expires_in)*1000,scopes:String(out.scope||'').split(',').filter(Boolean)};
 }
 async function connect(body,p){
- const t=trainer(p,body.trainerId,true);if(!configured())failure('Chưa cấu hình ứng dụng TikTok. Xem hướng dẫn kết nối.',503);
+ const t=trainer(p,body.trainerId,true);
  if(!ALLOWED.includes(body.returnUrl))failure('Địa chỉ quay lại không hợp lệ.');
  const rec=await read('channel:'+t.id);if(!rec.data?.handle)failure('Admin cần gán trang TikTok trước khi kết nối.');
- const state=crypto.randomUUID()+crypto.randomUUID();await put({key:'oauth:'+state,version:null},{trainerId:String(t.id),dashboardToken:body.dashboardToken,expected:rec.data.handle,returnUrl:body.returnUrl,expires:Date.now()+10*60000,version:rec.version});
+ const id=channelSandbox(rec.data);if(!configured(id))failure('Sandbox được gán chưa cấu hình xong. Nhờ Admin thiết lập trước khi kết nối.',503);
+ const state=crypto.randomUUID()+crypto.randomUUID();await put({key:'oauth:'+state,version:null},{trainerId:String(t.id),dashboardToken:body.dashboardToken,expected:rec.data.handle,returnUrl:body.returnUrl,sandboxId:id,clientKey:env(id).client,expires:Date.now()+10*60000,version:rec.version});
  const requested=body.followerStats===true?[...SCOPES,FOLLOWER_SCOPE]:SCOPES;
- const url=new URL('https://www.tiktok.com/v2/auth/authorize/');url.search=new URLSearchParams({client_key:env().client,scope:requested.join(','),response_type:'code',redirect_uri:callback(),state,disable_auto_auth:'1'}).toString();
+ const url=new URL('https://www.tiktok.com/v2/auth/authorize/');url.search=new URLSearchParams({client_key:env(id).client,scope:requested.join(','),response_type:'code',redirect_uri:callback(),state,disable_auto_auth:'1'}).toString();
  return {url:url.href};
 }
 async function oauth(url){
@@ -81,14 +77,18 @@ async function oauth(url){
   const current=await read('channel:'+saved.data.trainerId);if(!current.data||current.version!==saved.data.version||current.data.handle!==saved.data.expected)throw Error();
   // Recheck the authorizing dashboard account and current ownership at callback time.
   const owner=await authenticate(saved.data.dashboardToken);trainer(owner,saved.data.trainerId,true);
-  const out=await tokenCall({grant_type:'authorization_code',code:url.searchParams.get('code'),redirect_uri:callback()});const token=tokenPayload(out);
+  const id=sandboxId(saved.data.sandboxId);if(!id||channelSandbox(current.data)!==id||!configured(id)||saved.data.clientKey&&saved.data.clientKey!==env(id).client)throw Error();
+  const out=await tokenCall({grant_type:'authorization_code',code:url.searchParams.get('code'),redirect_uri:callback()},id);const token=tokenPayload(out,null,id);
   const info=await official('/v2/user/info/?fields=open_id,display_name,username',{headers:{Authorization:'Bearer '+token.access}});const profile=info.data?.user;
   if(!profile||profile.open_id!==token.openId||handle(profile.username)!==saved.data.expected)throw Error();
-  const sameAccount=current.data.token?.openId===token.openId;
-  let next={...current.data,token,profile:{username:handle(profile.username),displayName:clean(profile.display_name).slice(0,150)},
-   snapshot:sameAccount?current.data.snapshot:null,pending:sameAccount?current.data.pending:null,
-   followers:sameAccount?current.data.followers:null,
-   followerBaseline:current.data.followerBaseline?.handle===saved.data.expected&&(!current.data.followerBaseline.openId||current.data.followerBaseline.openId===token.openId)?{...current.data.followerBaseline,openId:token.openId}:null};
+  const oldId=sandboxId(current.data.token?.sandboxId);
+  const sameAccount=current.data.token?.openId===token.openId&&oldId===id;
+  const changedSandbox=!!current.data.token&&oldId!==id;
+  const keepHistory=sameAccount||changedSandbox;
+  let next={...current.data,sandboxId:id,token,profile:{username:handle(profile.username),displayName:clean(profile.display_name).slice(0,150)},
+   snapshot:keepHistory?current.data.snapshot:null,pending:sameAccount?current.data.pending:null,
+   followers:keepHistory?current.data.followers:null,
+   followerBaseline:current.data.followerBaseline?.handle===saved.data.expected&&(!current.data.followerBaseline.openId||current.data.followerBaseline.openId===token.openId||changedSandbox)?{...current.data.followerBaseline,openId:token.openId}:null};
   next=await captureFollowers(next);await put(current,next);
   return Response.redirect(back+'#channel-connect=ok',303);
  }catch{return Response.redirect(back+'#channel-connect=failed',303);}
@@ -105,10 +105,13 @@ async function captureFollowers(channel){
  }catch(error){return {...channel,followers:{...channel.followers,status:error instanceof AccessError&&error.status===403?'needs_authorization':'unavailable',lastAttemptAt:new Date().toISOString()}};}
 }
 async function sync(body,p){
- const t=trainer(p,body.trainerId);if(!configured())failure('Chưa cấu hình ứng dụng TikTok.',503);
+ const t=trainer(p,body.trainerId);
  const rec=await read('channel:'+t.id);let c=rec.data;if(!c?.token)failure('Trainer chưa kết nối TikTok.',409);
+ const id=sandboxId(c.token.sandboxId);if(!id||channelSandbox(c)!==id)failure('Kênh vừa đổi Sandbox. Hãy kết nối lại; dữ liệu cũ được giữ nguyên.',409);
+ if(!configured(id))failure('Sandbox của kênh chưa cấu hình xong. Dữ liệu cũ được giữ nguyên.',503);
+ if(c.token.clientKey&&c.token.clientKey!==env(id).client)failure('Cấu hình Sandbox đã thay đổi. Hãy kết nối lại; dữ liệu cũ được giữ nguyên.',409);
  if(!body.force&&c.snapshot?.complete&&Date.now()-Date.parse(c.snapshot.syncedAt)<15*60000&&!c.pending&&c.followers?.lastAttemptAt&&Date.now()-Date.parse(c.followers.lastAttemptAt)<15*60000)return {trainerId:String(t.id),cached:true,complete:true};
- if(c.token.expires<Date.now()+120000){const out=await tokenCall({grant_type:'refresh_token',refresh_token:c.token.refresh});c={...c,token:tokenPayload(out,c.token)};await put(rec,c);}
+ if(c.token.expires<Date.now()+120000){const out=await tokenCall({grant_type:'refresh_token',refresh_token:c.token.refresh},id);c={...c,token:tokenPayload(out,c.token,id)};await put(rec,c);}
  // Keep follower observations even when a later video request fails.
  c=await captureFollowers(c);await put(rec,c);
  let pending=c.pending&&Date.now()-c.pending.started<10*60000?c.pending:{started:Date.now(),cursor:null,videos:[]};
@@ -127,45 +130,22 @@ async function sync(body,p){
  else c={...c,pending};
  await put(rec,c);return {trainerId:String(t.id),complete,pagesPending:!complete,videoCount:pending.videos.length};
 }
-async function manualScan(body,p){
- const t=trainer(p,body.trainerId),initial=await read('channel:'+t.id),assigned=initial.data?.handle;
- if(!assigned)failure('Admin cần gán đúng kênh TikTok trước khi quét.',409);
- let values;
- try{
-  const response=await fetch(WEB_TRACKING_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({url:'https://www.tiktok.com/@'+assigned}),redirect:'error',signal:AbortSignal.timeout(35000)});
-  if(!response.ok||Number(response.headers.get('content-length')||0)>262144)throw Error();
-  const raw=await response.text();if(raw.length>262144)throw Error();
-  values=parseWebTracking(JSON.parse(raw),assigned);
- }catch{failure('Chưa lấy được số liệu hợp lệ từ web tracking. Giữ nguyên dữ liệu và mốc trước; hãy thử lại.',502);}
- const at=new Date().toISOString(),fresh=await authenticate(body.dashboardToken);trainer(fresh,t.id);
- for(let attempt=0;attempt<4;attempt++){
-  const record=await read('channel:'+t.id),channel=record.data;
-  if(!channel||channel.handle!==assigned)failure('Kênh đã được đổi trong lúc quét. Mở lại danh sách trước khi quét.',409);
-  const points=channel.followers?.history||[],latest=[...points].filter(x=>Number.isSafeInteger(x.count)&&x.count>=0&&Number.isFinite(Date.parse(x.at))&&Date.parse(x.at)<=Date.parse(at)).sort((a,b)=>Date.parse(a.at)-Date.parse(b.at)).pop();
-  const saved=channel.followerBaseline;
-  const reference=latest?{count:latest.count,source:'tiktok_observation'}:saved?.handle===assigned&&saved.date===FOLLOWER_BASELINE_DATE&&Number.isSafeInteger(saved.count)&&saved.count>=0?{count:saved.count,source:'admin_record'}:null;
-  const webTracking=recordWebTracking(channel.webTracking,{...values,at},reference);
-  try{
-   await put(record,{...channel,webTracking});
-   const view=webTrackingView(webTracking,new Date(Date.parse(at)+7*3600000).toISOString().slice(0,10),new Date(Date.parse(at)+7*3600000).toISOString().slice(0,10));
-   return {trainerId:String(t.id),source:'web_tracking',...view,firstScan:!channel.webTracking};
-  }catch(error){if(!(error instanceof AccessError)||error.status!==409||attempt===3)throw error;}
- }
-}
 async function overview(body,p){
  const range=dates(body);const list=[];
  for(const t of roster(p)){
   const rec=await read('channel:'+t.id),c=rec.data;const videos=(c?.snapshot?.videos||[]).filter(v=>{const day=new Date(v.createdAt).toLocaleDateString('sv-SE',{timeZone:'Asia/Ho_Chi_Minh'});return day>=range.from&&day<=range.to;});
-  list.push({id:String(t.id),name:clean(t.name),region:clean(t.region),handle:c?.handle||'',trackingFrom:c?.trackingFrom||null,connected:!!c?.token,known:!!c?.snapshot?.complete,syncedAt:c?.snapshot?.syncedAt||null,pending:!!c?.pending,videos,followers:followerView(c,range.from,range.to),webTracking:webTrackingView(c?.webTracking,range.from,range.to),webFollowers:webTrackingFollowers(c,range.from,range.to,followerView(c,range.from,range.to))});
+  list.push({id:String(t.id),name:clean(t.name),region:clean(t.region),handle:c?.handle||'',trackingFrom:c?.trackingFrom||null,connected:!!c?.token,known:!!c?.snapshot?.complete,syncedAt:c?.snapshot?.syncedAt||null,pending:!!c?.pending,videos,followers:followerView(c,range.from,range.to),sandboxId:channelSandbox(c),sandboxReady:configured(channelSandbox(c)),needsSandboxReconnect:!!c?.token&&sandboxId(c.token.sandboxId)!==channelSandbox(c)});
  }
- return {trainers:list,role:p.role,ownTrainerId:p.trainerId,configured:configured(),...range};
+ return {trainers:list,role:p.role,ownTrainerId:p.trainerId,configured:sandboxList().some(s=>s.configured),sandboxes:sandboxList(),...range};
 }
 async function assign(body,p){
  if(p.role!=='admin')failure('Chỉ Admin được gán trang TikTok.',403);const t=trainer(p,body.trainerId),name=handle(body.handle);
  if(!validDate(body.trackingFrom))failure('Ngày bắt đầu theo dõi không hợp lệ.');
  for(const other of p.trainers){if(String(other.id)!==String(t.id)&&(await read('channel:'+other.id)).data?.handle===name)failure('Trang TikTok này đã được gán cho Trainer khác.');}
  const rec=await read('channel:'+t.id),same=rec.data?.handle===name;
- await put(rec,{...(same?rec.data:{}),handle:name,trackingFrom:body.trackingFrom,updatedAt:new Date().toISOString()});return {saved:true,trainerId:String(t.id)};
+ const id=body.sandboxId===undefined?channelSandbox(rec.data):SANDBOX_IDS.includes(body.sandboxId)?body.sandboxId:null;if(!id)failure('Chọn Sandbox hợp lệ.');
+ if(id==='secondary'&&channelSandbox(rec.data)!==id&&!configured(id))failure('Sandbox 2 chưa được cấu hình. Giữ nguyên Sandbox và dữ liệu hiện tại.',409);
+ await put(rec,{...(same?rec.data:{}),handle:name,sandboxId:id,trackingFrom:body.trackingFrom,updatedAt:new Date().toISOString()});return {saved:true,trainerId:String(t.id)};
 }
 async function setFollowerBaseline(body,p){
  if(p.role!=='admin')failure('Chỉ Admin được nhập mốc follower đầu kỳ.',403);
@@ -185,9 +165,9 @@ Deno.serve(async req=>{
   if(req.method!=='POST')return respond({error:'Chỉ hỗ trợ POST.'},405);
   if(Number(req.headers.get('content-length')||0)>8000)return respond({error:'Yêu cầu quá dài.'},413);
   const raw=await req.text();if(raw.length>8000)return respond({error:'Yêu cầu quá dài.'},413);let body;try{body=JSON.parse(raw);}catch{failure('Yêu cầu không hợp lệ.');}
-  if(body.action==='status')return respond({ok:true,configured:configured(),credentialSource:env().credentialSource,redirectUri:callback(),scopes:SCOPES,optionalScopes:[FOLLOWER_SCOPE],followerHistory:true,followerBaselineDate:FOLLOWER_BASELINE_DATE,manualTracking:true});
+  if(body.action==='status')return respond({ok:true,configured:sandboxList().some(s=>s.configured),sandboxes:sandboxList(),multiSandbox:true,credentialSource:env().credentialSource,redirectUri:callback(),scopes:SCOPES,optionalScopes:[FOLLOWER_SCOPE],followerHistory:true,followerBaselineDate:FOLLOWER_BASELINE_DATE,manualTracking:false});
   const p=await authenticate(body.dashboardToken);let out;
-  switch(body.action){case 'manual_scan':out=await manualScan(body,p);break;case 'overview':out=await overview(body,p);break;case 'assign':out=await assign(body,p);break;case 'connect':out=await connect(body,p);break;case 'sync':out=await sync(body,p);break;case 'set_follower_baseline':out=await setFollowerBaseline(body,p);break;default:failure('Thao tác không hợp lệ.');}
+  switch(body.action){case 'overview':out=await overview(body,p);break;case 'assign':out=await assign(body,p);break;case 'connect':out=await connect(body,p);break;case 'sync':out=await sync(body,p);break;case 'set_follower_baseline':out=await setFollowerBaseline(body,p);break;default:failure('Thao tác không hợp lệ.');}
   return respond({ok:true,...out});
  }catch(e){return respond({error:e instanceof AccessError?e.message:'Chưa xử lý được yêu cầu Xây kênh. Dữ liệu cũ được giữ nguyên.'},e instanceof AccessError?e.status:500);}
 });
