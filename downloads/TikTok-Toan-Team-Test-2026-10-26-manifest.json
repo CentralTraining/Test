@@ -1,0 +1,20 @@
+{
+  "bytes": 2454714,
+  "characters": 2391391,
+  "sha256": "d44160563c971fc5098108d98678cd0254769fb8e085929da0b6120b4c835d96",
+  "git_blob_sha": "a5f88a0e614076ee522b68331c351bdd56af9828",
+  "test_only": true,
+  "read_scope": "all_trainers",
+  "write_scope": "unchanged_shared_api",
+  "version": "2026-10-26",
+  "environment": "Test",
+  "html_file": "Dashboard-Test-2026-10-26-TikTok-Toan-Team.html",
+  "zip_file": "Dashboard-Test-2026-10-26-TikTok-Toan-Team-Full-Source.zip",
+  "zip_bytes": 981995,
+  "zip_sha256": "f0a2255a02b401b851beeb2dbc7b997dd5cd846bdece730873801e0cf891c8dd",
+  "zip_git_blob_sha": "3ed4f3fe274054db279926c831c02213b8209412",
+  "parent_commit": "ab3971c2159cd900373a9d6ee3a866c7a6e20f77",
+  "edge_function": "trainer-channel-test",
+  "function_version": 15,
+  "function_sha256": "4cee48c27986c43ed08dae7bbeb1a2abd489a92b36610af2f713785a45a1bca6"
+}

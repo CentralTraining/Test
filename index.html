@@ -19912,7 +19912,7 @@ function channelVideos_(t){
 }
 async function channelSync_(force){
  if(channelView_.busy||!channelView_.configured)return;channelView_.busy=true;const owner=channelOwner_();channelDraw_();
- const list=(channelView_.data?.trainers||[]).filter(t=>t.connected&&t.sandboxReady!==false&&!t.needsSandboxReconnect&&(!channelView_.filters.region||t.region===channelView_.filters.region)&&(!channelView_.filters.trainer||t.id===channelView_.filters.trainer));
+ const visible=(channelView_.data?.trainers||[]).filter(t=>(!channelView_.filters.region||t.region===channelView_.filters.region)&&(!channelView_.filters.trainer||t.id===channelView_.filters.trainer)),list=visible.filter(t=>t.connected&&t.canSync!==false&&t.sandboxReady!==false&&!t.needsSandboxReconnect),readOnly=visible.some(t=>t.connected&&t.canSync===false);
  let done=0,failed=0,pending=0;
  try{
   for(const t of list){
@@ -19920,7 +19920,7 @@ async function channelSync_(force){
    channelMessage_('Đang đồng bộ kênh: '+t.name+' ('+(done+1)+'/'+list.length+')');
    try{let out;for(let pass=0;pass<50;pass++){out=await channelApi_('sync',{trainerId:t.id,force:!!force&&pass===0});if(out.complete)break;if(currentTabId_()!=='extensions'||owner!==channelOwner_())break;}if(out?.complete)done++;else pending++;}catch{failed++;}
   }
-  if(owner===channelOwner_()){await channelLoad_(false);channelView_.busy=false;channelDraw_();channelMessage_(list.length?`Đã đồng bộ ${done}/${list.length} kênh.${failed?' '+failed+' kênh chưa lấy được; giữ dữ liệu trước.':''}${pending?' '+pending+' kênh còn đang lấy trang video.':''}`:'Chưa có kênh TikTok đã kết nối trong phạm vi.',failed>0);}
+  if(owner===channelOwner_()){await channelLoad_(false);channelView_.busy=false;channelDraw_();channelMessage_(list.length?`Đã đồng bộ ${done}/${list.length} kênh.${failed?' '+failed+' kênh chưa lấy được; giữ dữ liệu trước.':''}${pending?' '+pending+' kênh còn đang lấy trang video.':''}`:readOnly?'Đã tải lại chỉ số. Các kênh ngoài khu vực do chủ kênh hoặc Admin đồng bộ.':'Chưa có kênh TikTok đã kết nối trong phạm vi.',failed>0);}
  }catch(error){channelMessage_(error.message,true);}
  finally{channelView_.busy=false;clearTimeout(channelView_.timer);if(owner===channelOwner_())channelView_.timer=setTimeout(()=>{if(currentTabId_()==='extensions')channelSync_(false);},15*60000);const btn=document.getElementById('channelSync');if(btn)btn.disabled=!channelView_.configured;}
 }
@@ -19983,7 +19983,7 @@ function channelBindFollowers_(root,trainers,period){
 function channelCompactSummary_(report,trainers,period){
  const follower=FollowerModel.report(trainers,period),team=FollowerModel.report(channelView_.data?.trainers||trainers,period),e=channelEscape_,known=report.totals.known;
  const progress=report.complete&&report.totals.target?channelNumber_(Math.round(report.totals.actual/report.totals.target*1000)/10)+'%':known+'/'+trainers.length+' kênh có dữ liệu';
- const average=team.average===null?'—':(team.average>0?'+':'')+new Intl.NumberFormat('vi-VN',{maximumFractionDigits:1}).format(team.average),teamLabel=isAdmin()?'TB toàn team':'TB khu vực';
+ const average=team.average===null?'—':(team.average>0?'+':'')+new Intl.NumberFormat('vi-VN',{maximumFractionDigits:1}).format(team.average),teamLabel=isAdmin()||channelView_.data?.overviewScope==='team'?'TB toàn team':'TB khu vực';
  const coverage=follower.comparable+'/'+trainers.length+' kênh · từ '+follower.label.slice(0,5),averageTip='Trung bình = tổng tăng / số kênh đủ dữ liệu trong phạm vi tài khoản: '+team.comparable+'/'+team.total+' kênh. '+(team.complete?'Đã đủ dữ liệu.':'Chưa đủ dữ liệu toàn bộ; không tính kênh thiếu mốc là 0.');
  return `<div class="channel-summary channel-summary-compact"><div class="channel-stat"><span>Bài đăng</span><strong>${channelFollowerCount_(known?report.totals.actual:null)}<em> / ${channelNumber_(report.totals.target)}</em></strong><small>${e(progress)}</small></div><div class="channel-stat channel-follow-stat"><span>↑ Tăng follow</span><strong title="${e((follower.complete?'Tổng tăng':'Tổng tăng đã ghi nhận')+' từ '+follower.label+': '+channelFollowerSigned_(follower.delta))}">${channelFollowerCount_(follower.delta,true)}</strong><small class="channel-team-average" title="${e(averageTip)}">${teamLabel}: <b>${e(average)}</b><span class="channel-average-unit"> FL/Trainer</span>${team.complete?'':` <span class="channel-average-coverage">(${team.comparable}/${team.total})</span>`}</small><small class="channel-follow-coverage">${e(coverage)} <button type="button" class="channel-stat-info" data-channel-follow-help title="Cách tính follower">ⓘ</button></small></div><div class="channel-stat"><span>♥ Like</span><strong>${channelFollowerCount_(known?report.totals.likes:null)}</strong><small>Video trong kỳ</small></div><div class="channel-stat"><span>↗ Share</span><strong>${channelFollowerCount_(known?report.totals.shares:null)}</strong><small>Video trong kỳ</small></div></div>`;
 }
