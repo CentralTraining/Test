@@ -1,0 +1,18 @@
+{
+  "version": "2026-10-26",
+  "environment": "Test",
+  "parent_commit": "a6398117ee5d160ac69a75434115ac1e3bb1cabb",
+  "file": "Dashboard-Test-2026-10-26-Tang-Follow-Theo-Thang.html",
+  "bytes": 2448414,
+  "characters": 2385116,
+  "sha256": "2b9269615f6949e1f939ae1162e9047422601e8ce13d61bbd065ac88414a4b96",
+  "git_blob_sha": "6c58062ee9322a0e7b0537c70baf2686f9d1d9ca",
+  "frontend_only": true,
+  "main_changed": false,
+  "shared_backend_changed": false,
+  "checks": [
+    "model-verification.json",
+    "monthly-ui-verification.json",
+    "ui-verification.json"
+  ]
+}
