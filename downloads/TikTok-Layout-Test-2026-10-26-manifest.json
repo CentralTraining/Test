@@ -1,0 +1,19 @@
+{
+  "only_channel_blocks_changed": true,
+  "only_filter_markup_and_css_changed": true,
+  "no_logic_changes": true,
+  "bytes": 2454459,
+  "characters": 2391161,
+  "sha256": "e5b6c3026fed89e905cf6d38cf3487eb6c1e4a0595dab6b1156b89bf9f02ff61",
+  "git_blob_sha": "3d713a6c41d47dc4076e2aad879892eda0fde605",
+  "environment": "Test",
+  "version": "2026-10-26",
+  "file": "Dashboard-Test-2026-10-26-TikTok-Layout-Bo-Loc.html",
+  "parent_commit": "de18e7bd44ff8e1b60abfac4edb2d24417bff616",
+  "main_changed": false,
+  "backend_changed": false,
+  "checks": [
+    "layout-verification.json",
+    "ui-verification.json"
+  ]
+}
