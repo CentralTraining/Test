@@ -1,3 +1,4 @@
+import { relayMainOauth } from './oauth-route.ts';
 import { WEB_TRACKING_ENDPOINT, parseWebTracking, recordWebTracking, webTrackingView, webTrackingFollowers } from './web-tracking.ts';
 import { authenticate, AccessError } from './access.ts';
 import { FOLLOWER_SCOPE, FOLLOWER_BASELINE_DATE, recordFollowers, followerView } from './followers.ts';
@@ -71,6 +72,7 @@ async function connect(body,p){
  return {url:url.href};
 }
 async function oauth(url){
+ const relayed=relayMainOauth(url,env().url);if(relayed)return relayed;
  const state=url.searchParams.get('state')||'';if(!/^[a-f0-9-]{72}$/.test(state))failure('Phiên kết nối không hợp lệ.');
  const saved=await read('oauth:'+state);if(!saved.data||saved.data.expires<Date.now())failure('Phiên kết nối đã hết hạn. Hãy kết nối lại.');
  await consume(saved.key,saved.version);const back=saved.data.returnUrl;
@@ -189,5 +191,6 @@ Deno.serve(async req=>{
   return respond({ok:true,...out});
  }catch(e){return respond({error:e instanceof AccessError?e.message:'Chưa xử lý được yêu cầu Xây kênh. Dữ liệu cũ được giữ nguyên.'},e instanceof AccessError?e.status:500);}
 });
+
 
 
