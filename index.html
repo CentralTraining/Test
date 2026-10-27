@@ -2445,6 +2445,198 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
 @media(prefers-reduced-motion:reduce){nav.tabs button{transition:none!important;}}
 
 </style>
+<style id="tiktok-visual-theme-20261027">
+/* TikTok visual theme: scoped to the Extensions workspace and its dialogs. */
+#tab-extensions,.channel-overlay{
+  --text:#f3f5fb;--muted:#a3a9b8;--line:#2a2e3a;--bg:#12141c;
+  --green:#25f4ee;--green-dark:#f3f5fb;--green-ok:#69dfb6;--green-ok-bg:#14352e;
+  --amber:#ffd18a;--amber-bg:#3c2d1b;--red:#ff8298;--red-bg:#3b1e2b;
+  --channel-cyan:#25f4ee;--channel-pink:#fe2c55;--channel-teal:#25f4ee;--channel-blue:#829bff;
+  color:var(--text);color-scheme:dark;
+}
+#tab-extensions>.subnav{
+  background:#101218;border:1px solid #272b36;border-radius:14px;padding:5px;margin-bottom:10px;
+}
+#tab-extensions>.subnav>button{
+  background:#1c202b;color:#f4f6fb;border:0;border-bottom:2px solid #25f4ee;border-radius:9px;
+  box-shadow:inset -2px 0 #fe2c5540;font-weight:700;
+}
+#tab-extensions #channelTool{
+  position:relative;isolation:isolate;padding:18px;border-radius:18px;border:1px solid #272c38;
+  background:radial-gradient(ellipse at 2% 0%,#25f4ee0c,transparent 36%),radial-gradient(ellipse at 98% 0%,#fe2c550c,transparent 32%),#0d0f15;
+  box-shadow:0 12px 34px #0a0e1812;--channel-row:31px;
+}
+#channelTool .channel-heading.channel-compact-heading{margin-bottom:13px;gap:12px;}
+#channelTool .channel-compact-heading h2{
+  display:flex;align-items:center;gap:10px;color:#fff;font-size:23px;line-height:1.25;letter-spacing:-.65px;
+}
+#channelTool .channel-compact-heading h2:before{
+  content:'';display:block;flex:0 0 35px;width:35px;height:35px;border-radius:10px;
+  border:1px solid #363b48;background-color:#11131b;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Cdefs%3E%3Cpath id='n' d='M20 6h4c.3 2.5 1.7 4.3 4.2 4.9v4.3a10.5 10.5 0 0 1-4.2-1.5v9.5a7.1 7.1 0 1 1-7.4-7.1v4.2a3 3 0 1 0 3.4 3V6Z'/%3E%3C/defs%3E%3Cuse href='%23n' fill='%2325f4ee' transform='translate(-1.2 1.2)'/%3E%3Cuse href='%23n' fill='%23fe2c55' transform='translate(1.2 -1.2)'/%3E%3Cuse href='%23n' fill='white'/%3E%3C/svg%3E");
+  background-size:30px;background-repeat:no-repeat;background-position:center;
+}
+#channelTool .channel-compact-heading p{margin-left:45px;color:#9fa8b9;font-size:10px;}
+#channelTool .channel-heading-actions{gap:7px;}
+#channelTool button.secondary,.channel-dialog button.secondary{
+  border:1px solid #3a404e;background:#1a1e28;color:#e9edf6;border-radius:8px;
+  box-shadow:none;transition:background .15s,border-color .15s;
+}
+#channelTool button.secondary:hover,.channel-dialog button.secondary:hover{background:#252a37;border-color:#6a758b;}
+#channelTool #channelSync{
+  background:#fe2c55;border-color:#fe2c55;color:#fff;font-weight:700;
+  box-shadow:0 3px 12px #fe2c551c;
+}
+#channelTool #channelSync:hover:not(:disabled){background:#e9234a;border-color:#e9234a;}
+#channelTool button:disabled,.channel-dialog button:disabled{opacity:.45;cursor:not-allowed;}
+#channelTool :is(button,input,select,summary):focus-visible,.channel-dialog :is(button,input,select,summary,a):focus-visible{
+  outline:2px solid #25f4ee;outline-offset:3px;
+}
+#channelTool .channel-toolbar.scope-filters{
+  background:#171a23;border:1px solid #2a2f3c;border-radius:12px;padding:12px 13px;
+  box-shadow:none;margin:12px 0 8px;
+}
+#channelTool .channel-filter-field>.scope-label{color:#a6afc1;font-size:10px;letter-spacing:.15px;}
+#channelTool .channel-toolbar .channel-filter-fields :is(input,select){
+  color:#f2f5fc;background:#10131c;border:1px solid #343b4b;border-radius:8px;
+  font-size:11px;color-scheme:dark;
+}
+#channelTool .channel-toolbar .channel-filter-fields :is(input,select):hover{border-color:#566477;}
+#channelTool .channel-toolbar .channel-filter-fields :is(input,select):focus-visible{border-color:#25f4ee;box-shadow:0 0 0 2px #25f4ee14;}
+#channelTool .channel-modes{background:#0e1119;border:1px solid #343b4b;border-radius:8px;}
+#channelTool .channel-modes button{background:transparent;color:#9ea8bd;border-radius:5px;}
+#channelTool .channel-modes button:hover{color:#f4f7fc;background:#202633;}
+#channelTool .channel-modes button[aria-pressed=true]{color:#051718;background:#25f4ee;box-shadow:none;font-weight:800;}
+#channelTool .channel-status{color:#9fa9bd;font-size:10px;margin:9px 1px;}
+#channelTool .channel-status:before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:#25f4ee;margin-right:7px;vertical-align:1px;}
+#channelTool .channel-status[data-error=true]{color:#ff8298;}
+#channelTool .channel-status[data-error=true]:before{background:#fe2c55;}
+#channelTool .channel-summary-compact{gap:10px;margin:10px 0 13px;}
+#channelTool .channel-stat{
+  position:relative;overflow:hidden;padding:13px 14px;background:#181b25;border:1px solid #2c3140;
+  border-radius:12px;box-shadow:none;
+}
+#channelTool .channel-stat:after{
+  content:'';position:absolute;top:12px;right:12px;width:24px;height:24px;border-radius:7px;
+  display:block;background-color:#25f4ee12;background-size:15px;background-position:center;background-repeat:no-repeat;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2325f4ee' d='M7 4v16l13-8Z'/%3E%3C/svg%3E");
+}
+#channelTool .channel-stat:nth-child(2):after{background-color:#fe2c5518;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23ff7290' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m4 17 6-6 4 3 6-8m-6 0h6v6'/%3E%3C/svg%3E");}
+#channelTool .channel-stat:nth-child(3):after{background-color:#fe2c5518;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ff7290' d='M12 21 3 12A6 6 0 0 1 12 4a6 6 0 0 1 9 8Z'/%3E%3C/svg%3E");}
+#channelTool .channel-stat:nth-child(4):after{background-color:#af98ff17;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23c0adff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M4 19c0-8 5-10 11-10V4l6 7-6 7v-5c-5 0-8 1-11 6Z'/%3E%3C/svg%3E");}
+#channelTool .channel-stat>span{color:#a4aec1;font-size:9px;font-weight:650;letter-spacing:.5px;padding-right:28px;}
+#channelTool .channel-stat strong{color:#fff;font-size:29px;letter-spacing:-.9px;font-weight:800;margin:5px 0 3px;}
+#channelTool .channel-stat:first-child strong{color:#25f4ee;}
+#channelTool .channel-follow-stat>strong{color:#ff6c89;}
+#channelTool .channel-stat strong em{color:#8691a7;font-size:12px;letter-spacing:0;}
+#channelTool .channel-stat small{color:#9ba5b9;font-size:9px;}
+#channelTool .channel-team-average b{color:#f0f4fc;}
+#channelTool .channel-summary-compact .channel-follow-coverage{color:#8490a5;}
+#channelTool .channel-stat-info,#channelTool .channel-chart-help{color:#a2aec2;background:transparent;border-color:transparent;}
+#channelTool .channel-grid-compact{gap:12px;margin:12px 0;}
+#channelTool .channel-card{background:#151820;border:1px solid #2a303d;border-radius:12px;box-shadow:none;padding:14px;}
+#channelTool .channel-card h3{color:#f5f7fc;font-size:14px;font-weight:750;letter-spacing:-.25px;}
+#channelTool .channel-panel-title h3:before{content:'';display:inline-block;width:3px;height:13px;background:#25f4ee;border-radius:3px;margin-right:7px;vertical-align:-1px;}
+#channelTool .channel-interaction-panel .channel-panel-title h3:before{background:#fe2c55;}
+#channelTool .channel-card p,#channelTool .channel-panel-caption{color:#909db2;font-size:9px;}
+#channelTool .channel-posts-head,#channelTool .channel-metrics-head{
+  color:#b6c0d3;background:#202532;border-radius:6px;font-size:9px;font-weight:650;height:30px;
+}
+#channelTool .channel-chart-row,#channelTool .channel-metrics-row{border-bottom:1px solid #252b37;}
+#channelTool .channel-chart-row:hover,#channelTool .channel-metrics-row:not(.channel-metrics-head):hover{background:#ffffff04;}
+#channelTool .channel-chart-name,#channelTool .channel-metric-trainer strong{color:#eef3fc;font-size:11px;font-weight:650;}
+#channelTool .channel-chart-name small,#channelTool .channel-metric-trainer small{color:#8c98ad;font-size:8px;}
+#channelTool .channel-chart-value,#channelTool .channel-metric-number{color:#edf4ff;font-variant-numeric:tabular-nums;}
+#channelTool .channel-chart-value small{color:#919db2;}
+#channelTool .channel-track{height:7px;background:#252d3a;border:0;}
+#channelTool .channel-track>i{background:linear-gradient(90deg,#17a6b1,#25f4ee);border-radius:4px;}
+#channelTool .channel-track.unknown,#channelTool .channel-metric-track.unknown{background:repeating-linear-gradient(135deg,#242a35,#242a35 4px,#303846 4px,#303846 5px);}
+#channelTool .channel-metric-track{background:#252c39;height:3px;border-radius:3px;}
+#channelTool .channel-metric-track.follow:before{background:#626f83;}
+#channelTool .channel-metric-track.follow i{background:#25f4ee;}
+#channelTool .channel-metric-track.view i{background:#829bff;}
+#channelTool .channel-metric-track.like i{background:#ff6c89;}
+#channelTool .channel-metric-track.share i{background:#ba9cff;}
+#channelTool .channel-follow-detail{background:transparent;border:0;color:#eaf4ff;}
+#channelTool .channel-follow-now{color:#f4f8ff;}
+#channelTool .channel-follow-gain.up{color:#25f4ee;}
+#channelTool .channel-follow-gain.down{color:#ff708d;}
+#channelTool .channel-follow-gain.flat,#channelTool .channel-follow-gain.unknown{color:#8996aa;}
+#channelTool .channel-follow-gain:before{color:#68768c;}
+#channelTool .channel-metrics-head>[role=columnheader]:nth-child(3){color:#83f3ec;}
+#channelTool .channel-metrics-head>[role=columnheader]:nth-child(4){color:#a8b8ff;}
+#channelTool .channel-metrics-head>[role=columnheader]:nth-child(5){color:#ff8ca4;}
+#channelTool .channel-metrics-head>[role=columnheader]:nth-child(6){color:#c5b2ff;}
+#channelTool .channel-metric-note{color:#8e9cb3;}
+#channelTool .channel-metric-note summary{font-size:9px;color:#a4b2ca;}
+#channelTool .channel-rhythm-panel{margin-top:12px;}
+#channelTool .channel-timeline{border-bottom:1px solid #343c4d;background:repeating-linear-gradient(0deg,transparent,transparent 34px,#2a324033 34px,#2a324033 35px);}
+#channelTool .channel-day-bar{background:linear-gradient(180deg,#25f4ee,#188fa4);border-radius:4px 4px 0 0;}
+#channelTool .channel-day-bar span{color:#b4fcf9;font-size:9px;}
+#channelTool .channel-day>small{color:#8c9bb2;}
+#channelTool .channel-management{background:#141720;border-color:#2c3341;border-radius:12px;}
+#channelTool .channel-management>summary{color:#d7e1f2;font-size:10px;}
+#channelTool .channel-management>summary:after{color:#25f4ee;}
+#channelTool .channel-management-body .channel-card{background:#171c26;}
+#channelTool .channel-detail-table th{background:#222a38;color:#bdcbe0;}
+#channelTool .channel-detail-table td{color:#e7f0ff;border-color:#2d3544;}
+#channelTool .channel-detail-table a{color:#70ede6;}
+#channelTool .channel-tag{background:#2a303d;color:#b7c3d7;}
+#channelTool .channel-tag.good{background:#143b34;color:#7de5c3;}
+#channelTool .channel-tag.wait{background:#3b2e25;color:#f1c28e;}
+#channelTool .channel-banner{color:#e1eafa;background:#1d2633;border-color:#3e536d;}
+#channelTool .channel-note,#channelTool .channel-empty{color:#95a3b8;}
+.channel-overlay{background:#050712b8;backdrop-filter:blur(6px);}
+.channel-overlay .channel-dialog{color:#edf3ff;background:#171c27;border:1px solid #3b4559;border-radius:16px;box-shadow:0 24px 90px #0009;}
+.channel-overlay .channel-dialog h3{color:#f8faff;}
+.channel-overlay .channel-dialog .channel-close{color:#e5edfc;background:#242d3e;border-color:#424e63;}
+.channel-overlay .channel-dialog :is(input,select){color:#eff5ff;background:#101621;border-color:#43506a;color-scheme:dark;}
+.channel-overlay .channel-dialog :is(p,li,small){color:#b2c0d5;}
+.channel-overlay .channel-dialog a{color:#71eee6;}
+.channel-overlay .channel-dialog :is(th,td){border-color:#354158;color:#dce8fc;background:transparent;}
+.channel-overlay .channel-dialog th{background:#222d3e;color:#bccfe9;}
+.channel-overlay .channel-dialog svg{background:#111721;border-color:#334058;}
+.channel-overlay .channel-dialog svg text{fill:#adbed7;}
+.channel-overlay .channel-dialog svg polyline{stroke:#25f4ee;}
+.channel-overlay .channel-video{border-color:#354158;}
+@media(prefers-reduced-motion:reduce){#channelTool *,.channel-overlay *{transition:none!important;scroll-behavior:auto!important;}}
+.mobile-layout #tab-extensions #channelTool{padding:10px 8px;border-radius:13px;--channel-row:30px;}
+.mobile-layout #channelTool .channel-heading.channel-compact-heading{align-items:flex-start;gap:7px;margin-bottom:10px;}
+.mobile-layout #channelTool .channel-compact-heading h2{font-size:17px!important;gap:7px;letter-spacing:-.5px;}
+.mobile-layout #channelTool .channel-compact-heading h2:before{width:27px;height:27px;flex-basis:27px;background-size:24px;border-radius:8px;}
+.mobile-layout #channelTool .channel-compact-heading p{margin-left:34px;font-size:8px;line-height:1.45;max-width:170px;}
+.mobile-layout #channelTool .channel-heading-actions{gap:4px;}
+.mobile-layout #channelTool .channel-heading-actions button{font-size:8px;padding:6px;border-radius:6px;white-space:nowrap;}
+.mobile-layout #channelTool .channel-toolbar.scope-filters{padding:7px!important;gap:6px!important;border-radius:10px;}
+.mobile-layout #channelTool .channel-filter-field>.scope-label{font-size:8px;}
+.mobile-layout #channelTool .channel-modes{border-radius:7px;}
+.mobile-layout #channelTool .channel-summary-compact{gap:5px;margin:9px 0;}
+.mobile-layout #channelTool .channel-stat{padding:8px 6px;border-radius:9px;}
+.mobile-layout #channelTool .channel-stat:after{display:none;}
+.mobile-layout #channelTool .channel-stat>span{font-size:7px;padding-right:0;letter-spacing:0;}
+.mobile-layout #channelTool .channel-stat strong{font-size:19px;letter-spacing:-.6px;}
+.mobile-layout #channelTool .channel-stat strong em{font-size:8px;}
+.mobile-layout #channelTool .channel-stat small{font-size:7px;}
+.mobile-layout #channelTool .channel-summary-compact .channel-team-average{font-size:6.5px;}
+.mobile-layout #channelTool .channel-summary-compact .channel-follow-coverage{font-size:6px;}
+.mobile-layout #channelTool .channel-card{padding:10px 7px;border-radius:10px;}
+.mobile-layout #channelTool .channel-card h3{font-size:12px;}
+.mobile-layout #channelTool .channel-card p{font-size:8px;}
+.mobile-layout #channelTool .channel-posts-head,.mobile-layout #channelTool .channel-metrics-head{font-size:7px;height:28px;}
+.mobile-layout #channelTool .channel-chart-name,.mobile-layout #channelTool .channel-metric-trainer strong{font-size:9px;}
+.mobile-layout #channelTool .channel-metric-number{font-size:9px;}
+.mobile-layout #channelTool .channel-grid-compact{gap:0;margin:9px 0;}
+.mobile-layout #channelTool .channel-timeline{height:118px;}
+.mobile-layout #channelTool .channel-status{font-size:8px;}
+@media(max-width:370px){
+ .mobile-layout #channelTool .channel-heading.channel-compact-heading{flex-wrap:wrap;}
+ .mobile-layout #channelTool .channel-heading-actions{margin-left:34px;}
+ .mobile-layout #channelTool .channel-stat strong{font-size:16px;}
+ .mobile-layout #channelTool .channel-stat>span{font-size:6px;}
+ .mobile-layout #channelTool .channel-metric-number{font-size:8px;}
+ .mobile-layout #channelTool .channel-metric-trainer strong{font-size:8px;}
+}
+</style>
 </head>
 <body>
 

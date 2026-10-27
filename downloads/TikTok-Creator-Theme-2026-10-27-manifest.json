@@ -1,0 +1,34 @@
+{
+  "scope": "Test",
+  "date": "2026-10-27",
+  "filename": "Dashboard-Test-2026-10-27-TikTok-Creator-Theme.html",
+  "bytes": 2474779,
+  "characters": 2411273,
+  "sha256": "bd1ae1729d5392c7d40e9b2babeca4095c9c1eacfcbf504dd193d7352f667bce",
+  "git_blob_sha": "56c8f65c5a1ef12d90ce04211216cd385f2c5cba",
+  "base_test_commit": "536a3286a2ccce3ecbdd8e3f24735dbe9f385f9e",
+  "changes": [
+    "Dark TikTok-inspired Extensions workspace with cyan and pink accents",
+    "Scoped visual theme for filters, metric cards, progress charts and dialogs",
+    "Desktop and mobile styling; existing layout and all JavaScript preserved"
+  ],
+  "database_changes": false,
+  "backend_changes": false,
+  "javascript_changes": false,
+  "previews": {
+    "desktop": {
+      "filename": "TikTok-Creator-Preview-Desktop-2026-10-27.png",
+      "bytes": 147262,
+      "base64_length": 196352,
+      "sha256": "d7513ace93f8b413368c47ca10a94b96f5157fb303bb15f87a001ec38669ace2",
+      "synthetic_data_only": true
+    },
+    "mobile": {
+      "filename": "TikTok-Creator-Preview-Mobile-2026-10-27.png",
+      "bytes": 118454,
+      "base64_length": 157940,
+      "sha256": "8fe6d13e2409d5a3b85afa951b2f204e0abd5ca52eae08030d60129699f53876",
+      "synthetic_data_only": true
+    }
+  }
+}
