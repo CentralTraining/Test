@@ -13229,13 +13229,11 @@ function renderSurveyForm(){
   const tList = coachingScopedTrainerList_();
   const trainer = tList.find(t=>t.id===coachRegTrainerId);
   const scopedResponses = trainer ? surveyResponses.filter(s=>s.trainerId===trainer.id) : [];
-  // Cùng mã PG ở Trainer khác không được cộng vào tổng hay thứ tự khảo sát.
-  const pgCounts=new Map(), surveyOrdinals=new Map();
-  [...scopedResponses].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).forEach(s=>{
+  // Tổng khảo sát của từng PG trong tháng, chỉ thuộc Trainer đang chọn.
+  const pgCounts=new Map();
+  scopedResponses.forEach(s=>{
     const key=coachingSurveyPgKey_(s);
-    if(!key){ surveyOrdinals.set(s,1); return; }
-    const ordinal=(pgCounts.get(key)||0)+1;
-    pgCounts.set(key,ordinal); surveyOrdinals.set(s,ordinal);
+    if(key)pgCounts.set(key,(pgCounts.get(key)||0)+1);
   });
 
   let html = '';
@@ -13259,7 +13257,7 @@ function renderSurveyForm(){
     const count=pgCounts.get(coachingSurveyPgKey_(s))||0;
     return surveyFormLuotFilter_==='2' ? count>=COACHING_SESSIONS_TO_COMPLETE : count===1;
   });
-  html += `<p class="section-desc" style="margin:0 0 8px;">Mỗi dòng là 1 phiếu khảo sát. Cột “Lần khảo sát” ghi thứ tự từng lần của PG.</p>`;
+  html += `<p class="section-desc" style="margin:0 0 8px;">Mỗi dòng là 1 phiếu. “Số khảo sát” là tổng của từng PG trong tháng; không cộng cột này để tính tổng phiếu.</p>`;
 
   if(filteredResponses.length===0){
     html += `<div class="empty">Chưa có khảo sát nào khớp bộ lọc trong tháng này.</div>`;
@@ -13271,17 +13269,17 @@ function renderSurveyForm(){
     if(surveyFormPage_<1) surveyFormPage_ = 1;
     const startIdx = (surveyFormPage_-1)*SURVEY_FORM_PAGE_SIZE;
     const pageItems = sorted.slice(startIdx, startIdx+SURVEY_FORM_PAGE_SIZE);
-    html += `<table><thead><tr><th>Thời gian</th><th>Mã NV</th><th>Họ & Tên PGs</th><th>Trainer</th><th>Nhóm</th><th>Lần khảo sát</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>`;
+    html += `<table><thead><tr><th>Thời gian</th><th>Mã NV</th><th>Họ & Tên PGs</th><th>Trainer</th><th>Nhóm</th><th>Số khảo sát</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>`;
     pageItems.forEach(s=>{
-      const ordinal=surveyOrdinals.get(s)||1;
-      const done=ordinal>=COACHING_SESSIONS_TO_COMPLETE;
+      const count=pgCounts.get(coachingSurveyPgKey_(s))||0;
+      const done=count>=COACHING_SESSIONS_TO_COMPLETE;
       html += `<tr>
         <td>${s.timestamp ? new Date(s.timestamp).toLocaleString('vi-VN') : '—'}</td>
         <td>${s.code||'—'}</td>
         <td>${s.pgName||'—'}</td>
         <td>${s.trainerName||'—'}</td>
         <td>${s.pgGroup||'—'}</td>
-        <td><span class="pill ${done?'pill-ok':'pill-warn'}">Lần ${ordinal}/${COACHING_SESSIONS_TO_COMPLETE}</span></td>
+        <td><span class="pill ${done?'pill-ok':'pill-warn'}">${count}</span></td>
         ${isAdmin()?`<td><button class="danger" data-del-survey="${s.id}">Xóa</button></td>`:''}
       </tr>`;
     });
