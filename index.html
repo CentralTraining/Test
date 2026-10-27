@@ -13222,6 +13222,37 @@ async function processSurvey01Workbook_(wb){
 let surveyFormPage_ = 1;
 let surveyFormLuotFilter_ = '';
 const SURVEY_FORM_PAGE_SIZE = 10;
+function exportCoachingSurveyGroups_(groups,trainer,month,filter){
+  if(!trainer||month!==currentMonth||filter!==surveyFormLuotFilter_||coachRegTrainerId!==trainer.id)return;
+  if(!isAdmin()&&!isTrainer())return;
+  if(!coachingScopedTrainerList_().some(t=>t.id===trainer.id))return;
+  if(isTrainer()){
+    const ownRegion=String(session.region||trainerOf(session.trainerId)?.region||'').trim().toUpperCase();
+    if(trainer.id!==session.trainerId||!ownRegion||String(trainer.region||'').trim().toUpperCase()!==ownRegion)return;
+  }
+  const selected=groups.filter(group=>group.responses.length&&group.responses.every(s=>s.trainerId===trainer.id));
+  if(!selected.length)return;
+  const filterLabel=filter==='2'?'Đủ ≥2 lượt':filter==='1'?'Có 1 lượt':'Tất cả';
+  const total=selected.reduce((sum,group)=>sum+group.count,0);
+  const rows=selected.map((group,index)=>{
+    const s=group.latest;
+    return [index+1,String(s.code||''),String(s.pgName||''),String(trainer.region||''),String(trainer.name||''),
+      String(s.pgGroup||''),Number(group.count),group.count>=COACHING_SESSIONS_TO_COMPLETE?'Đủ khảo sát':'Chưa đủ khảo sát',
+      s.timestamp?new Date(s.timestamp).toLocaleString('vi-VN'): ''];
+  });
+  const data=[['KẾT QUẢ KHẢO SÁT COACHING PGs 0★–1★'],
+    ['Tháng',month,'Trainer',trainer.name,'Khu vực',trainer.region||''],
+    ['Bộ lọc',filterLabel,'Số PG',rows.length,'Tổng khảo sát',total],[],
+    ['STT','Mã NV','Họ & Tên PGs','Khu vực','Trainer','Nhóm','Số khảo sát','Trạng thái','Khảo sát gần nhất'],
+    ...rows,['TỔNG','','','','','',total,'','']];
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[8,16,30,20,28,20,14,24,24].map(wch=>({wch}));
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}}];
+  ws['!autofilter']={ref:'A5:I'+(5+rows.length)};
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Danh sach PG');
+  const safeName=String(trainer.name||'Trainer').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_|_$/g,'');
+  XLSX.writeFile(wb,`Khao_sat_Coaching_PGs_01_${month}_${safeName}_${filter||'tat_ca'}.xlsx`);
+}
 function renderSurveyForm(){
   const box=document.getElementById('surveyFormBox');
   if(!box) return;
@@ -13249,7 +13280,9 @@ function renderSurveyForm(){
   if(surveyFormLuotFilter_)filteredGroups=groups.filter(group=>surveyFormLuotFilter_==='2'
     ?group.count>=COACHING_SESSIONS_TO_COMPLETE:group.count===1);
   const filteredEntries=filteredGroups.reduce((sum,group)=>sum+group.count,0);
-  let html=`<div class="scope-filters" style="justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;">
+  const canExport=isAdmin()||isTrainer();
+  const exportMonth=currentMonth,exportFilter=surveyFormLuotFilter_;
+  let html=`${canExport?`<div style="display:flex;justify-content:flex-start;margin-bottom:10px;"><button class="secondary" id="exportCoachingSurveyBtn" type="button" ${filteredGroups.length?'':'disabled'} title="Xuất toàn bộ PG khớp bộ lọc, gồm tất cả các trang">⇩ Xuất Excel</button></div>`:''}<div class="scope-filters" style="justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span class="scope-label">${trainer?escapeHtml(trainer.name)+' · ':''}Tổng <strong>${monthEntries}</strong> phiếu khảo sát · <strong>${groups.length}</strong> PG trong ${monthLabel(currentMonth)}</span>
       <span class="scope-label">Lọc PG:</span>
@@ -13292,6 +13325,11 @@ function renderSurveyForm(){
   const luotSel=document.getElementById('surveyFormLuotSel');
   if(luotSel)luotSel.addEventListener('change',()=>{surveyFormLuotFilter_=luotSel.value;surveyFormPage_=1;renderSurveyForm();});
   if(filteredGroups.length)renderSurveyFormPagination_(filteredGroups.length);
+  const exportBtn=document.getElementById('exportCoachingSurveyBtn');
+  if(exportBtn)exportBtn.addEventListener('click',()=>{
+    try{exportCoachingSurveyGroups_(filteredGroups,trainer,exportMonth,exportFilter);}
+    catch(error){alert('Không xuất được Excel. Vui lòng thử lại: '+(error?.message||error));}
+  });
   box.querySelectorAll('[data-del-survey]').forEach(btn=>{
     btn.addEventListener('click',async()=>{
       if(!isAdmin())return;

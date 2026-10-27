@@ -1,0 +1,17 @@
+{
+  "scope": "Test",
+  "date": "2026-10-27",
+  "filename": "Dashboard-Test-2026-10-27-Coaching-Xuat-Excel.html",
+  "bytes": 2459466,
+  "characters": 2395960,
+  "sha256": "febf1d5448972c9f1a9f2704ff6c45d865cf6b8370320c563df0e7e367be0b70",
+  "git_blob_sha": "7fae289467013f5d00aac968c99e98494a1ff3be",
+  "changes": [
+    "Top-left Excel export button for grouped Coaching survey list",
+    "Exports all pages of the current Trainer and PG survey filter",
+    "One PG per row with numeric survey totals and month/filter metadata",
+    "Trainer export restricted to their assigned scope"
+  ],
+  "database_changes": false,
+  "backend_changes": false
+}

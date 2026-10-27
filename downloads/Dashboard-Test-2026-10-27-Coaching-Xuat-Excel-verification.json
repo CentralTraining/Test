@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "synthetic_data_only": true,
+  "remote_writes": 0,
+  "unexpectedRequests": 0,
+  "checks": [
+    {
+      "viewport": 1440,
+      "passed": true,
+      "checks": [
+        "actual XLSX downloads from the top-left button",
+        "8 PG and 14 surveys reconcile",
+        "1-survey and >=2-survey filters retained",
+        "all 13 PG / 19 surveys exported from page 2",
+        "numeric totals and Excel auto-filter",
+        "staff codes preserve leading zeros; text cannot become formulas",
+        "Trainer export and stale/foreign scope guards",
+        "viewer and empty-list handling",
+        "no remote writes or page errors"
+      ]
+    },
+    {
+      "viewport": 390,
+      "passed": true,
+      "checks": [
+        "actual XLSX downloads from the top-left button",
+        "8 PG and 14 surveys reconcile",
+        "1-survey and >=2-survey filters retained",
+        "all 13 PG / 19 surveys exported from page 2",
+        "numeric totals and Excel auto-filter",
+        "staff codes preserve leading zeros; text cannot become formulas",
+        "Trainer export and stale/foreign scope guards",
+        "viewer and empty-list handling",
+        "no remote writes or page errors"
+      ]
+    }
+  ]
+}
