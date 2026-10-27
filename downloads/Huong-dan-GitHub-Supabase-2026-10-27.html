@@ -1,0 +1,379 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hướng dẫn triển khai Trainer Hub độc lập</title><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{font:15px/1.75 system-ui,-apple-system,"Segoe UI",sans-serif;color:#213a2c;background:#f2f7f3;margin:0}main{max-width:1040px;padding:26px 24px 50px;margin:auto}.hero{background:#075b39;color:white;padding:36px 40px;border-radius:20px;margin-bottom:22px}.tag{font-size:11px;letter-spacing:1.6px;font-weight:750;opacity:.8}.hero h1{font-size:36px;line-height:1.2;margin:18px 0}.hero p{max-width:680px;opacity:.9}.hero button{background:#fff;color:#075b39}h2{font-size:24px;line-height:1.35;margin:4px 0 18px;color:#075b39}h3{font-size:17px;margin-top:28px;color:#075b39}section{background:white;border:1px solid #dce9df;border-radius:16px;padding:30px 34px;margin:18px 0;scroll-margin-top:20px}p{margin:12px 0}ol,ul{padding-left:25px}li{padding-left:3px;margin:10px 0}.step{font-size:12px;font-weight:800;color:#6d9d7b;letter-spacing:1px}.note{background:#e9f3ec;border:1px solid #d2e6d8;border-radius:12px;padding:16px 20px;font-size:14px}nav{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0}nav a{background:#fff;border:1px solid #d5e5d9;padding:7px 12px;border-radius:8px;text-decoration:none;font-size:13px;color:#075b39}a{color:#087a4d}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;margin:18px 0}th,td{padding:12px 13px;text-align:left;vertical-align:top;border:1px solid #e1ebe4;overflow-wrap:anywhere}th{background:#ecf5ee;color:#075b39}th:first-child{width:35%}code{font-family:ui-monospace,Consolas,monospace;font-size:.86em;background:#f0f5f1;padding:2px 4px;border-radius:4px;overflow-wrap:anywhere}pre{background:#112a1d;color:#e5f4e9;border-radius:10px;padding:18px;overflow:auto;white-space:pre-wrap;font-size:12px;line-height:1.55;margin:0 0 16px;max-height:440px}pre code{background:none;color:inherit;padding:0;font-size:inherit}.code-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:20px 0 8px;font-size:12px;color:#607866}button{border:1px solid #a5c7af;background:#f4fbf6;border-radius:8px;color:#075b39;font:600 12px system-ui;padding:8px 12px;cursor:pointer}details{border:1px solid #d7e7dc;border-radius:10px;padding:12px 16px;margin:18px 0}summary{cursor:pointer;color:#075b39;font-weight:650}footer{font-size:12px;color:#6c8273;text-align:center;padding:24px}#copyStatus{position:fixed;bottom:20px;right:20px;background:#075b39;color:white;padding:10px 16px;border-radius:10px;display:none}@media(max-width:680px){main{padding:12px}.hero{padding:26px}.hero h1{font-size:28px}section{padding:23px 18px}h2{font-size:21px}table{font-size:11px}td,th{padding:8px}nav a{font-size:11px}.note{padding:13px}body{font-size:14px}}@media print{body{background:white}main{max-width:none;padding:0}button,nav,#copyStatus{display:none!important}.hero{background:white!important;color:#075b39!important;padding:0;border-radius:0}section{border:0;padding:0;break-inside:auto}details:not([open]){display:none}pre{max-height:none;font-size:9px}.note{background:white!important}a{color:inherit}}</style></head><body><main><header class="hero"><div class="tag">TRAINER HUB · BẢN ĐỘC LẬP · 27/10/2026</div><h1>Đưa Trainer Hub lên<br>GitHub Pages & Supabase</h1><p>Một file <b>index.html</b> cho giao diện. Một Supabase mới cho tài khoản, cấu hình đội ngũ và dữ liệu TikTok.</p><button onclick="print()">In / Lưu PDF</button></header>
+<aside class="note"><b>Bản này bắt đầu với dữ liệu riêng.</b> Không cần chỉnh Dashboard đang sử dụng. Tài khoản, Trainer, mốc Follow và kết nối TikTok được tạo mới trên project của bản độc lập. File giao diện chưa điền URL/key vì Nghĩa chưa tạo Supabase mới.</aside>
+<nav><a href="#files">1. Các file</a><a href="#github">2. GitHub</a><a href="#supabase">3. Supabase</a><a href="#function">4. Máy chủ</a><a href="#html">5. File HTML</a><a href="#admin">6. Admin & user</a><a href="#tiktok">7. TikTok</a><a href="#errors">8. Kiểm tra lỗi</a></nav>
+<section id="files"><div class="step">01</div><h2>Tải và giải nén gói đầy đủ</h2><p>Giải nén ZIP vào một thư mục trên máy. Không mở ứng dụng từ bên trong ZIP.</p><table><thead><tr><th>File</th><th>Dùng để làm gì?</th></tr></thead><tbody><tr><td><code>index.html</code></td><td>Toàn bộ giao diện: đăng nhập, khu vực/Trainer, tài khoản và Xây kênh TikTok.</td></tr><tr><td><code>supabase/setup.sql</code></td><td>Tạo hai bảng riêng, bật RLS và cấp quyền cho máy chủ.</td></tr><tr><td><code>trainer-hub-function.ts</code></td><td>Mã máy chủ gộp một file; dán vào Supabase Editor.</td></tr><tr><td><code>supabase/functions/trainer-hub/</code></td><td>Source theo module, nếu sau này triển khai bằng Supabase CLI.</td></tr><tr><td><code>HUONG-DAN.html</code></td><td>Hướng dẫn này, có nút sao chép SQL và source máy chủ.</td></tr><tr><td><code>terms.html</code>, <code>privacy.html</code></td><td>Trang điều khoản và bảo mật cho cấu hình URL TikTok khi cần.</td></tr></tbody></table><p>Giao diện ứng dụng không cần file JavaScript/CSS riêng hay thư viện tải ngoài. Các file máy chủ được triển khai ở Supabase.</p></section>
+<section id="github"><div class="step">02</div><h2>Tạo repository GitHub và xác định link riêng</h2><ol><li>Đăng nhập <a href="https://github.com/new">github.com/new</a>.</li><li>Đặt tên repository, ví dụ <b>TrainerHub</b>; chọn <b>Public</b> và bật <b>Add a README file</b>. Chọn <b>Create repository</b>.</li><li>Link ứng dụng sẽ có dạng <code>https://TEN-GITHUB.github.io/TrainerHub/</code>. Nếu dùng tài khoản CentralTraining thì dạng link là <code>https://centraltraining.github.io/TrainerHub/</code>. Đây là ví dụ đường dẫn sau triển khai, không phải một website đã được tạo sẵn.</li><li>Ghi lại link chính xác, gồm chữ hoa/thường của tên repository và dấu <code>/</code> cuối. Bước dưới dùng link này cho <code>APP_URL</code>.</li></ol><p class="note">Repository public chỉ chứa mã giao diện và các thông tin công khai của ứng dụng. Tài khoản và số liệu được lưu trong Supabase mới, qua máy chủ có kiểm tra đăng nhập.</p></section>
+<section id="supabase"><div class="step">03</div><h2>Tạo Supabase mới và tạo bảng</h2><ol><li>Vào <a href="https://supabase.com/dashboard">supabase.com/dashboard</a> → <b>New project</b>. Tạo project mới, chọn vùng phù hợp và lưu mật khẩu database riêng. Chờ project sẵn sàng.</li><li>Trong cửa sổ <b>Connect</b> hoặc <b>Project Settings → Data API / API Keys</b>, lấy <b>Project URL</b> và <b>Publishable key</b>. Nếu project cũ dùng định dạng legacy thì dùng <b>anon public key</b>. Không lấy service_role/secret key cho HTML.</li><li>Mở <b>SQL Editor → New query</b>. Dán toàn bộ SQL dưới đây, bấm <b>Run</b>.</li><li>Trong Table Editor, kiểm tra có <code>trainer_hub_settings</code> và <code>trainer_hub_private</code>. Bảng settings có hai dòng <code>auth_users</code> và <code>config</code>.</li><li>Giữ <b>Data API</b> bật và schema <code>public</code> được expose. Nếu đổi cấu hình Data API, máy chủ cần truy cập hai bảng này bằng service role. SQL đã bật RLS và chặn quyền đọc/ghi trực tiếp của trình duyệt.</li></ol><div class="code-head"><span>SQL tạo bảng · chạy trên project MỚI</span><button data-copy="sql-code">Sao chép SQL</button></div><pre id="sql-code"><code>-- Run in SQL Editor of the NEW Supabase project. This never deletes existing data.
+create table if not exists public.trainer_hub_settings (
+  key text primary key,
+  value jsonb not null,
+  version bigint not null default 1,
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.trainer_hub_private (
+  key text primary key,
+  value jsonb not null,
+  version bigint not null default 1,
+  updated_at timestamptz not null default now()
+);
+alter table public.trainer_hub_settings enable row level security;
+alter table public.trainer_hub_private enable row level security;
+revoke all on table public.trainer_hub_settings from public, anon, authenticated;
+revoke all on table public.trainer_hub_private from public, anon, authenticated;
+grant all on table public.trainer_hub_settings to service_role;
+grant all on table public.trainer_hub_private to service_role;
+insert into public.trainer_hub_settings (key,value) values
+  (&#x27;auth_users&#x27;,&#x27;[]&#x27;::jsonb),
+  (&#x27;config&#x27;,&#x27;{&quot;regions&quot;:[],&quot;trainers&quot;:[]}&#x27;::jsonb)
+on conflict (key) do nothing;
+</code></pre><p>SQL có thể chạy lại mà không xóa dữ liệu hoặc ghi đè các tài khoản đã tạo.</p></section>
+<section id="function"><div class="step">04</div><h2>Đặt Secrets và triển khai máy chủ</h2><h3>4.1 — Thêm cấu hình trong Supabase</h3><p>Mở <b>Edge Functions → Secrets</b>, thêm các tên sau:</p><table><thead><tr><th>Tên Secret</th><th>Giá trị</th></tr></thead><tbody><tr><td><code>APP_URL</code></td><td>Link GitHub Pages của bước 2, ví dụ <code>https://TEN-GITHUB.github.io/TrainerHub/</code>.</td></tr><tr><td><code>BOOTSTRAP_TOKEN</code></td><td>Một chuỗi ngẫu nhiên riêng do Nghĩa tự tạo, tối thiểu 24 ký tự; nên dùng trình tạo mật khẩu 32 ký tự trở lên. Mã này dùng tạo Admin đầu tiên. Giữ riêng, không đưa vào GitHub.</td></tr><tr><td><code>TIKTOK_CLIENT_KEY</code></td><td>Client Key của ứng dụng/Sandbox chính dành cho bản độc lập. Có thể thêm sau ở bước 7.</td></tr><tr><td><code>TIKTOK_CLIENT_SECRET</code></td><td>Client Secret tương ứng. Chỉ nhập trong Supabase Secrets.</td></tr><tr><td><code>TIKTOK_SANDBOX2_CLIENT_KEY</code></td><td>Tùy chọn: Client Key của Sandbox thứ hai của bản độc lập.</td></tr><tr><td><code>TIKTOK_SANDBOX2_CLIENT_SECRET</code></td><td>Tùy chọn: Client Secret tương ứng với Sandbox thứ hai.</td></tr></tbody></table><p>Supabase tự cung cấp <code>SUPABASE_URL</code> và <code>SUPABASE_SERVICE_ROLE_KEY</code> cho Edge Function. Không cần điền lại hai biến này và không chép chúng vào file HTML.</p><h3>4.2 — Deploy bằng trình duyệt</h3><ol><li>Mở <b>Edge Functions → Deploy a new function → Via Editor</b> (tên nút có thể là <b>Deploy new function</b>).</li><li>Đặt tên function chính xác là <b><code>trainer-hub</code></b>.</li><li>Xóa source mẫu trong editor. Bấm nút <b>Sao chép source máy chủ</b> dưới đây rồi dán toàn bộ vào editor. Đây là file gộp, không cần tạo thêm import/module trong editor.</li><li>Bấm <b>Deploy</b> và chờ trạng thái sẵn sàng.</li><li>Mở function → <b>Details / Settings</b> → tắt <b>Verify JWT</b> hoặc <b>Enforce JWT verification</b>, rồi lưu. Ứng dụng dùng phiên đăng nhập nội bộ, được xác thực trong source máy chủ.</li><li>URL function phải là <code>https://MA-PROJECT.supabase.co/functions/v1/trainer-hub</code>.</li></ol><details><summary>Source máy chủ đầy đủ — mở để xem / sao chép</summary><div class="code-head"><span>trainer-hub-function.ts</span><button data-copy="function-code">Sao chép source máy chủ</button></div><pre id="function-code"><code>// Trainer Hub standalone — deploy this complete file as trainer-hub. No imports required.
+const HubAccess=(()=&gt;{
+// Account/config module. Private tables are read only by the server&#x27;s service role.
+const enc=new TextEncoder(),dec=new TextDecoder();
+const clean=v=&gt;String(v??&#x27;&#x27;).trim();
+const loginName=v=&gt;clean(v).normalize(&#x27;NFKC&#x27;).toLowerCase();
+const b64=v=&gt;btoa(String.fromCharCode(...new Uint8Array(v))).replace(/\+/g,&#x27;-&#x27;).replace(/\//g,&#x27;_&#x27;).replace(/=+$/,&#x27;&#x27;);
+const unb64=v=&gt;Uint8Array.from(atob(v.replace(/-/g,&#x27;+&#x27;).replace(/_/g,&#x27;/&#x27;)),c=&gt;c.charCodeAt(0));
+class AccessError extends Error{constructor(message,status=401){super(message);this.status=status;}}
+const fail=(message,status=400)=&gt;{throw new AccessError(message,status);};
+function appUrl(){
+ const value=clean(Deno.env.get(&#x27;APP_URL&#x27;));let u;try{u=new URL(value);}catch{fail(&#x27;Chưa đặt APP_URL hợp lệ trên máy chủ.&#x27;,503);}
+ if(u.protocol!==&#x27;https:&#x27;||u.username||u.password||u.search||u.hash)fail(&#x27;APP_URL phải là URL HTTPS đầy đủ, không có query/hash.&#x27;,503);
+ return u.href;
+}
+async function database(path,options={}){
+ const base=Deno.env.get(&#x27;SUPABASE_URL&#x27;),secret=Deno.env.get(&#x27;SUPABASE_SERVICE_ROLE_KEY&#x27;);if(!base||!secret)fail(&#x27;Máy chủ chưa sẵn sàng.&#x27;,503);
+ const response=await fetch(base+&#x27;/rest/v1/trainer_hub_settings&#x27;+path,{...options,headers:{apikey:secret,Authorization:&#x27;Bearer &#x27;+secret,&#x27;Content-Type&#x27;:&#x27;application/json&#x27;,Prefer:&#x27;return=representation&#x27;,...options.headers},signal:AbortSignal.timeout(12000)});
+ if(!response.ok)fail(&#x27;Không truy cập được bảng cấu hình. Kiểm tra đã chạy setup.sql.&#x27;,503);
+ return response.status===204?[]:await response.json();
+}
+async function readSetting(key){const rows=await database(&#x27;?key=eq.&#x27;+encodeURIComponent(key)+&#x27;&amp;select=key,value,version&#x27;);return rows[0]||{key,value:key===&#x27;auth_users&#x27;?[]:{regions:[],trainers:[]},version:null};}
+async function putSetting(record,value){
+ const version=record.version===null?1:record.version+1;
+ const body={key:record.key,value,version,updated_at:new Date().toISOString()};
+ const rows=record.version===null?await database(&#x27;&#x27;,{method:&#x27;POST&#x27;,headers:{Prefer:&#x27;resolution=ignore-duplicates,return=representation&#x27;},body:JSON.stringify(body)}):await database(&#x27;?key=eq.&#x27;+encodeURIComponent(record.key)+&#x27;&amp;version=eq.&#x27;+record.version,{method:&#x27;PATCH&#x27;,body:JSON.stringify(body)});
+ if(rows.length!==1)fail(&#x27;Dữ liệu vừa được cập nhật ở phiên khác. Tải lại và thử lại.&#x27;,409);return rows[0];
+}
+const digest=async value=&gt;new Uint8Array(await crypto.subtle.digest(&#x27;SHA-256&#x27;,enc.encode(value)));
+async function passwordHash(password,saved=null){
+ if(typeof password!==&#x27;string&#x27;||password.length&lt;10||password.length&gt;256)fail(&#x27;Mật khẩu cần từ 10 đến 256 ký tự.&#x27;);
+ const parts=saved?.split(&#x27;$&#x27;),salt=saved?unb64(parts[2]):crypto.getRandomValues(new Uint8Array(16)),iterations=120000;
+ if(saved&amp;&amp;(parts.length!==4||parts[0]!==&#x27;pbkdf2_sha256&#x27;||parts[1]!==String(iterations)))return &#x27;&#x27;;
+ const key=await crypto.subtle.importKey(&#x27;raw&#x27;,enc.encode(password),&#x27;PBKDF2&#x27;,false,[&#x27;deriveBits&#x27;]);
+ const result=await crypto.subtle.deriveBits({name:&#x27;PBKDF2&#x27;,salt,iterations,hash:&#x27;SHA-256&#x27;},key,256);
+ return &#x27;pbkdf2_sha256$&#x27;+iterations+&#x27;$&#x27;+b64(salt)+&#x27;$&#x27;+b64(result);
+}
+async function equal(a,b){const x=await digest(String(a)),y=await digest(String(b));return x.every((v,i)=&gt;v===y[i]);}
+async function context(){const [users,config]=await Promise.all([readSetting(&#x27;auth_users&#x27;),readSetting(&#x27;config&#x27;)]);if(!Array.isArray(users.value))fail(&#x27;Dữ liệu tài khoản chưa hợp lệ.&#x27;,503);return {users,config};}
+function principal(user,config){
+ if(!user||user.locked||![&#x27;admin&#x27;,&#x27;trainer&#x27;].includes(user.role)||!user.passHash)fail(&#x27;Tài khoản không có quyền truy cập.&#x27;,403);
+ const trainer=(config.trainers||[]).find(t=&gt;String(t.id)===String(user.trainerId));
+ if(user.role===&#x27;trainer&#x27;&amp;&amp;!trainer?.region)fail(&#x27;Tài khoản chưa được gán Trainer và khu vực.&#x27;,403);
+ return {userId:String(user.id),username:user.username,displayName:user.displayName,role:user.role,trainerId:user.role===&#x27;trainer&#x27;?String(trainer.id):&#x27;&#x27;,region:user.role===&#x27;trainer&#x27;?trainer.region:&#x27;&#x27;};
+}
+const binding=(p,user)=&gt;JSON.stringify([p.role,p.region,p.trainerId,user.passHash]);
+async function signingKey(){return crypto.subtle.importKey(&#x27;raw&#x27;,await digest(&#x27;trainer-hub-session-v1:&#x27;+Deno.env.get(&#x27;SUPABASE_SERVICE_ROLE_KEY&#x27;)),{name:&#x27;HMAC&#x27;,hash:&#x27;SHA-256&#x27;},false,[&#x27;sign&#x27;,&#x27;verify&#x27;]);}
+async function issue(user,config){const p=principal(user,config),expires=Date.now()+8*3600000,payload=b64(enc.encode(JSON.stringify({sub:p.userId,exp:expires,nonce:crypto.randomUUID()}))),signature=b64(await crypto.subtle.sign(&#x27;HMAC&#x27;,await signingKey(),enc.encode(payload+&#x27;:&#x27;+binding(p,user))));return {token:payload+&#x27;.&#x27;+signature,expires,viewer:p};}
+async function authenticate(token){
+ let payload,signature,claims;try{if(typeof token!==&#x27;string&#x27;||token.length&gt;1500||token.split(&#x27;.&#x27;).length!==2)throw Error();[payload,signature]=token.split(&#x27;.&#x27;);claims=JSON.parse(dec.decode(unb64(payload)));if(!claims.sub||!Number.isFinite(claims.exp)||claims.exp&lt;Date.now()||claims.exp&gt;Date.now()+8*3600000)throw Error();}catch{fail(&#x27;Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.&#x27;,401);}
+ const c=await context(),users=c.users.value,matches=users.filter(u=&gt;String(u.id)===claims.sub),user=matches.length===1?matches[0]:null,p=principal(user,c.config.value);let valid=false;
+ try{valid=await crypto.subtle.verify(&#x27;HMAC&#x27;,await signingKey(),unb64(signature),enc.encode(payload+&#x27;:&#x27;+binding(p,user)));}catch{}
+ if(!valid)fail(&#x27;Phiên đăng nhập không còn hợp lệ. Đăng nhập lại.&#x27;,401);
+ return {...p,trainers:c.config.value.trainers||[],config:c.config.value,configVersion:c.config.version};
+}
+async function initialized(){return (await readSetting(&#x27;auth_users&#x27;)).value.length&gt;0;}
+async function authorize(username,password){
+ if(typeof password!==&#x27;string&#x27;||password.length&gt;256||!clean(username)||clean(username).length&gt;80)fail(&#x27;Tên đăng nhập hoặc mật khẩu không đúng.&#x27;,401);
+ const c=await context(),list=c.users.value,matches=list.filter(u=&gt;loginName(u.username)===loginName(username)),user=matches.length===1?matches[0]:null;
+ if(!user||user.locked)fail(&#x27;Tên đăng nhập hoặc mật khẩu không đúng, hoặc tài khoản bị khóa.&#x27;,401);
+ if((user.blockedUntil||0)&gt;Date.now())fail(&#x27;Tạm khóa đăng nhập do nhập sai nhiều lần. Thử lại sau 15 phút hoặc nhờ Admin mở khóa.&#x27;,429);
+ let match=false;try{match=await equal(await passwordHash(password,user.passHash),user.passHash);}catch{}
+ if(!match){user.failedLoginAttempts=(user.failedLoginAttempts||0)+1;if(user.failedLoginAttempts&gt;=5)user.blockedUntil=Date.now()+15*60000;await putSetting(c.users,list);fail(&#x27;Tên đăng nhập hoặc mật khẩu không đúng.&#x27;,401);}
+ if(user.failedLoginAttempts||user.blockedUntil){user.failedLoginAttempts=0;user.blockedUntil=0;await putSetting(c.users,list);}
+ return issue(user,c.config.value);
+}
+function fields(body,config){
+ const username=loginName(body.username),displayName=clean(body.displayName),role=body.role;
+ if(!/^[a-z0-9_.@-]{3,80}$/.test(username)||!displayName||displayName.length&gt;160||![&#x27;admin&#x27;,&#x27;trainer&#x27;].includes(role))fail(&#x27;Nhập tên hiển thị, username hợp lệ (3–80 ký tự) và vai trò.&#x27;);
+ const trainer=role===&#x27;trainer&#x27;?(config.trainers||[]).find(t=&gt;String(t.id)===String(body.trainerId)):null;
+ if(role===&#x27;trainer&#x27;&amp;&amp;!trainer)fail(&#x27;Chọn Trainer đã được gán khu vực.&#x27;);
+ return {username,displayName,role,trainerId:trainer?String(trainer.id):&#x27;&#x27;,region:trainer?.region||&#x27;&#x27;};
+}
+async function bootstrap(body){
+ const secret=Deno.env.get(&#x27;BOOTSTRAP_TOKEN&#x27;);if(!secret||secret.length&lt;24)fail(&#x27;Admin cần đặt BOOTSTRAP_TOKEN từ 24 ký tự trong Secrets.&#x27;,503);
+ if(typeof body.bootstrapToken!==&#x27;string&#x27;||!await equal(secret,body.bootstrapToken))fail(&#x27;Mã khởi tạo không đúng.&#x27;,403);
+ const c=await context();if(c.users.value.length)fail(&#x27;Admin đầu tiên đã được tạo. Hãy đăng nhập.&#x27;,409);
+ const user={id:crypto.randomUUID(),...fields({...body,role:&#x27;admin&#x27;},c.config.value),passHash:await passwordHash(body.password),locked:false,createdAt:new Date().toISOString()};
+ await putSetting(c.users,[user]);return issue(user,c.config.value);
+}
+const safeUser=u=&gt;({id:u.id,username:u.username,displayName:u.displayName,role:u.role,trainerId:u.trainerId||&#x27;&#x27;,region:u.region||&#x27;&#x27;,locked:!!u.locked,blockedUntil:u.blockedUntil||0});
+async function manage(action,body,p){
+ if(action===&#x27;me&#x27;)return {viewer:{userId:p.userId,username:p.username,displayName:p.displayName,role:p.role,trainerId:p.trainerId,region:p.region},config:p.config,configVersion:p.configVersion};
+ if(action===&#x27;change_password&#x27;){
+  const record=await readSetting(&#x27;auth_users&#x27;),user=record.value.find(u=&gt;String(u.id)===p.userId);let correct=false;
+  try{correct=await equal(await passwordHash(body.currentPassword,user.passHash),user.passHash);}catch{}
+  if(!correct)fail(&#x27;Mật khẩu hiện tại không đúng.&#x27;,403);user.passHash=await passwordHash(body.password);user.failedLoginAttempts=0;user.blockedUntil=0;await putSetting(record,record.value);return {saved:true,relogin:true};
+ }
+ if(p.role!==&#x27;admin&#x27;)fail(&#x27;Chỉ Admin được quản lý khu vực, Trainer và tài khoản.&#x27;,403);
+ const c=await context();
+ if(action===&#x27;admin_users&#x27;)return {users:c.users.value.map(safeUser)};
+ if(action===&#x27;admin_save_config&#x27;){
+  if(body.version!==c.config.version)fail(&#x27;Cấu hình đã thay đổi. Tải lại để xem bản mới.&#x27;,409);
+  const input=body.config;if(!input||!Array.isArray(input.regions)||!Array.isArray(input.trainers)||input.regions.length&gt;200||input.trainers.length&gt;500)fail(&#x27;Cấu hình khu vực/Trainer không hợp lệ.&#x27;);
+  const regions=input.regions.map(clean);if(regions.some(x=&gt;!x||x.length&gt;120)||new Set(regions.map(x=&gt;x.toLocaleLowerCase())).size!==regions.length)fail(&#x27;Tên khu vực trống hoặc trùng nhau.&#x27;);
+  const trainers=input.trainers.map(t=&gt;({id:clean(t.id),name:clean(t.name),region:clean(t.region)}));
+  if(trainers.some(t=&gt;!t.id||t.id.length&gt;80||!t.name||t.name.length&gt;160||!regions.includes(t.region))||new Set(trainers.map(t=&gt;t.id)).size!==trainers.length)fail(&#x27;Mỗi Trainer cần ID duy nhất, tên và khu vực hợp lệ.&#x27;);
+  if(c.users.value.some(u=&gt;u.role===&#x27;trainer&#x27;&amp;&amp;!trainers.some(t=&gt;t.id===u.trainerId)))fail(&#x27;Còn tài khoản gắn với Trainer này. Gán lại tài khoản trước khi xóa Trainer.&#x27;);
+  const config={regions,trainers};const saved=await putSetting(c.config,config);return {saved:true,config,configVersion:saved.version};
+ }
+ const list=c.users.value;
+ if(action===&#x27;admin_create_user&#x27;){
+  const data=fields(body,c.config.value);if(list.some(u=&gt;loginName(u.username)===data.username))fail(&#x27;Username đã tồn tại.&#x27;,409);
+  if(data.role===&#x27;trainer&#x27;&amp;&amp;list.some(u=&gt;u.role===&#x27;trainer&#x27;&amp;&amp;u.trainerId===data.trainerId))fail(&#x27;Trainer này đã có tài khoản.&#x27;,409);
+  const user={id:crypto.randomUUID(),...data,passHash:await passwordHash(body.password),locked:false,createdAt:new Date().toISOString()};list.push(user);await putSetting(c.users,list);return {saved:true,user:safeUser(user)};
+ }
+ const user=list.find(u=&gt;String(u.id)===String(body.userId));if(!user)fail(&#x27;Không tìm thấy tài khoản.&#x27;,404);
+ if(action===&#x27;admin_update_user&#x27;){
+  const data=fields(body,c.config.value);if(list.some(u=&gt;u.id!==user.id&amp;&amp;loginName(u.username)===data.username))fail(&#x27;Username đã tồn tại.&#x27;,409);
+  if(data.role===&#x27;trainer&#x27;&amp;&amp;list.some(u=&gt;u.id!==user.id&amp;&amp;u.role===&#x27;trainer&#x27;&amp;&amp;u.trainerId===data.trainerId))fail(&#x27;Trainer này đã có tài khoản.&#x27;,409);
+  if(user.id===p.userId&amp;&amp;data.role!==&#x27;admin&#x27;)fail(&#x27;Không tự đổi quyền Admin của tài khoản đang dùng.&#x27;);Object.assign(user,data);
+ }else if(action===&#x27;admin_set_password&#x27;){user.passHash=await passwordHash(body.password);user.failedLoginAttempts=0;user.blockedUntil=0;}
+ else if(action===&#x27;admin_set_locked&#x27;){if(user.id===p.userId&amp;&amp;body.locked)fail(&#x27;Không tự khóa tài khoản đang dùng.&#x27;);user.locked=body.locked===true;user.blockedUntil=0;user.failedLoginAttempts=0;}
+ else fail(&#x27;Thao tác quản lý không hợp lệ.&#x27;);
+ if(!list.some(u=&gt;u.role===&#x27;admin&#x27;&amp;&amp;!u.locked))fail(&#x27;Phải giữ ít nhất một Admin đang hoạt động.&#x27;);
+ await putSetting(c.users,list);return {saved:true,user:safeUser(user),relogin:user.id===p.userId&amp;&amp;action===&#x27;admin_set_password&#x27;};
+}
+
+return {AccessError, appUrl, initialized, authorize, bootstrap, manage, authenticate};})();
+{
+const {AccessError, appUrl, initialized, authorize, bootstrap, manage, authenticate}=HubAccess;
+
+const SANDBOX_IDS=[&#x27;primary&#x27;,&#x27;secondary&#x27;];
+const sandboxId=value=&gt;value===undefined||value===null?&#x27;primary&#x27;:SANDBOX_IDS.includes(value)?value:null;
+function sandboxCredentials(id,get){
+ if(!SANDBOX_IDS.includes(id))throw Error(&#x27;Unknown Sandbox&#x27;);
+ const prefix=id===&#x27;secondary&#x27;?&#x27;TIKTOK_SANDBOX2_&#x27;:&#x27;TIKTOK_&#x27;;
+ return {client:get(prefix+&#x27;CLIENT_KEY&#x27;)?.trim(),clientSecret:get(prefix+&#x27;CLIENT_SECRET&#x27;)?.trim()};
+}
+
+// Observations come from TikTok at sync time, never from a requested report date.
+const FOLLOWER_SCOPE=&#x27;user.info.stats&#x27;;
+const FOLLOWER_BASELINE_DATE=&#x27;2026-10-01&#x27;;
+const followerCalendar=new Intl.DateTimeFormat(&#x27;sv-SE&#x27;,{timeZone:&#x27;Asia/Ho_Chi_Minh&#x27;,year:&#x27;numeric&#x27;,month:&#x27;2-digit&#x27;,day:&#x27;2-digit&#x27;});
+const followerDay=at=&gt;followerCalendar.format(new Date(at));
+function followerPoints(history){
+ const byTime=new Map();
+ for(const p of Array.isArray(history)?history:[]){
+  if(typeof p?.at!==&#x27;string&#x27;||!Number.isFinite(Date.parse(p.at))||!Number.isSafeInteger(p.count)||p.count&lt;0)continue;
+  const at=new Date(p.at).toISOString();byTime.set(at,{at,count:p.count});
+ }
+ return [...byTime.values()].sort((a,b)=&gt;Date.parse(a.at)-Date.parse(b.at));
+}
+function recordFollowers(history,point){
+ const points=followerPoints([...(Array.isArray(history)?history:[]),point]),days=new Map();
+ for(const p of points){const day=followerDay(p.at),entry=days.get(day);if(entry)entry.last=p;else days.set(day,{first:p,last:p});}
+ return [...days.values()].flatMap(d=&gt;d.first.at===d.last.at?[d.first]:[d.first,d.last]);
+}
+function followerView(channel,from,to){
+ const history=followerPoints(channel?.followers?.history),last=history[history.length-1],authorized=!!channel?.token?.scopes?.includes(FOLLOWER_SCOPE)&amp;&amp;channel?.followers?.status!==&#x27;needs_authorization&#x27;;
+ const saved=channel?.followerBaseline,baseline=saved?.date===FOLLOWER_BASELINE_DATE&amp;&amp;Number.isSafeInteger(saved.count)&amp;&amp;saved.count&gt;=0&amp;&amp;saved.handle===channel?.handle&amp;&amp;(!saved.openId||saved.openId===channel?.token?.openId)?{date:saved.date,count:saved.count,source:&#x27;admin_record&#x27;,recordedAt:saved.recordedAt}:null;
+ return {authorized,status:!channel?.token?&#x27;not_connected&#x27;:!authorized?&#x27;needs_authorization&#x27;:channel.followers?.status||&#x27;awaiting_sync&#x27;,
+  current:last?.count??null,asOf:last?.at??null,firstRecordedAt:history[0]?.at??null,baselineDate:FOLLOWER_BASELINE_DATE,baseline,
+  history:history.filter(p=&gt;{const day=followerDay(p.at);return day&gt;=FOLLOWER_BASELINE_DATE&amp;&amp;day&lt;=to;})};
+}
+
+
+
+// Official TikTok Display API only. Tokens never leave this function; no scraping.
+const te=new TextEncoder(),td=new TextDecoder();
+const ROOT=&#x27;trainer-hub&#x27;,TABLE=&#x27;trainer_hub_private&#x27;;
+const SCOPES=[&#x27;user.info.basic&#x27;,&#x27;user.info.profile&#x27;,&#x27;video.list&#x27;];
+const norm=s=&gt;String(s||&#x27;&#x27;).normalize(&#x27;NFD&#x27;).replace(/[\u0300-\u036f]/g,&#x27;&#x27;).replace(/[Đđ]/g,&#x27;d&#x27;).toLowerCase().replace(/[^a-z0-9]/g,&#x27;&#x27;);
+const clean=s=&gt;String(s??&#x27;&#x27;).trim();
+const b64=a=&gt;{const bytes=new Uint8Array(a);let out=&#x27;&#x27;;for(let i=0;i&lt;bytes.length;i+=32768)out+=String.fromCharCode(...bytes.subarray(i,i+32768));return btoa(out).replace(/\+/g,&#x27;-&#x27;).replace(/\//g,&#x27;_&#x27;).replace(/=+$/,&#x27;&#x27;);};
+const unb64=s=&gt;Uint8Array.from(atob(s.replace(/-/g,&#x27;+&#x27;).replace(/_/g,&#x27;/&#x27;)),c=&gt;c.charCodeAt(0));
+// Keep the original Sandbox credentials and route the second slot independently.
+const env=(id=&#x27;primary&#x27;)=&gt;({url:Deno.env.get(&#x27;SUPABASE_URL&#x27;),secret:Deno.env.get(&#x27;SUPABASE_SERVICE_ROLE_KEY&#x27;),...sandboxCredentials(id,k=&gt;Deno.env.get(k))});
+const callback=()=&gt;env().url+&#x27;/functions/v1/&#x27;+ROOT+&#x27;/oauth/callback&#x27;;
+const configured=(id=&#x27;primary&#x27;)=&gt;!!(env(id).client&amp;&amp;env(id).clientSecret);
+const sandboxList=()=&gt;SANDBOX_IDS.map(id=&gt;({id,label:id===&#x27;primary&#x27;?&#x27;Sandbox 1&#x27;:&#x27;Sandbox 2&#x27;,configured:configured(id)}));
+const channelSandbox=c=&gt;{const id=sandboxId(c?.sandboxId);if(!id)failure(&#x27;Sandbox của kênh không hợp lệ. Nhờ Admin kiểm tra.&#x27;,409);return id;};
+const failure=(message,status=400)=&gt;{throw new AccessError(message,status);};
+async function cryptKey(){return crypto.subtle.importKey(&#x27;raw&#x27;,await crypto.subtle.digest(&#x27;SHA-256&#x27;,te.encode(&#x27;trainer-hub-private-v1:&#x27;+env().secret)),&#x27;AES-GCM&#x27;,false,[&#x27;encrypt&#x27;,&#x27;decrypt&#x27;]);}
+async function seal(key,data){const iv=crypto.getRandomValues(new Uint8Array(12));return {v:1,iv:b64(iv),ciphertext:b64(await crypto.subtle.encrypt({name:&#x27;AES-GCM&#x27;,iv,additionalData:te.encode(key)},await cryptKey(),te.encode(JSON.stringify(data))))};}
+async function unseal(key,data){try{return JSON.parse(td.decode(await crypto.subtle.decrypt({name:&#x27;AES-GCM&#x27;,iv:unb64(data.iv),additionalData:te.encode(key)},await cryptKey(),unb64(data.ciphertext))));}catch{failure(&#x27;Không đọc được dữ liệu kênh đã mã hóa.&#x27;,503);}}
+async function database(path,options={}){
+ const e=env();if(!e.url||!e.secret)failure(&#x27;Chưa sẵn sàng nơi lưu dữ liệu.&#x27;,503);
+ const r=await fetch(e.url+&#x27;/rest/v1/&#x27;+TABLE+path,{...options,headers:{apikey:e.secret,Authorization:&#x27;Bearer &#x27;+e.secret,&#x27;Content-Type&#x27;:&#x27;application/json&#x27;,Prefer:&#x27;return=representation&#x27;,...options.headers},signal:AbortSignal.timeout(12000)});
+ if(!r.ok)failure(&#x27;Không lưu/đọc được dữ liệu Xây kênh. Hãy thử lại.&#x27;,503);
+ return r.status===204?[]:await r.json();
+}
+async function read(key){
+ key=ROOT+&#x27;:&#x27;+key;const rows=await database(&#x27;?key=eq.&#x27;+encodeURIComponent(key)+&#x27;&amp;select=key,value,version&#x27;);
+ return rows[0]?{key,version:rows[0].version,data:await unseal(key,rows[0].value)}:{key,version:null,data:null};
+}
+async function resolvedChannel(id){const local=await read(&#x27;channel:&#x27;+id);return {local,data:local.data};}
+async function put(record,data){
+ if(!record.key.startsWith(ROOT+&#x27;:&#x27;))record.key=ROOT+&#x27;:&#x27;+record.key;
+ const value=await seal(record.key,data),next=record.version===null?1:record.version+1;
+ const rows=record.version===null?await database(&#x27;&#x27;,{method:&#x27;POST&#x27;,headers:{Prefer:&#x27;resolution=ignore-duplicates,return=representation&#x27;},body:JSON.stringify({key:record.key,value,version:next,updated_at:new Date().toISOString()})}):await database(&#x27;?key=eq.&#x27;+encodeURIComponent(record.key)+&#x27;&amp;version=eq.&#x27;+record.version,{method:&#x27;PATCH&#x27;,body:JSON.stringify({value,version:next,updated_at:new Date().toISOString()})});
+ if(rows.length!==1)failure(&#x27;Dữ liệu vừa thay đổi ở phiên khác. Hãy tải lại.&#x27;,409);
+ record.data=data;record.version=next;return record;
+}
+async function consume(key,version){const rows=await database(&#x27;?key=eq.&#x27;+encodeURIComponent(key)+&#x27;&amp;version=eq.&#x27;+version,{method:&#x27;DELETE&#x27;});if(rows.length!==1)failure(&#x27;Liên kết kết nối đã được dùng. Hãy kết nối lại.&#x27;,409);}
+const validDate=s=&gt;typeof s===&#x27;string&#x27;&amp;&amp;/^\d{4}-\d{2}-\d{2}$/.test(s)&amp;&amp;!Number.isNaN(Date.parse(s+&#x27;T00:00:00Z&#x27;))&amp;&amp;new Date(s+&#x27;T00:00:00Z&#x27;).toISOString().slice(0,10)===s;
+function dates(body){if(!validDate(body.from)||!validDate(body.to)||body.to&lt;body.from||(Date.parse(body.to)-Date.parse(body.from))/86400000&gt;365)failure(&#x27;Chọn khoảng ngày hợp lệ, tối đa 366 ngày.&#x27;);return {from:body.from,to:body.to};}
+function handle(value){let s=clean(value).replace(/^@/,&#x27;&#x27;);if(/^https:\/\//i.test(s)){let u;try{u=new URL(s);}catch{failure(&#x27;Link TikTok không hợp lệ.&#x27;);}if(![&#x27;tiktok.com&#x27;,&#x27;www.tiktok.com&#x27;].includes(u.hostname)||!/^\/@[a-zA-Z0-9._]+\/?$/.test(u.pathname)||u.username||u.password)failure(&#x27;Nhập link trang TikTok dạng https://www.tiktok.com/@tenkenh.&#x27;);s=u.pathname.slice(2).replace(/\/$/,&#x27;&#x27;);}if(!/^[a-zA-Z0-9._]{2,24}$/.test(s))failure(&#x27;Tên kênh TikTok không hợp lệ.&#x27;);return s.toLowerCase();}
+function trainer(p,id,write=false){const t=p.trainers.find(t=&gt;String(t.id)===String(id));if(!t||!(p.role===&#x27;admin&#x27;||(p.role===&#x27;trainer&#x27;&amp;&amp;norm(p.region)&amp;&amp;norm(t.region)===norm(p.region))))failure(&#x27;Không có quyền truy cập Trainer này.&#x27;,403);if(write&amp;&amp;p.role!==&#x27;admin&#x27;&amp;&amp;String(t.id)!==p.trainerId)failure(&#x27;Chỉ được kết nối kênh của chính bạn.&#x27;,403);return t;}
+function roster(p){return p.trainers;}
+async function official(path,options,scopeProbe=false){
+ let r;try{r=await fetch(&#x27;https://open.tiktokapis.com&#x27;+path,{...options,signal:AbortSignal.timeout(20000)});}catch{failure(&#x27;TikTok chưa phản hồi. Số liệu lần đồng bộ trước được giữ lại.&#x27;,502);}
+ let out;try{out=await r.json();}catch{failure(&#x27;TikTok trả dữ liệu không hợp lệ.&#x27;,502);}
+ if(!r.ok||out.error?.code&amp;&amp;out.error.code!==&#x27;ok&#x27;||typeof out.error===&#x27;string&#x27;){
+  if(scopeProbe&amp;&amp;(r.status===403||String(out.error?.code||&#x27;&#x27;).includes(&#x27;scope&#x27;)))failure(&#x27;Cần cấp quyền đọc follower.&#x27;,403);
+  failure(r.status===429?&#x27;TikTok đang giới hạn lượt truy cập. Hãy thử lại sau.&#x27;:&#x27;Không lấy được dữ liệu TikTok. Hãy kiểm tra hoặc kết nối lại kênh.&#x27;,r.status===429?429:502);
+ }
+ return out;
+}
+async function tokenCall(values,id=&#x27;primary&#x27;){const e=env(id);return official(&#x27;/v2/oauth/token/&#x27;,{method:&#x27;POST&#x27;,headers:{&#x27;Content-Type&#x27;:&#x27;application/x-www-form-urlencoded&#x27;},body:new URLSearchParams({client_key:e.client,client_secret:e.clientSecret,...values}).toString()});}
+function tokenPayload(out,previous,id=&#x27;primary&#x27;){
+ if(!out.access_token||!out.refresh_token||!out.open_id||!Number.isFinite(Number(out.expires_in)))failure(&#x27;TikTok chưa cấp quyền đọc video.&#x27;,502);
+ if(!SCOPES.every(s=&gt;String(out.scope||&#x27;&#x27;).split(&#x27;,&#x27;).includes(s)))failure(&#x27;Cần đồng ý đủ quyền hồ sơ và video để kết nối.&#x27;,403);
+ if(previous&amp;&amp;previous.openId!==out.open_id)failure(&#x27;Tài khoản TikTok trả về không khớp kênh đã gán.&#x27;,403);
+ return {sandboxId:id,clientKey:env(id).client,access:out.access_token,refresh:out.refresh_token,openId:out.open_id,expires:Date.now()+Number(out.expires_in)*1000,scopes:String(out.scope||&#x27;&#x27;).split(&#x27;,&#x27;).filter(Boolean)};
+}
+async function connect(body,p){
+ const t=trainer(p,body.trainerId,true);
+ if(body.returnUrl!==appUrl())failure(&#x27;Địa chỉ quay lại không hợp lệ.&#x27;);
+ const resolved=await resolvedChannel(t.id);
+ const rec=resolved.local;if(!rec.data?.handle)failure(&#x27;Admin cần gán trang TikTok trước khi kết nối.&#x27;);
+ const id=channelSandbox(rec.data);if(!configured(id))failure(&#x27;Sandbox được gán chưa cấu hình xong. Nhờ Admin thiết lập trước khi kết nối.&#x27;,503);
+ const state=crypto.randomUUID()+crypto.randomUUID();await put({key:&#x27;oauth:&#x27;+state,version:null},{trainerId:String(t.id),dashboardToken:body.dashboardToken,expected:rec.data.handle,returnUrl:body.returnUrl,sandboxId:id,clientKey:env(id).client,expires:Date.now()+10*60000,version:rec.version});
+ const requested=body.followerStats===true?[...SCOPES,FOLLOWER_SCOPE]:SCOPES;
+ const url=new URL(&#x27;https://www.tiktok.com/v2/auth/authorize/&#x27;);url.search=new URLSearchParams({client_key:env(id).client,scope:requested.join(&#x27;,&#x27;),response_type:&#x27;code&#x27;,redirect_uri:callback(),state,disable_auto_auth:&#x27;1&#x27;}).toString();
+ return {url:url.href};
+}
+async function oauth(url){
+ const state=url.searchParams.get(&#x27;state&#x27;)||&#x27;&#x27;;if(!/^[a-f0-9-]{72}$/.test(state))failure(&#x27;Phiên kết nối không hợp lệ.&#x27;);
+ const saved=await read(&#x27;oauth:&#x27;+state);if(!saved.data||saved.data.expires&lt;Date.now())failure(&#x27;Phiên kết nối đã hết hạn. Hãy kết nối lại.&#x27;);
+ await consume(saved.key,saved.version);const back=saved.data.returnUrl;if(back!==appUrl())failure(&#x27;Địa chỉ quay lại đã thay đổi. Kết nối lại.&#x27;);
+ try{
+  if(url.searchParams.has(&#x27;error&#x27;)||!url.searchParams.get(&#x27;code&#x27;))throw Error();
+  const current=await read(&#x27;channel:&#x27;+saved.data.trainerId);if(!current.data||current.version!==saved.data.version||current.data.handle!==saved.data.expected)throw Error();
+  // Recheck the authorizing dashboard account and current ownership at callback time.
+  const owner=await authenticate(saved.data.dashboardToken);trainer(owner,saved.data.trainerId,true);
+  const id=sandboxId(saved.data.sandboxId);if(!id||channelSandbox(current.data)!==id||!configured(id)||saved.data.clientKey&amp;&amp;saved.data.clientKey!==env(id).client)throw Error();
+  const out=await tokenCall({grant_type:&#x27;authorization_code&#x27;,code:url.searchParams.get(&#x27;code&#x27;),redirect_uri:callback()},id);const token=tokenPayload(out,null,id);
+  const info=await official(&#x27;/v2/user/info/?fields=open_id,display_name,username&#x27;,{headers:{Authorization:&#x27;Bearer &#x27;+token.access}});const profile=info.data?.user;
+  if(!profile||profile.open_id!==token.openId||handle(profile.username)!==saved.data.expected)throw Error();
+  const oldId=sandboxId(current.data.token?.sandboxId);
+  const sameAccount=current.data.token?.openId===token.openId&amp;&amp;oldId===id;
+  const changedSandbox=!!current.data.token&amp;&amp;oldId!==id;
+  const keepHistory=sameAccount||changedSandbox;
+  let next={...current.data,sandboxId:id,token,profile:{username:handle(profile.username),displayName:clean(profile.display_name).slice(0,150)},
+   snapshot:keepHistory?current.data.snapshot:null,pending:sameAccount?current.data.pending:null,
+   followers:keepHistory?current.data.followers:null,
+   followerBaseline:current.data.followerBaseline?.handle===saved.data.expected&amp;&amp;(!current.data.followerBaseline.openId||current.data.followerBaseline.openId===token.openId||changedSandbox)?{...current.data.followerBaseline,openId:token.openId}:null};
+  next=await captureFollowers(next);await put(current,next);
+  return Response.redirect(back+&#x27;#channel-connect=ok&#x27;,303);
+ }catch{return Response.redirect(back+&#x27;#channel-connect=failed&#x27;,303);}
+}
+const number=v=&gt;{const n=Number(v);if(v===null||v===undefined||v===&#x27;&#x27;||!Number.isSafeInteger(n)||n&lt;0)failure(&#x27;TikTok trả chỉ số chưa đầy đủ. Số liệu cũ được giữ lại.&#x27;,502);return n;};
+async function captureFollowers(channel){
+ const knownScopes=Array.isArray(channel.token?.scopes);
+ if(knownScopes&amp;&amp;!channel.token.scopes.includes(FOLLOWER_SCOPE)||!knownScopes&amp;&amp;channel.followers?.status===&#x27;needs_authorization&#x27;)return {...channel,followers:{...channel.followers,status:&#x27;needs_authorization&#x27;,lastAttemptAt:new Date().toISOString()}};
+ try{
+  const out=await official(&#x27;/v2/user/info/?fields=open_id,follower_count&#x27;,{headers:{Authorization:&#x27;Bearer &#x27;+channel.token.access}},true),profile=out.data?.user;
+  if(!profile||profile.open_id!==channel.token.openId)throw Error(&#x27;Follower account mismatch&#x27;);
+  const count=number(profile.follower_count),at=new Date().toISOString(),history=recordFollowers(channel.followers?.history,{at,count});
+  return {...channel,token:knownScopes?channel.token:{...channel.token,scopes:[FOLLOWER_SCOPE],scopeSource:&#x27;stats_probe&#x27;},followers:{history,status:&#x27;ready&#x27;,lastAttemptAt:at}};
+ }catch(error){return {...channel,followers:{...channel.followers,status:error instanceof AccessError&amp;&amp;error.status===403?&#x27;needs_authorization&#x27;:&#x27;unavailable&#x27;,lastAttemptAt:new Date().toISOString()}};}
+}
+async function sync(body,p){
+ const t=trainer(p,body.trainerId);
+ const resolved=await resolvedChannel(t.id);
+ const rec=resolved.local;let c=rec.data;if(!c?.token)failure(&#x27;Trainer chưa kết nối TikTok.&#x27;,409);
+ const id=sandboxId(c.token.sandboxId);if(!id||channelSandbox(c)!==id)failure(&#x27;Kênh vừa đổi Sandbox. Hãy kết nối lại; dữ liệu cũ được giữ nguyên.&#x27;,409);
+ if(!configured(id))failure(&#x27;Sandbox của kênh chưa cấu hình xong. Dữ liệu cũ được giữ nguyên.&#x27;,503);
+ if(c.token.clientKey&amp;&amp;c.token.clientKey!==env(id).client)failure(&#x27;Cấu hình Sandbox đã thay đổi. Hãy kết nối lại; dữ liệu cũ được giữ nguyên.&#x27;,409);
+ if(!body.force&amp;&amp;c.snapshot?.complete&amp;&amp;Date.now()-Date.parse(c.snapshot.syncedAt)&lt;15*60000&amp;&amp;!c.pending&amp;&amp;c.followers?.lastAttemptAt&amp;&amp;Date.now()-Date.parse(c.followers.lastAttemptAt)&lt;15*60000)return {trainerId:String(t.id),cached:true,complete:true};
+ if(c.token.expires&lt;Date.now()+120000){const out=await tokenCall({grant_type:&#x27;refresh_token&#x27;,refresh_token:c.token.refresh},id);c={...c,token:tokenPayload(out,c.token,id)};await put(rec,c);}
+ // Keep follower observations even when a later video request fails.
+ c=await captureFollowers(c);await put(rec,c);
+ let pending=c.pending&amp;&amp;Date.now()-c.pending.started&lt;10*60000?c.pending:{started:Date.now(),cursor:null,videos:[]};
+ let complete=false;
+ for(let page=0;page&lt;5;page++){
+  const payload={max_count:20,...(pending.cursor===null?{}:{cursor:pending.cursor})};
+  const out=await official(&#x27;/v2/video/list/?fields=id,create_time,title,like_count,share_count,view_count&#x27;,{method:&#x27;POST&#x27;,headers:{Authorization:&#x27;Bearer &#x27;+c.token.access,&#x27;Content-Type&#x27;:&#x27;application/json&#x27;},body:JSON.stringify(payload)});
+  const d=out.data;if(!d||!Array.isArray(d.videos)||typeof d.has_more!==&#x27;boolean&#x27;)failure(&#x27;TikTok chưa trả danh sách video đầy đủ.&#x27;,502);
+  const map=new Map(pending.videos.map(v=&gt;[v.id,v]));
+  for(const v of d.videos){if(!/^\d{5,30}$/.test(String(v.id))||!Number.isFinite(Number(v.create_time)))failure(&#x27;TikTok trả video không hợp lệ.&#x27;,502);map.set(String(v.id),{id:String(v.id),createdAt:new Date(Number(v.create_time)*1000).toISOString(),title:clean(v.title).slice(0,500),likes:number(v.like_count),shares:number(v.share_count),views:number(v.view_count)});}
+  pending.videos=[...map.values()];if(pending.videos.length&gt;20000)failure(&#x27;Kênh có quá nhiều video cho một lượt đồng bộ. Dữ liệu trước vẫn được giữ.&#x27;,422);
+  if(!d.has_more){complete=true;break;}
+  if(!Number.isFinite(Number(d.cursor))||Number(d.cursor)===pending.cursor)failure(&#x27;TikTok chưa trả trang video tiếp theo hợp lệ.&#x27;,502);pending.cursor=Number(d.cursor);
+ }
+ if(complete){c={...c,snapshot:{complete:true,videos:pending.videos,syncedAt:new Date().toISOString()},pending:null};}
+ else c={...c,pending};
+ await put(rec,c);return {trainerId:String(t.id),complete,pagesPending:!complete,videoCount:pending.videos.length};
+}
+async function overview(body,p){
+ const range=dates(body);const list=[];
+ for(const t of roster(p)){
+  const resolved=await resolvedChannel(t.id),c=resolved.data;const videos=(c?.snapshot?.videos||[]).filter(v=&gt;{const day=new Date(v.createdAt).toLocaleDateString(&#x27;sv-SE&#x27;,{timeZone:&#x27;Asia/Ho_Chi_Minh&#x27;});return day&gt;=range.from&amp;&amp;day&lt;=range.to;});
+  list.push({id:String(t.id),name:clean(t.name),region:clean(t.region),handle:c?.handle||&#x27;&#x27;,trackingFrom:c?.trackingFrom||null,canSync:p.role===&#x27;admin&#x27;||norm(p.region)===norm(t.region),connected:!!c?.token,known:!!c?.snapshot?.complete,syncedAt:c?.snapshot?.syncedAt||null,pending:!!c?.pending,videos,followers:followerView(c,range.from,range.to),sandboxId:channelSandbox(c),sandboxReady:configured(channelSandbox(c)),needsSandboxReconnect:!!c?.token&amp;&amp;sandboxId(c.token.sandboxId)!==channelSandbox(c)});
+ }
+ return {trainers:list,overviewScope:&#x27;team&#x27;,role:p.role,ownTrainerId:p.trainerId,configured:sandboxList().some(s=&gt;s.configured),sandboxes:sandboxList(),...range};
+}
+async function assign(body,p){
+ if(p.role!==&#x27;admin&#x27;)failure(&#x27;Chỉ Admin được gán trang TikTok.&#x27;,403);const t=trainer(p,body.trainerId),name=handle(body.handle);
+ if(!validDate(body.trackingFrom))failure(&#x27;Ngày bắt đầu theo dõi không hợp lệ.&#x27;);
+ for(const other of p.trainers){if(String(other.id)!==String(t.id)&amp;&amp;(await resolvedChannel(other.id)).data?.handle===name)failure(&#x27;Trang TikTok này đã được gán cho Trainer khác.&#x27;);}
+ const resolved=await resolvedChannel(t.id),rec=resolved.local,same=rec.data?.handle===name;
+ const id=body.sandboxId===undefined?channelSandbox(rec.data):SANDBOX_IDS.includes(body.sandboxId)?body.sandboxId:null;if(!id)failure(&#x27;Chọn Sandbox hợp lệ.&#x27;);
+ if(id===&#x27;secondary&#x27;&amp;&amp;channelSandbox(rec.data)!==id&amp;&amp;!configured(id))failure(&#x27;Sandbox 2 chưa được cấu hình. Giữ nguyên Sandbox và dữ liệu hiện tại.&#x27;,409);
+ const next={...(same?rec.data:{}),handle:name,sandboxId:id,trackingFrom:body.trackingFrom,updatedAt:new Date().toISOString()};
+ if(same&amp;&amp;!next.token&amp;&amp;id!==channelSandbox(rec.data)&amp;&amp;next.followerBaseline)next.followerBaseline={...next.followerBaseline,openId:null};
+ await put(rec,next);return {saved:true,trainerId:String(t.id)};
+}
+async function setFollowerBaseline(body,p){
+ if(p.role!==&#x27;admin&#x27;)failure(&#x27;Chỉ Admin được nhập mốc follower đầu kỳ.&#x27;,403);
+ const t=trainer(p,body.trainerId);
+ if(!Number.isSafeInteger(body.count)||body.count&lt;0)failure(&#x27;Nhập số follower thực tế ngày 01/10/2026, là số nguyên không âm.&#x27;);
+ const resolved=await resolvedChannel(t.id),rec=resolved.local,c=resolved.data;if(!c?.handle)failure(&#x27;Gán đúng kênh TikTok trước khi nhập mốc follower.&#x27;);
+ const baseline={date:FOLLOWER_BASELINE_DATE,count:body.count,source:&#x27;admin_record&#x27;,recordedAt:new Date().toISOString(),handle:c.handle,openId:c.token?.openId||null};
+ await put(rec,{...(rec.data||{handle:c.handle,trackingFrom:c.trackingFrom,sandboxId:&#x27;primary&#x27;}),followerBaseline:baseline});return {saved:true,trainerId:String(t.id),baseline:{date:baseline.date,count:baseline.count,source:baseline.source,recordedAt:baseline.recordedAt}};
+}
+Deno.serve(async req=&gt;{
+ let originAllowed;try{originAllowed=new URL(appUrl()).origin;}catch(error){return new Response(JSON.stringify({error:error.message}),{status:503,headers:{&#x27;Content-Type&#x27;:&#x27;application/json&#x27;,&#x27;Cache-Control&#x27;:&#x27;no-store&#x27;}});}
+ const origin=req.headers.get(&#x27;origin&#x27;),headers={&#x27;Content-Type&#x27;:&#x27;application/json&#x27;,&#x27;Cache-Control&#x27;:&#x27;no-store&#x27;,&#x27;Access-Control-Allow-Origin&#x27;:originAllowed,&#x27;Access-Control-Allow-Headers&#x27;:&#x27;content-type,apikey,authorization&#x27;,&#x27;Access-Control-Allow-Methods&#x27;:&#x27;POST,OPTIONS&#x27;,&#x27;Vary&#x27;:&#x27;Origin&#x27;,&#x27;Referrer-Policy&#x27;:&#x27;no-referrer&#x27;};
+ const respond=(body,status=200)=&gt;new Response(JSON.stringify(body),{status,headers});
+ try{
+  const u=new URL(req.url);if(req.method===&#x27;GET&#x27;&amp;&amp;u.pathname.endsWith(&#x27;/oauth/callback&#x27;))return await oauth(u);
+  if(origin&amp;&amp;origin!==originAllowed)return respond({error:&#x27;Nguồn truy cập không hợp lệ.&#x27;},403);
+  if(req.method===&#x27;OPTIONS&#x27;)return new Response(null,{status:204,headers});
+  if(req.method!==&#x27;POST&#x27;)return respond({error:&#x27;Chỉ hỗ trợ POST.&#x27;},405);
+  if(Number(req.headers.get(&#x27;content-length&#x27;)||0)&gt;64000)return respond({error:&#x27;Yêu cầu quá dài.&#x27;},413);
+  const raw=await req.text();if(raw.length&gt;64000)return respond({error:&#x27;Yêu cầu quá dài.&#x27;},413);let body;
+  try{body=JSON.parse(raw);if(!body||typeof body!==&#x27;object&#x27;||Array.isArray(body))throw Error();}catch{failure(&#x27;Yêu cầu không hợp lệ.&#x27;);}
+  if(body.action===&#x27;status&#x27;)return respond({ok:true,initialized:await initialized(),configured:sandboxList().some(s=&gt;s.configured),sandboxes:sandboxList(),redirectUri:callback(),appUrl:appUrl(),followerHistory:true,manualTracking:false});
+  if(body.action===&#x27;login&#x27;)return respond({ok:true,...await authorize(body.username,body.password)});
+  if(body.action===&#x27;bootstrap&#x27;)return respond({ok:true,...await bootstrap(body)});
+  const p=await authenticate(body.dashboardToken);let out;
+  if(body.action===&#x27;me&#x27;||body.action===&#x27;change_password&#x27;||String(body.action).startsWith(&#x27;admin_&#x27;))out=await manage(body.action,body,p);
+  else switch(body.action){case &#x27;overview&#x27;:out=await overview(body,p);break;case &#x27;assign&#x27;:out=await assign(body,p);break;case &#x27;connect&#x27;:out=await connect(body,p);break;case &#x27;sync&#x27;:out=await sync(body,p);break;case &#x27;set_follower_baseline&#x27;:out=await setFollowerBaseline(body,p);break;default:failure(&#x27;Thao tác không hợp lệ.&#x27;);}
+  return respond({ok:true,...out});
+ }catch(error){return respond({error:error instanceof AccessError?error.message:&#x27;Chưa xử lý được yêu cầu. Dữ liệu cũ được giữ nguyên.&#x27;},error instanceof AccessError?error.status:500);}
+});
+
+}
+</code></pre></details><p>Đăng nhập và quản lý tài khoản đã dùng được dù chưa thêm khóa TikTok. Giao diện sẽ báo chưa cấu hình TikTok cho đến khi hoàn tất bước 7.</p></section>
+<section id="html"><div class="step">05</div><h2>Điền hai giá trị vào HTML và bật GitHub Pages</h2><ol><li>Mở file <code>index.html</code> bằng VS Code, TextEdit ở chế độ văn bản thuần, hoặc Notepad.</li><li>Tìm <code>HUB_CONFIG</code> gần đầu file. Điền hai giá trị công khai từ Supabase mới:</li></ol><pre><code>const HUB_CONFIG = {
+  supabaseUrl: "https://MA-PROJECT.supabase.co",
+  publishableKey: "PUBLISHABLE_KEY_CUA_PROJECT_MOI"
+};</code></pre><ol start="3"><li>Lưu file với tên chính xác <b>index.html</b>, mã hóa UTF-8. Không để thành <code>index.html.txt</code>.</li><li>Mở repository GitHub mới → <b>Add file → Upload files</b>. Kéo <code>index.html</code> vào thư mục gốc. Có thể tải thêm <code>terms.html</code>, <code>privacy.html</code> để dùng cho các URL TikTok. Bấm <b>Commit changes</b>.</li><li>Vào <b>Settings → Pages</b>. Chọn <b>Deploy from a branch</b>, branch <b>main</b>, folder <b>/ (root)</b> → <b>Save</b>.</li><li>Mở <b>Actions</b>, đợi workflow <b>pages build and deployment</b> màu xanh. Quay lại Pages → <b>Visit site</b>.</li><li>Đối chiếu link Pages với <code>APP_URL</code> trong Supabase. Nếu khác, sửa Secret <code>APP_URL</code> cho khớp link thật.</li></ol><p class="note">Chỉ nhập Project URL và publishable/anon key vào HTML. Client Secret TikTok và mã khởi tạo Admin nằm trong Supabase Secrets.</p></section>
+<section id="admin"><div class="step">06</div><h2>Tạo Admin, khu vực, Trainer và user</h2><ol><li>Mở link Pages. Lần đầu sẽ thấy <b>Khởi tạo Admin</b>. Nhập mã <code>BOOTSTRAP_TOKEN</code> đã đặt, tên hiển thị, username và mật khẩu ít nhất 10 ký tự. Bấm <b>Tạo Admin đầu tiên</b>.</li><li>Ứng dụng tự đăng nhập. Các lần sau đăng nhập bằng username/mật khẩu vừa tạo. Có thể xóa <code>BOOTSTRAP_TOKEN</code> trong Secrets sau khi đã tạo Admin; hệ thống không cho khởi tạo lại khi đã có tài khoản.</li><li>Vào <b>Khu vực & Trainer</b> → thêm các khu vực → thêm họ tên từng Trainer và gán khu vực. Dùng <b>Sửa</b> khi đổi tên/phân công để giữ đúng ID và lịch sử.</li><li>Vào <b>Tài khoản</b> → nhập tên hiển thị, username, mật khẩu → chọn vai trò <b>Trainer</b> → chọn đúng Trainer → <b>Tạo user</b>. Mỗi Trainer gắn một tài khoản. Có thể tạo Admin phụ tại đây.</li><li>Gửi link ứng dụng và thông tin đăng nhập riêng cho từng người theo cách của Nghĩa. Trainer đăng nhập bằng tài khoản ứng dụng này.</li></ol><p><b>Không tạo các user này ở Supabase → Authentication → Users.</b> Bản độc lập sử dụng module tài khoản nội bộ, lưu trong bảng riêng và kiểm tra quyền ở Edge Function.</p><table><thead><tr><th>Vai trò</th><th>Quyền</th></tr></thead><tbody><tr><td>Admin</td><td>Quản lý khu vực/Trainer/user; gán kênh và Sandbox; nhập mốc Follow; xem và đồng bộ toàn team.</td></tr><tr><td>Trainer</td><td>Xem chỉ số TikTok toàn team; lọc mọi khu vực; kết nối kênh của mình; đồng bộ trong khu vực được giao; đổi mật khẩu cá nhân.</td></tr></tbody></table></section>
+<section id="tiktok"><div class="step">07</div><h2>Thiết lập TikTok cho bản độc lập</h2><p>Để hai hệ thống chạy đồng thời độc lập, nên dùng <b>ứng dụng hoặc Sandbox có bộ Client Key/Secret riêng</b> cho bản mới, thay vì tạo hai nơi refresh cùng một grant. Không chép token hoặc các bản ghi kết nối mã hóa từ Supabase cũ sang project mới.</p><h3>7.1 — Tạo ứng dụng/Sandbox và quyền</h3><ol><li>Vào <a href="https://developers.tiktok.com/">TikTok for Developers</a>, chọn ứng dụng riêng hoặc tạo Sandbox riêng cho Trainer Hub.</li><li>Thêm <b>Login Kit</b>. Trong <b>Scopes</b>, thêm <code>user.info.basic</code>, <code>user.info.profile</code>, <code>video.list</code>, <code>user.info.stats</code>. Quyền stats dùng lấy follower.</li><li>Ở Web / Website URL dùng link Pages mới. Nếu TikTok yêu cầu Terms / Privacy, điền link <code>.../TrainerHub/terms.html</code> và <code>.../TrainerHub/privacy.html</code>. Kiểm tra lại thông tin đơn vị/email trong hai trang trước khi dùng.</li><li>Ở <b>Login Kit → Web → Redirect URI</b>, điền chính xác:</li></ol><pre><code>https://MA-PROJECT.supabase.co/functions/v1/trainer-hub/oauth/callback</code></pre><ol start="5"><li>Trong Sandbox settings → <b>Target users</b>, thêm đúng tài khoản TikTok dùng thử, rồi <b>Apply changes</b>.</li><li>Copy Client Key và Client Secret của Sandbox này vào <code>TIKTOK_CLIENT_KEY</code>, <code>TIKTOK_CLIENT_SECRET</code> trên Supabase mới.</li><li>Nếu có 13 Trainer, dùng hai Sandbox của bản độc lập: tối đa 10 target user trong Sandbox chính và 3 người trong Sandbox thứ hai. Thêm bộ khóa thứ hai bằng hai Secret <code>TIKTOK_SANDBOX2_CLIENT_KEY</code>, <code>TIKTOK_SANDBOX2_CLIENT_SECRET</code>. Cả hai dùng cùng callback mới ở trên, nhưng mỗi Sandbox có bộ khóa và danh sách Target users riêng.</li></ol><p class="note">“Add up to 10 Redirect URIs” là tối đa 10 URL callback. Giới hạn số tài khoản thử nghiệm được quản lý riêng tại Target users. Production cho người dùng ngoài Target users cần TikTok phê duyệt.</p><h3>7.2 — Nếu TikTok yêu cầu Verify URL</h3><ol><li>Chọn <b>URL prefix</b> và nhập link gốc <code>https://TEN-GITHUB.github.io/TrainerHub/</code>.</li><li>Tải file xác minh do TikTok cấp. Tải nguyên tên và nội dung file đó lên thư mục gốc repository mới, cùng cấp <code>index.html</code>.</li><li>Chờ Pages triển khai. Mở URL <code>.../TrainerHub/ten-file-tiktok.txt</code>, kiểm tra nhìn thấy nội dung xác minh, rồi quay lại TikTok bấm <b>Verify</b>.</li></ol><h3>7.3 — Gán và kết nối từng kênh</h3><ol><li>Admin vào <b>Xây kênh → Quản lý kênh → Gán trang TikTok</b>.</li><li>Chọn Trainer, nhập <code>https://www.tiktok.com/@tenkenh</code>, chọn đúng Sandbox và ngày bắt đầu tính target. Lưu.</li><li>Trainer đăng nhập ứng dụng → <b>Quản lý kênh → Kết nối</b>. Đăng nhập đúng tài khoản TikTok đã gán và đồng ý quyền. Để có số follower, bấm <b>Cấp quyền follow</b> nếu kết nối chưa có quyền stats.</li><li>Bấm <b>Đồng bộ TikTok</b>. Admin có thể đồng bộ tất cả; Trainer đồng bộ khu vực của mình và xem số liệu đã lưu của toàn team.</li></ol><p>Mốc Follow tháng 10/2026 được Admin nhập theo số thực tế ngày 01/10. Tháng sau dùng lần ghi nhận thực tế đầu tiên trong ngày 01 theo giờ Việt Nam. Nếu thiếu số lịch sử thì để trống; API không tự trả lại lịch sử chưa ghi nhận. Tự đồng bộ mỗi 15 phút chỉ hoạt động khi đang mở mục Xây kênh.</p></section>
+<section id="errors"><div class="step">08</div><h2>Kiểm tra sau triển khai và xử lý lỗi</h2><table><thead><tr><th>Hiện tượng</th><th>Kiểm tra</th></tr></thead><tbody><tr><td>Thông báo điền HUB_CONFIG</td><td>Đã thay hai chuỗi rỗng trong index.html, lưu UTF-8 và upload đúng file? Nhấn Ctrl + F5.</td></tr><tr><td>404 trang Pages</td><td>File tên index.html ở root; branch main/root; workflow Pages đã xanh. Tên repo và chữ hoa/thường của URL phải khớp.</td></tr><tr><td>Không truy cập được bảng cấu hình</td><td>Đã chạy toàn bộ setup.sql trên đúng project mới; Data API bật với schema public. Không mở quyền anon để sửa lỗi này.</td></tr><tr><td>401 / Invalid JWT trước cả đăng nhập</td><td>Verify JWT của function trainer-hub đã tắt; endpoint đúng project. Ứng dụng tự xác thực session trong source.</td></tr><tr><td>Nguồn truy cập không hợp lệ / CORS</td><td>APP_URL là link HTTPS Pages đang mở; không chạy đăng nhập từ file:// trên máy. Giữ đúng origin khi dùng custom domain.</td></tr><tr><td>Bootstrap không đúng</td><td>Mã nhập khớp BOOTSTRAP_TOKEN trong đúng project mới, tối thiểu 24 ký tự. Admin chỉ được tạo lần đầu.</td></tr><tr><td>TikTok client_key</td><td>Bộ Client Key/Secret cùng một Sandbox, đúng Secret của slot tương ứng. Không lấy Client Key Production để ghép với Secret Sandbox.</td></tr><tr><td>TikTok redirect_uri</td><td>Redirect URI khớp URL Supabase mới, tên function trainer-hub và hậu tố /oauth/callback. Không dùng callback của Dashboard cũ.</td></tr><tr><td>TikTok non_sandbox_target</td><td>Tài khoản TikTok thực sự đang đăng nhập đã có trong Target users của đúng Sandbox, sau đó Apply changes.</td></tr><tr><td>Không có Follow / hiển thị —</td><td>Đã cấp user.info.stats? Có mốc đầu tháng thực tế? Cấp quyền và đồng bộ lại. Thiếu mốc không được coi là tăng 0.</td></tr><tr><td>Vừa đổi mật khẩu/quyền/gán Trainer thì bị yêu cầu đăng nhập</td><td>Đây là việc kiểm tra phiên theo thông tin tài khoản mới; đăng nhập lại bằng quyền/mật khẩu hiện tại.</td></tr></tbody></table><p>Checklist hoàn tất:</p><ul><li>Đăng xuất/đăng nhập Admin được; tạo khu vực, Trainer và user được.</li><li>Trainer chỉ có hai tab Xây kênh/Tài khoản, xem toàn team nhưng không có nút tạo user hoặc gán kênh.</li><li>Trainer kết nối đúng kênh và quay lại link Pages mới; số liệu chỉ hiện khi API thực sự trả về.</li><li>Khóa tài khoản hoặc đổi mật khẩu làm phiên cũ mất quyền.</li><li>Không có URL project Supabase cũ hoặc dữ liệu Trainer thật được đóng gói sẵn trong bản xuất.</li></ul><p class="note">Bản xuất đã được kiểm thử bằng dữ liệu giả lập cho đăng nhập, phân quyền, tạo cấu hình/user, hai Sandbox, callback, đồng bộ và biểu đồ. Kết nối thực tế với Supabase/TikTok mới cần hoàn tất các bước cấu hình trong hướng dẫn này.</p></section>
+<footer>Trainer Hub · Team Training Central · Phiên bản 27/10/2026<br>Giữ lại ZIP làm bản source gốc. Chỉ thay HTML khi cập nhật giao diện; thay logic máy chủ thì triển khai lại function.</footer>
+</main><div id="copyStatus" role="status"></div><script>document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const text=document.getElementById(b.dataset.copy).innerText;try{await navigator.clipboard.writeText(text);}catch{const ta=document.createElement('textarea');ta.value=text;document.body.append(ta);ta.select();document.execCommand('copy');ta.remove();}const n=document.getElementById('copyStatus');n.textContent='Đã sao chép. Dán vào đúng vị trí trong Supabase.';n.style.display='block';setTimeout(()=>n.style.display='none',3500);});</script></body></html>

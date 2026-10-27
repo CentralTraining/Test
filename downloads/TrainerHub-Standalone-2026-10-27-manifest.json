@@ -1,0 +1,22 @@
+{
+  "TrainerHub-Standalone-2026-10-27.html": {
+    "bytes": 122516,
+    "sha256": "5d4fc281c84ef41feba3fd3c047fa4b99f02bae97cc9ec87c54860134cf29b8e",
+    "git_blob_sha": "3f50c9b9dbb7cd85f8e49b27b63b8b3c431732b4"
+  },
+  "Huong-dan-GitHub-Supabase-2026-10-27.html": {
+    "bytes": 63781,
+    "sha256": "2ed50c9e25082ce7833544dcb10d9ff3388845c1772c6d14a28a88a44d29c141",
+    "git_blob_sha": "52ca7511e33d07a837d082c32980f46b7b1686a7"
+  },
+  "TrainerHub-Standalone-Full-2026-10-27.zip": {
+    "bytes": 81702,
+    "sha256": "58f979979ada3fb668d9b5bc2808902a60558a4f5ee0fe26dbe2ff4f1af4e861",
+    "git_blob_sha": "3317fe70d7b3a3cedccad98bb0dd916442ec311f"
+  },
+  "TrainerHub-Standalone-2026-10-27-downloads.html": {
+    "bytes": 2298,
+    "sha256": "1f0f8703269803946c7efe46d8b8577670f1c4d907d6bad55fce8eb8a8c266d6",
+    "git_blob_sha": "a68c23c9b3ad602995585a1ea4c14e75ded6ea65"
+  }
+}
