@@ -2666,6 +2666,8 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
 #channelTool .channel-hashtag-heading h3>span{display:grid;place-items:center;width:26px;height:26px;background:#25f4ee15;border:1px solid #25f4ee35;color:#25f4ee;border-radius:8px;font-size:18px;}
 #channelTool .channel-hashtag-heading p{margin:5px 0 0;max-width:600px;}
 #channelTool .channel-hashtag-heading>button{white-space:nowrap;font-size:10px;}
+#channelTool .channel-hashtag-panel .channel-hashtag-period{padding:8px 10px;background:#172638;border:1px solid #324e6c;border-radius:8px;color:#c6ddf8;font-size:10px;margin:0 0 12px;line-height:1.5;}
+#channelTool .channel-hashtag-period strong{color:#e6f8ff;}
 #channelTool .channel-hashtag-form{padding:11px 12px;border:1px solid #303c50;border-radius:10px;background:#111824;margin:0 0 10px;}
 #channelTool .channel-hashtag-form>label{display:block;font-size:10px;color:#b9c9df;font-weight:700;margin-bottom:6px;}
 #channelTool .channel-hashtag-form>div{display:flex;gap:8px;}
@@ -2742,6 +2744,7 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
 .mobile-layout #channelTool .channel-hashtag-video-heading{align-items:flex-start;}
 .mobile-layout #channelTool .channel-hashtag-panel .channel-hashtag-note{font-size:8px;}
 .mobile-layout #channelTool .channel-hashtag-pagination{font-size:8px;gap:6px;}
+
 </style>
 </head>
 <body>
@@ -20132,7 +20135,8 @@ const ChannelHashtagModel=(()=>{
    if(!item.captionKnown||!item.id||!Number.isFinite(Date.parse(item.createdAt)))continue;
    const day=new Date(Date.parse(item.createdAt)+7*3600000).toISOString().slice(0,10);
    if(day<period.from||day>period.to)continue;
-   const found=extract(item.caption),matched=watch.filter(tag=>found.includes(tag));
+   const found=extract([item.caption,item.title].filter(value=>typeof value==='string').join('\n'));
+   const matched=watch.filter(tag=>found.includes(tag));
    if(matched.length&&!unique.has(String(item.id)))unique.set(String(item.id),{...item,matched,day});
   }
   const all=[...unique.values()].sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt)||String(a.id).localeCompare(String(b.id)));
@@ -20159,6 +20163,22 @@ function channelHashtagCurrent_(){
 }
 function channelHashtagCacheKey_(t,period){return JSON.stringify([String(t.id),period.from,period.to,t.syncedAt||'']);}
 function channelHashtagContextKey_(report,period){return JSON.stringify([period.from,period.to,report.rows.map(t=>[String(t.id),t.syncedAt||'',t.known,t.connected])]);}
+function channelHashtagObservedItems_(trainer,direct){
+ if(!trainer.known||!trainer.connected)return [];
+ const snapshot=(trainer.videos||[]).map(video=>({...video,trainerId:String(trainer.id),trainerName:trainer.name,region:trainer.region,handle:trainer.handle,
+   caption:typeof video.title==='string'?video.title:null,captionKnown:typeof video.title==='string',comments:null,
+   snapshotFallback:true,observedAt:trainer.syncedAt||null}));
+ const live=new Map((direct?.items||[]).map(video=>[String(video.id),video]));
+ return snapshot.map(saved=>{
+   const video=live.get(String(saved.id));
+   if(!video?.captionKnown)return saved;
+   const merged={...saved,...video,snapshotFallback:false,observedAt:direct.readAt||null};
+   for(const field of ['views','likes','shares'])if(!Number.isFinite(merged[field])&&Number.isFinite(saved[field])){
+     merged[field]=saved[field];merged.snapshotFallback=true;merged.observedAt=trainer.syncedAt||null;
+   }
+   return merged;
+ });
+}
 function channelHashtagRedraw_(){
  const root=document.getElementById('channelTool');
  if(!root?.querySelector('#channelHashtagPanel')||!['admin','trainer'].includes(session?.role))return;
@@ -20220,6 +20240,8 @@ async function channelHashtagRefresh_(){
     if(!allowed())return;
     if(!complete)throw Error('Kênh còn video chưa đọc xong. Hãy chọn khoảng ngày nhỏ hơn rồi thử lại.');
     state.cache.set(channelHashtagCacheKey_(t,period),{items,complete:true,readAt:readAt||new Date().toISOString()});
+    const unread=items.filter(video=>!video.captionKnown).length;
+    if(unread)state.errors.set(String(t.id),'TikTok chưa trả nội dung mới của '+unread+'/'+items.length+' video trong kỳ. Những video có dữ liệu đã đồng bộ vẫn hiển thị theo mốc lưu, có ghi rõ nguồn.');
     while(state.cache.size>52)state.cache.delete(state.cache.keys().next().value);
    }catch(error){if(allowed())state.errors.set(String(t.id),error.message||'Chưa đọc được nội dung video.');}
    if(allowed()){done++;state.progress='Đã kiểm tra '+done+'/'+list.length+' kênh trong phạm vi.';channelHashtagRedraw_();}
@@ -20235,34 +20257,39 @@ function channelDrawHashtags_(root,report,period){
  const context=channelHashtagContextKey_(report,period);
  if(state.requestContext&&state.requestContext!==context){state.run++;state.busy=false;state.errors.clear();state.progress='Bộ lọc đã thay đổi. Bấm Cập nhật hashtag để đọc kỳ mới.';}
  state.requestContext=context;
- const entries=report.rows.map(t=>({t,cache:state.cache.get(channelHashtagCacheKey_(t,period))}));
- const items=entries.flatMap(({cache})=>cache?.items||[]),known=items.filter(v=>v.captionKnown).length;
- const expected=report.rows.filter(t=>t.known).reduce((n,t)=>n+t.videos.length,0);
+ const entries=report.rows.map(t=>{const cache=state.cache.get(channelHashtagCacheKey_(t,period));return {t,cache,items:channelHashtagObservedItems_(t,cache)};});
+ const items=entries.flatMap(entry=>entry.items),known=items.filter(v=>v.captionKnown).length;
+ const expected=report.rows.filter(t=>t.known&&t.connected).reduce((n,t)=>n+t.videos.length,0);
  const checked=entries.filter(({cache})=>cache?.complete).length;
- const ready=known>0||(checked>0&&expected===0&&report.rows.every(t=>t.known));
+ const ready=known>0||(expected===0&&report.rows.length>0&&report.rows.every(t=>t.known&&t.connected));
  const stats=ChannelHashtagModel.report(items,state.tags,state.active,period),v=stats.totals;
  const metrics=[['Video khớp',v.videos],['Trainer tham gia',v.trainers],['Lượt xem',v.views],['Lượt thích',v.likes],['Bình luận',v.comments],['Chia sẻ',v.shares]];
  const readTimes=entries.map(({cache})=>cache?.readAt).filter(Boolean).sort();
- const coverage='Đã đọc nội dung '+known+'/'+expected+' video đã đồng bộ · đã kiểm tra '+checked+'/'+report.rows.length+' kênh';
+ const coverage='Đã có nội dung '+known+'/'+expected+' video đã đồng bộ · đã đọc lại '+checked+'/'+report.rows.length+' kênh';
+ const stored=items.filter(video=>video.captionKnown&&video.snapshotFallback).length;
+ const sourceLabel=stored?stored+' video dùng mốc đồng bộ; dữ liệu gốc được giữ nguyên.':'Các video đã đọc dùng nội dung và chỉ số TikTok vừa trả về.';
+ const observedTimes=items.map(video=>video.observedAt).filter(Boolean).sort();
  const totalPages=Math.max(1,Math.ceil(stats.videos.length/10));state.page=Math.max(1,Math.min(state.page,totalPages));
  const videos=stats.videos.slice((state.page-1)*10,state.page*10);
  panel.innerHTML=`<div class="channel-hashtag-heading"><div><h3><span aria-hidden="true">#</span> Tracking hashtag</h3><p>Trong các kênh Trainer đã kết nối · Dùng cùng bộ lọc thời gian, khu vực và Trainer phía trên</p></div><button type="button" class="secondary" id="channelHashtagRefresh" ${state.busy||channelView_.busy||!state.tags.length?'disabled':''}>${state.busy?'Đang cập nhật…':'↻ Cập nhật hashtag'}</button></div>
+  <p class="channel-hashtag-period">Kỳ đang theo dõi: <strong>${e(period.from.split('-').reverse().join('/'))} – ${e(period.to.split('-').reverse().join('/'))}</strong> · Theo ngày đăng video</p>
   ${isAdmin()?`<form id="channelHashtagForm" class="channel-hashtag-form"><label for="channelHashtagInput">Hashtag theo dõi</label><div><input id="channelHashtagInput" type="text" maxlength="2200" placeholder="Nhập #hashtag, cách nhau bằng dấu phẩy" autocomplete="off" ${!state.loaded||state.saving?'disabled':''}><button type="submit" class="secondary" ${!state.loaded||state.saving?'disabled':''}>${state.saving?'Đang lưu…':'＋ Thêm hashtag'}</button></div></form>`:''}
   ${state.loading?'<p class="channel-note">Đang tải danh sách hashtag…</p>':''}
   ${state.error?`<div class="channel-hashtag-error" role="alert">${e(state.error)}${!state.loaded?'<button type="button" class="secondary" id="channelHashtagRetry">Tải lại</button>':''}</div>`:''}
   <div class="channel-hashtag-tags" aria-label="Chọn hashtag">${state.tags.length?`<button type="button" data-channel-hashtag="" aria-pressed="${!state.active}">Tất cả hashtag</button>`:''}${stats.tags.map(tag=>`<span><button type="button" data-channel-hashtag="${e(tag.tag)}" aria-pressed="${state.active===tag.tag}">#${e(tag.tag)} <small>${ready?num(tag.videos):'—'}</small></button>${isAdmin()?`<button type="button" class="channel-hashtag-remove" data-channel-hashtag-remove="${e(tag.tag)}" aria-label="Bỏ theo dõi hashtag ${e(tag.tag)}" ${state.saving?'disabled':''}>×</button>`:''}</span>`).join('')}</div>
   ${!state.tags.length?`<div class="channel-empty">${state.loaded?(isAdmin()?'Thêm hashtag để theo dõi video và tương tác của đội ngũ.':'Admin chưa thêm hashtag để theo dõi.'):'Chưa tải được danh sách hashtag.'}</div>`:`
-  <div class="channel-hashtag-status" role="status" aria-live="polite"><span>${e(state.progress|| (ready?coverage:'Bấm Cập nhật hashtag để đọc nội dung video trong kỳ.'))}</span>${state.progress&&ready?`<small>${e(coverage)}</small>`:''}${readTimes.length?`<small>Lần đọc gần nhất: ${e(channelFollowerDate_(readTimes.at(-1)))}</small>`:''}</div>
-  ${state.errors.size?`<details class="channel-hashtag-errors"><summary>${state.errors.size} kênh chưa đọc được trong lượt này</summary><ul>${[...state.errors].map(([id,message])=>`<li>${e(report.rows.find(t=>String(t.id)===id)?.name||'Kênh')}: ${e(message)}</li>`).join('')}</ul></details>`:''}
+  <div class="channel-hashtag-status" role="status" aria-live="polite"><span>${e(state.progress|| (ready?coverage:'Bấm Cập nhật hashtag để đọc nội dung video trong kỳ.'))}</span>${state.progress&&ready?`<small>${e(coverage)}</small>`:''}${ready?`<small>${e(sourceLabel)}${observedTimes.length?' Mốc gần nhất: '+e(channelFollowerDate_(observedTimes.at(-1))):''}</small>`:''}${readTimes.length?`<small>Lần đọc lại gần nhất: ${e(channelFollowerDate_(readTimes.at(-1)))}</small>`:''}</div>
+  ${state.errors.size?`<details class="channel-hashtag-errors"><summary>${state.errors.size} kênh còn thiếu dữ liệu trong lượt này</summary><ul>${[...state.errors].map(([id,message])=>`<li>${e(report.rows.find(t=>String(t.id)===id)?.name||'Kênh')}: ${e(message)}</li>`).join('')}</ul></details>`:''}
   <div class="channel-hashtag-stats">${metrics.map(([label,value])=>`<div><span>${label}</span><strong title="${ready?num(value):'Chưa đọc dữ liệu'}">${ready?compact(value):'—'}</strong></div>`).join('')}</div>
-  <p class="channel-hashtag-note">Tổng chỉ tính video đã đọc được và khớp hashtag. Một video mang nhiều hashtag chỉ tính một lần trong tổng. View/like/bình luận/share là tổng hiện tại của video đăng trong kỳ, không phải số tăng riêng trong kỳ.</p>
+  <p class="channel-hashtag-note">Hashtag được đối chiếu trong cả tiêu đề và caption. Tổng tính các video khớp trong kỳ, theo dữ liệu mới hoặc mốc đồng bộ được ghi rõ. Một video có nhiều hashtag chỉ tính một lần; các lượt tương tác không phải số tăng riêng trong kỳ.</p>
   <h4>Theo Trainer</h4><div class="channel-hashtag-trainers" role="table" aria-label="Chỉ số hashtag theo Trainer"><div class="channel-hashtag-row channel-hashtag-head" role="row"><span>Trainer</span><span>Video</span><span>View</span><span>Like</span><span>Bình luận</span><span>Share</span></div>${entries.map(({t,cache})=>{
-   const own=stats.videos.filter(video=>video.trainerId===String(t.id)),total=ChannelHashtagModel.totals(own),read=cache?.items.filter(video=>video.captionKnown).length||0;
-   const usable=cache&&(read>0||cache.items.length===0);
-   return `<div class="channel-hashtag-row" role="row"><div><strong>${e(channelShort_(t.name))}</strong><small>${e(t.region)} · ${cache?read+'/'+cache.items.length+' video đã đọc':'Chưa cập nhật hashtag'}</small></div>${[['Video',total.videos],['View',total.views],['Like',total.likes],['Bình luận',total.comments],['Share',total.shares]].map(([label,value])=>`<div role="cell" title="${usable?num(value):'Chưa đọc dữ liệu'}"><small>${label}</small><b>${usable?compact(value):'—'}</b></div>`).join('')}</div>`;
+   const own=stats.videos.filter(video=>video.trainerId===String(t.id)),total=ChannelHashtagModel.totals(own),observed=channelHashtagObservedItems_(t,cache);
+   const read=observed.filter(video=>video.captionKnown).length,hasStored=observed.some(video=>video.snapshotFallback);
+   const usable=t.known&&t.connected&&(read>0||t.videos.length===0);
+   return `<div class="channel-hashtag-row" role="row"><div><strong>${e(channelShort_(t.name))}</strong><small>${e(t.region)} · ${usable?read+'/'+t.videos.length+' video · '+(hasStored?'Mốc đồng bộ':'Đọc trực tiếp'):'Chưa có dữ liệu'}</small></div>${[['Video',total.videos],['View',total.views],['Like',total.likes],['Bình luận',total.comments],['Share',total.shares]].map(([label,value])=>`<div role="cell" title="${usable?num(value):'Chưa đọc dữ liệu'}"><small>${label}</small><b>${usable?compact(value):'—'}</b></div>`).join('')}</div>`;
   }).join('')||'<div class="channel-empty">Chưa có Trainer trong phạm vi đang xem.</div>'}</div>
   <div class="channel-hashtag-video-heading"><h4>Video khớp hashtag <span>${ready?num(stats.videos.length):'—'}</span></h4><span>${e(state.active?'#'+state.active:'Tất cả hashtag đang theo dõi')}</span></div>
-  <div class="channel-hashtag-videos">${videos.map(video=>`<article><a href="https://www.tiktok.com/@${encodeURIComponent(video.handle||'')}/video/${encodeURIComponent(video.id)}" target="_blank" rel="noopener noreferrer">${e(video.title||video.caption||'Video TikTok')}</a><small>${e(video.trainerName)} · ${e(new Date(video.createdAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}))}</small><div class="channel-hashtag-video-tags">${video.matched.map(tag=>`<span>#${e(tag)}</span>`).join('')}</div><div class="channel-hashtag-video-metrics">${[['View',video.views],['Like',video.likes],['Bình luận',video.comments],['Share',video.shares]].map(([label,value])=>`<span>${label} <b title="${num(value)}">${compact(value)}</b></span>`).join('')}</div></article>`).join('')||`<div class="channel-empty">${ready?'Chưa tìm thấy video khớp hashtag trong phần nội dung đã đọc.':'Chưa cập nhật dữ liệu hashtag trong kỳ này.'}</div>`}</div>
+  <div class="channel-hashtag-videos">${videos.map(video=>`<article><a href="https://www.tiktok.com/@${encodeURIComponent(video.handle||'')}/video/${encodeURIComponent(video.id)}" target="_blank" rel="noopener noreferrer">${e(video.title||video.caption||'Video TikTok')}</a><small>${e(video.trainerName)} · ${e(new Date(video.createdAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}))}</small><small>${video.snapshotFallback?'Theo mốc đồng bộ':'Đọc trực tiếp từ TikTok'}${video.observedAt?' · '+e(channelFollowerDate_(video.observedAt)):''}</small><div class="channel-hashtag-video-tags">${video.matched.map(tag=>`<span>#${e(tag)}</span>`).join('')}</div><div class="channel-hashtag-video-metrics">${[['View',video.views],['Like',video.likes],['Bình luận',video.comments],['Share',video.shares]].map(([label,value])=>`<span>${label} <b title="${num(value)}">${compact(value)}</b></span>`).join('')}</div></article>`).join('')||`<div class="channel-empty">${ready?'Chưa tìm thấy video khớp hashtag trong nội dung của các kênh đã chọn, trong kỳ '+e(period.from.split('-').reverse().join('/'))+' – '+e(period.to.split('-').reverse().join('/'))+'.':'Chưa cập nhật dữ liệu hashtag trong kỳ này.'}</div>`}</div>
   ${stats.videos.length>10?`<div class="channel-hashtag-pagination"><span>${(state.page-1)*10+1}–${Math.min(state.page*10,stats.videos.length)} / ${stats.videos.length} video</span><button type="button" class="secondary" data-channel-hashtag-page="${state.page-1}" ${state.page===1?'disabled':''}>‹</button><span>${state.page}/${totalPages}</span><button type="button" class="secondary" data-channel-hashtag-page="${state.page+1}" ${state.page===totalPages?'disabled':''}>›</button></div>`:''}
   <p class="channel-hashtag-note">Phạm vi: video công khai đã đồng bộ của các kênh đang chọn và nội dung TikTok API trả về; không tìm kiếm toàn TikTok. Các kênh chưa đọc được không bị coi là đã hoàn tất.</p>`}`;
  panel.querySelector('#channelHashtagRefresh')?.addEventListener('click',channelHashtagRefresh_);

@@ -1,0 +1,105 @@
+{
+  "model": {
+    "passed": true,
+    "exact_hashtags": true,
+    "case_and_fullwidth_normalized": true,
+    "accents_preserved": true,
+    "unique_video_union": true,
+    "no_double_count_for_multiple_tags": true,
+    "unknown_captions_excluded": true,
+    "vietnam_calendar_boundaries": true,
+    "missing_metrics_not_zero": true,
+    "invalid_input_rejected": true,
+    "vnoppoa7pro_title_only_regression": true
+  },
+  "backend": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "remote_writes": 0,
+    "fresh_account_authentication": true,
+    "forged_locked_changed_sessions_rejected": true,
+    "team_read_boundary_preserved": true,
+    "only_cached_video_ids_queried": true,
+    "twenty_video_pagination": true,
+    "native_main_and_secondary_tokens_read_without_refresh": true,
+    "no_grant_or_baseline_writes": true,
+    "no_private_data_in_dto": true,
+    "unavailable_video_not_false_zero": true,
+    "stale_snapshot_rejected": true,
+    "expired_and_rate_limited_errors_explicit": true,
+    "existing_proxy_and_callback_preserved": true
+  },
+  "ui": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "remote_writes": 0,
+    "results": [
+      {
+        "width": 1440,
+        "height": 1000,
+        "passed": true,
+        "layout": {
+          "name": "hashtag-month",
+          "width": 1440,
+          "documentWidth": 1425,
+          "overflow": []
+        },
+        "matchedVideos": 56,
+        "exactMatching": true,
+        "overlappingTagsDeduplicated": true,
+        "apiCaptionPagination": true,
+        "unknownDataExplicit": true,
+        "partialFailuresVisible": true,
+        "watchlistOnlyMockWrites": true,
+        "trainerReadOnlyManagement": true
+      },
+      {
+        "width": 390,
+        "height": 900,
+        "passed": true,
+        "layout": {
+          "name": "hashtag-month",
+          "width": 390,
+          "documentWidth": 390,
+          "overflow": []
+        },
+        "matchedVideos": 56,
+        "exactMatching": true,
+        "overlappingTagsDeduplicated": true,
+        "apiCaptionPagination": true,
+        "unknownDataExplicit": true,
+        "partialFailuresVisible": true,
+        "watchlistOnlyMockWrites": true,
+        "trainerReadOnlyManagement": true
+      },
+      {
+        "width": 320,
+        "height": 850,
+        "passed": true,
+        "layout": {
+          "name": "hashtag-month",
+          "width": 320,
+          "documentWidth": 320,
+          "overflow": []
+        },
+        "matchedVideos": 56,
+        "exactMatching": true,
+        "overlappingTagsDeduplicated": true,
+        "apiCaptionPagination": true,
+        "unknownDataExplicit": true,
+        "partialFailuresVisible": true,
+        "watchlistOnlyMockWrites": true,
+        "trainerReadOnlyManagement": true
+      }
+    ]
+  },
+  "live_auth": {
+    "passed": true,
+    "unauthenticated_status": 401,
+    "only_error_field": true,
+    "no_private_values_returned": true,
+    "backend_version": 17
+  },
+  "main_function_unchanged": "b6b4b15b5db0ad19b872c075e1ff6dacbb79badc97a39383f0a547ea89b3bbc0",
+  "shared_api_unchanged": "9763cc38afad1923d427d3664dcb5cc4a4146a1aeae53a7f4b62eea105c4e486"
+}

@@ -1,0 +1,34 @@
+{
+  "scope": "Test",
+  "date": "2026-10-27",
+  "filename": "Dashboard-Test-2026-10-27-TikTok-Hashtag-Fix-View.html",
+  "bytes": 2506486,
+  "characters": 2442239,
+  "sha256": "ae3d0609b9d8e3a2690442e18b383c75baa16d384932518a15bfc624b8f0986c",
+  "git_blob_sha": "d1fd015f45649ca52bf28e6dbbfadb0b37ae7847",
+  "base_test_commit": "33438468164cb403594b741bc9a0f6f2e948b9ab",
+  "changes": [
+    "Match exact hashtags in both API caption and title, including empty descriptions",
+    "Normalize numeric-string engagement counters without treating missing data as zero",
+    "Retain genuine synchronized snapshot titles and counters with explicit source and as-of labels when a fresh query is incomplete",
+    "Show the exact local tracking date range and missing-caption channel status",
+    "Anonymous diagnostic counts for video fields and date coverage"
+  ],
+  "backend_function": "trainer-channel-test",
+  "shared_api_changed": false,
+  "main_function_changed": false,
+  "secrets_changed": false,
+  "database_schema_changes": false,
+  "watchlist_key": "channelHashtagWatchlist:v1",
+  "backend_version": 17,
+  "backend_sha256": "93161cbf3ba9fc811a2fb079fceb786dec033223aaa43a64b24f476f57a8cde6",
+  "backend_files": [
+    "index.ts",
+    "api-proxy.ts",
+    "access.ts",
+    "team-overview.ts",
+    "sandboxes.ts",
+    "followers.ts",
+    "deno.json"
+  ]
+}
