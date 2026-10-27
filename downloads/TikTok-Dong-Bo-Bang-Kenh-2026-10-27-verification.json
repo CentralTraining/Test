@@ -1,0 +1,593 @@
+{
+  "passed": true,
+  "synthetic_data_only": true,
+  "remote_writes": 0,
+  "javascript_unchanged": true,
+  "results": [
+    {
+      "width": 1440,
+      "height": 1000,
+      "appearance": {
+        "background": "rgb(21, 24, 32)",
+        "caption": "rgb(144, 157, 178)",
+        "title": "rgb(245, 247, 252)",
+        "sync": "rgb(254, 44, 85)",
+        "root": {
+          "x": 315.75,
+          "y": 117.375,
+          "width": 972.75,
+          "height": 847.90625,
+          "bottom": 965.28125
+        },
+        "posts": {
+          "x": 330.25,
+          "y": 356.40625,
+          "width": 383.234375,
+          "height": 393.75,
+          "bottom": 750.15625
+        },
+        "metrics": {
+          "x": 722.484375,
+          "y": 356.40625,
+          "width": 551.515625,
+          "height": 393.75,
+          "bottom": 750.15625
+        },
+        "rhythm": {
+          "x": 330.25,
+          "y": 759.15625,
+          "width": 943.75,
+          "height": 153.125,
+          "bottom": 912.28125
+        },
+        "sidebar": "rgba(0, 0, 0, 0)",
+        "mobile": false
+      },
+      "layout": {
+        "name": "tiktok-month",
+        "width": 1440,
+        "documentWidth": 1425,
+        "overflow": []
+      },
+      "menu": {
+        "actual": [
+          {
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(22, 33, 28)",
+            "border": "rgb(224, 233, 227)",
+            "padding": "4px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          },
+          {
+            "background": "rgb(237, 246, 240)",
+            "color": "rgb(7, 94, 56)",
+            "border": "rgb(7, 94, 56) rgb(7, 94, 56) rgb(21, 128, 84)",
+            "padding": "7px 13px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          }
+        ],
+        "dashboard": [
+          {
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(22, 33, 28)",
+            "border": "rgb(224, 233, 227)",
+            "padding": "4px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          },
+          {
+            "background": "rgb(237, 246, 240)",
+            "color": "rgb(7, 94, 56)",
+            "border": "rgb(7, 94, 56) rgb(7, 94, 56) rgb(21, 128, 84)",
+            "padding": "7px 13px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          }
+        ]
+      },
+      "tableTheme": {
+        "table": "rgb(24, 31, 45)",
+        "rows": [
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          }
+        ],
+        "positive": "rgb(37, 244, 238)",
+        "negative": "rgb(255, 130, 152)"
+      },
+      "history": {
+        "background": "rgb(24, 33, 49)",
+        "rows": [
+          {
+            "background": "rgb(24, 33, 49)",
+            "text": "rgb(220, 232, 252)"
+          },
+          {
+            "background": "rgb(32, 44, 64)",
+            "text": "rgb(220, 232, 252)"
+          },
+          {
+            "background": "rgb(24, 33, 49)",
+            "text": "rgb(220, 232, 252)"
+          }
+        ]
+      },
+      "managementLayout": {
+        "name": "tiktok-management",
+        "width": 1440,
+        "documentWidth": 1425,
+        "overflow": []
+      },
+      "captionContrast": 6.465726510837194,
+      "noRemoteWrites": true,
+      "javascriptUnchanged": true
+    },
+    {
+      "width": 390,
+      "height": 900,
+      "appearance": {
+        "background": "rgb(21, 24, 32)",
+        "caption": "rgb(144, 157, 178)",
+        "title": "rgb(245, 247, 252)",
+        "sync": "rgb(254, 44, 85)",
+        "root": {
+          "x": 6,
+          "y": 114,
+          "width": 378,
+          "height": 1018.21875,
+          "bottom": 1132.21875
+        },
+        "posts": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "bottom": 0
+        },
+        "metrics": {
+          "x": 15,
+          "y": 386.21875,
+          "width": 360,
+          "height": 498,
+          "bottom": 884.21875
+        },
+        "rhythm": {
+          "x": 15,
+          "y": 896.21875,
+          "width": 360,
+          "height": 176,
+          "bottom": 1072.21875
+        },
+        "sidebar": "rgb(240, 249, 245)",
+        "mobile": true
+      },
+      "layout": {
+        "name": "tiktok-month",
+        "width": 390,
+        "documentWidth": 390,
+        "overflow": []
+      },
+      "menu": {
+        "actual": [
+          {
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(22, 33, 28)",
+            "border": "rgb(224, 233, 227)",
+            "padding": "3px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          },
+          {
+            "background": "rgb(237, 246, 240)",
+            "color": "rgb(7, 94, 56)",
+            "border": "rgb(7, 94, 56) rgb(7, 94, 56) rgb(21, 128, 84)",
+            "padding": "4px 6px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          }
+        ],
+        "dashboard": [
+          {
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(22, 33, 28)",
+            "border": "rgb(224, 233, 227)",
+            "padding": "3px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          },
+          {
+            "background": "rgb(237, 246, 240)",
+            "color": "rgb(7, 94, 56)",
+            "border": "rgb(7, 94, 56) rgb(7, 94, 56) rgb(21, 128, 84)",
+            "padding": "4px 6px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          }
+        ]
+      },
+      "tableTheme": {
+        "table": "rgb(24, 31, 45)",
+        "rows": [
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          }
+        ],
+        "positive": "rgb(37, 244, 238)",
+        "negative": "rgb(255, 130, 152)"
+      },
+      "history": {
+        "background": "rgb(24, 33, 49)",
+        "rows": [
+          {
+            "background": "rgb(24, 33, 49)",
+            "text": "rgb(220, 232, 252)"
+          },
+          {
+            "background": "rgb(32, 44, 64)",
+            "text": "rgb(220, 232, 252)"
+          },
+          {
+            "background": "rgb(24, 33, 49)",
+            "text": "rgb(220, 232, 252)"
+          }
+        ]
+      },
+      "managementLayout": {
+        "name": "tiktok-management",
+        "width": 390,
+        "documentWidth": 390,
+        "overflow": []
+      },
+      "captionContrast": 6.465726510837194,
+      "noRemoteWrites": true,
+      "javascriptUnchanged": true
+    },
+    {
+      "width": 320,
+      "height": 850,
+      "appearance": {
+        "background": "rgb(21, 24, 32)",
+        "caption": "rgb(144, 157, 178)",
+        "title": "rgb(245, 247, 252)",
+        "sync": "rgb(254, 44, 85)",
+        "root": {
+          "x": 6,
+          "y": 114,
+          "width": 308,
+          "height": 1076.84375,
+          "bottom": 1190.84375
+        },
+        "posts": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "bottom": 0
+        },
+        "metrics": {
+          "x": 15,
+          "y": 444.84375,
+          "width": 290,
+          "height": 498,
+          "bottom": 942.84375
+        },
+        "rhythm": {
+          "x": 15,
+          "y": 954.84375,
+          "width": 290,
+          "height": 176,
+          "bottom": 1130.84375
+        },
+        "sidebar": "rgb(240, 249, 245)",
+        "mobile": true
+      },
+      "layout": {
+        "name": "tiktok-month",
+        "width": 320,
+        "documentWidth": 320,
+        "overflow": []
+      },
+      "menu": {
+        "actual": [
+          {
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(22, 33, 28)",
+            "border": "rgb(224, 233, 227)",
+            "padding": "3px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          },
+          {
+            "background": "rgb(237, 246, 240)",
+            "color": "rgb(7, 94, 56)",
+            "border": "rgb(7, 94, 56) rgb(7, 94, 56) rgb(21, 128, 84)",
+            "padding": "4px 6px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          }
+        ],
+        "dashboard": [
+          {
+            "background": "rgb(255, 255, 255)",
+            "color": "rgb(22, 33, 28)",
+            "border": "rgb(224, 233, 227)",
+            "padding": "3px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          },
+          {
+            "background": "rgb(237, 246, 240)",
+            "color": "rgb(7, 94, 56)",
+            "border": "rgb(7, 94, 56) rgb(7, 94, 56) rgb(21, 128, 84)",
+            "padding": "4px 6px",
+            "shadow": "none",
+            "colorScheme": "normal"
+          }
+        ]
+      },
+      "tableTheme": {
+        "table": "rgb(24, 31, 45)",
+        "rows": [
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(29, 38, 54)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          },
+          {
+            "background": "rgb(24, 31, 45)",
+            "text": "rgb(231, 240, 255)",
+            "secondary": "rgb(167, 184, 208)",
+            "link": "rgb(112, 237, 230)"
+          }
+        ],
+        "positive": "rgb(37, 244, 238)",
+        "negative": "rgb(255, 130, 152)"
+      },
+      "history": {
+        "background": "rgb(24, 33, 49)",
+        "rows": [
+          {
+            "background": "rgb(24, 33, 49)",
+            "text": "rgb(220, 232, 252)"
+          },
+          {
+            "background": "rgb(32, 44, 64)",
+            "text": "rgb(220, 232, 252)"
+          },
+          {
+            "background": "rgb(24, 33, 49)",
+            "text": "rgb(220, 232, 252)"
+          }
+        ]
+      },
+      "managementLayout": {
+        "name": "tiktok-management",
+        "width": 320,
+        "documentWidth": 320,
+        "overflow": []
+      },
+      "captionContrast": 6.465726510837194,
+      "noRemoteWrites": true,
+      "javascriptUnchanged": true
+    }
+  ]
+}

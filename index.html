@@ -2447,19 +2447,12 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
 </style>
 <style id="tiktok-visual-theme-20261027">
 /* TikTok visual theme: scoped to the Extensions workspace and its dialogs. */
-#tab-extensions,.channel-overlay{
+#channelTool,.channel-overlay{
   --text:#f3f5fb;--muted:#a3a9b8;--line:#2a2e3a;--bg:#12141c;
   --green:#25f4ee;--green-dark:#f3f5fb;--green-ok:#69dfb6;--green-ok-bg:#14352e;
   --amber:#ffd18a;--amber-bg:#3c2d1b;--red:#ff8298;--red-bg:#3b1e2b;
   --channel-cyan:#25f4ee;--channel-pink:#fe2c55;--channel-teal:#25f4ee;--channel-blue:#829bff;
   color:var(--text);color-scheme:dark;
-}
-#tab-extensions>.subnav{
-  background:#101218;border:1px solid #272b36;border-radius:14px;padding:5px;margin-bottom:10px;
-}
-#tab-extensions>.subnav>button{
-  background:#1c202b;color:#f4f6fb;border:0;border-bottom:2px solid #25f4ee;border-radius:9px;
-  box-shadow:inset -2px 0 #fe2c5540;font-weight:700;
 }
 #tab-extensions #channelTool{
   position:relative;isolation:isolate;padding:18px;border-radius:18px;border:1px solid #272c38;
@@ -2636,6 +2629,35 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
  .mobile-layout #channelTool .channel-metric-number{font-size:8px;}
  .mobile-layout #channelTool .channel-metric-trainer strong{font-size:8px;}
 }
+
+/* The dashboard tab selector stays on its original light/green theme. */
+/* Explicit row backgrounds prevent inherited global white table/zebra surfaces. */
+#channelTool .channel-detail-table{
+  background:#181f2d;border:1px solid #354158;border-radius:12px;overflow:hidden;
+}
+#channelTool .table-scroll,.channel-overlay .table-scroll{
+  background:#181f2d;border-color:#354158;color-scheme:dark;scrollbar-color:#53627a #141b27;
+}
+#channelTool .table-scroll::-webkit-scrollbar,.channel-overlay .table-scroll::-webkit-scrollbar{width:8px;height:8px;}
+#channelTool .table-scroll::-webkit-scrollbar-track,.channel-overlay .table-scroll::-webkit-scrollbar-track{background:#141b27;}
+#channelTool .table-scroll::-webkit-scrollbar-thumb,.channel-overlay .table-scroll::-webkit-scrollbar-thumb{background:#53627a;border-radius:8px;}
+#channelTool .channel-detail-table :is(thead,tbody){background:transparent;}
+#channelTool .channel-detail-table tbody tr{background:#181f2d;}
+#channelTool .channel-detail-table tbody tr:nth-child(even){background:#1d2636;}
+#channelTool .channel-detail-table tbody tr:hover{background:#26364c;}
+#channelTool .channel-detail-table td{background:transparent;color:#e7f0ff;}
+#channelTool .channel-detail-table small{color:#a7b8d0;}
+#channelTool .channel-detail-table a{color:#70ede6;}
+#channelTool .channel-detail-table .channel-follower-change.up .channel-follow-detail{color:#25f4ee;}
+#channelTool .channel-detail-table .channel-follower-change.down .channel-follow-detail{color:#ff8298;}
+#channelTool .channel-detail-table .channel-follower-change.flat .channel-follow-detail,
+#channelTool .channel-detail-table .channel-follower-change.unknown .channel-follow-detail{color:#a7b8d0;}
+.channel-overlay .channel-dialog table{background:#182131;border:1px solid #3b4961;}
+.channel-overlay .channel-dialog table :is(thead,tbody){background:transparent;}
+.channel-overlay .channel-dialog table tbody tr{background:#182131;}
+.channel-overlay .channel-dialog table tbody tr:nth-child(even){background:#202c40;}
+.channel-overlay .channel-dialog table tbody tr:hover{background:#293b54;}
+.channel-overlay .channel-dialog table td{background:transparent;}
 </style>
 </head>
 <body>

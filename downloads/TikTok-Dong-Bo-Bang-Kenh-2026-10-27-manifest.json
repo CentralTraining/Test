@@ -1,0 +1,19 @@
+{
+  "scope": "Test",
+  "date": "2026-10-27",
+  "filename": "Dashboard-Test-2026-10-27-TikTok-Dong-Bo-Bang-Kenh.html",
+  "bytes": 2476643,
+  "characters": 2413137,
+  "sha256": "2560d0a2270f8d78833812b0b591cbe4a1b250c3dea143f78edd7477c64647ca",
+  "git_blob_sha": "bd71b31b2e63dd31485ccb7f2fa540710b37c93b",
+  "base_test_commit": "2102288f020fa3805c5172ea442201f6a293cf10",
+  "changes": [
+    "Restore original dashboard styling for the Xây kênh menu selector",
+    "Keep TikTok theme scoped to channel workspace and dialogs",
+    "Apply dark row, zebra and hover surfaces to the channel management and follower-history tables",
+    "Readable text and consistent follower gain/loss colors"
+  ],
+  "database_changes": false,
+  "backend_changes": false,
+  "javascript_changes": false
+}
