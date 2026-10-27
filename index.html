@@ -13226,22 +13226,32 @@ function renderSurveyForm(){
   const box=document.getElementById('surveyFormBox');
   if(!box) return;
 
-  const tList = coachingScopedTrainerList_();
-  const trainer = tList.find(t=>t.id===coachRegTrainerId);
-  const scopedResponses = trainer ? surveyResponses.filter(s=>s.trainerId===trainer.id) : [];
-  // Tổng khảo sát của từng PG trong tháng, chỉ thuộc Trainer đang chọn.
-  const pgCounts=new Map();
-  scopedResponses.forEach(s=>{
-    const key=coachingSurveyPgKey_(s);
-    if(key)pgCounts.set(key,(pgCounts.get(key)||0)+1);
+  const tList=coachingScopedTrainerList_();
+  const trainer=tList.find(t=>t.id===coachRegTrainerId);
+  const scopedResponses=trainer?surveyResponses.filter(s=>s.trainerId===trainer.id):[];
+  // Một dòng cho một mã PG của Trainer; chỉ gộp cách hiển thị, giữ nguyên từng phiếu.
+  const groupsByPg=new Map();
+  scopedResponses.forEach((s,index)=>{
+    const key=coachingSurveyPgKey_(s)||JSON.stringify(['unmatched',s.id||index]);
+    let group=groupsByPg.get(key);
+    if(!group){group={responses:[]};groupsByPg.set(key,group);}
+    group.responses.push(s);
   });
-
-  let html = '';
-  const monthEntries = scopedResponses.length;
-  const completedCount = [...pgCounts.values()].filter(count=>count>=COACHING_SESSIONS_TO_COMPLETE).length;
-  html += `<div class="scope-filters" style="justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;">
+  const groups=[...groupsByPg.values()];
+  groups.forEach(group=>{
+    group.responses.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+    group.latest=group.responses[0];group.count=group.responses.length;
+  });
+  groups.sort((a,b)=>new Date(b.latest.timestamp)-new Date(a.latest.timestamp));
+  const monthEntries=scopedResponses.length;
+  const completedCount=groups.filter(group=>group.count>=COACHING_SESSIONS_TO_COMPLETE).length;
+  let filteredGroups=groups;
+  if(surveyFormLuotFilter_)filteredGroups=groups.filter(group=>surveyFormLuotFilter_==='2'
+    ?group.count>=COACHING_SESSIONS_TO_COMPLETE:group.count===1);
+  const filteredEntries=filteredGroups.reduce((sum,group)=>sum+group.count,0);
+  let html=`<div class="scope-filters" style="justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span class="scope-label">${trainer?escapeHtml(trainer.name)+' · ':''}Tổng <strong>${monthEntries}</strong> phiếu khảo sát trong ${monthLabel(currentMonth)}</span>
+      <span class="scope-label">${trainer?escapeHtml(trainer.name)+' · ':''}Tổng <strong>${monthEntries}</strong> phiếu khảo sát · <strong>${groups.length}</strong> PG trong ${monthLabel(currentMonth)}</span>
       <span class="scope-label">Lọc PG:</span>
       <select id="surveyFormLuotSel" style="max-width:145px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
         <option value="" ${surveyFormLuotFilter_===''?'selected':''}>Tất cả</option>
@@ -13251,54 +13261,44 @@ function renderSurveyForm(){
     </div>
     <span class="scope-label">PG đủ ${COACHING_SESSIONS_TO_COMPLETE} lượt của Trainer đang chọn: <strong>${completedCount}</strong></span>
   </div>`;
-
-  let filteredResponses = scopedResponses;
-  if(surveyFormLuotFilter_) filteredResponses = filteredResponses.filter(s=>{
-    const count=pgCounts.get(coachingSurveyPgKey_(s))||0;
-    return surveyFormLuotFilter_==='2' ? count>=COACHING_SESSIONS_TO_COMPLETE : count===1;
-  });
-  html += `<p class="section-desc" style="margin:0 0 8px;">Mỗi dòng là 1 phiếu. “Số khảo sát” là tổng của từng PG trong tháng; không cộng cột này để tính tổng phiếu.</p>`;
-
-  if(filteredResponses.length===0){
-    html += `<div class="empty">Chưa có khảo sát nào khớp bộ lọc trong tháng này.</div>`;
-  } else {
-    const sorted = [...filteredResponses].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
-    const totalItems = sorted.length;
-    const totalPages = Math.max(1, Math.ceil(totalItems/SURVEY_FORM_PAGE_SIZE));
-    if(surveyFormPage_>totalPages) surveyFormPage_ = totalPages;
-    if(surveyFormPage_<1) surveyFormPage_ = 1;
-    const startIdx = (surveyFormPage_-1)*SURVEY_FORM_PAGE_SIZE;
-    const pageItems = sorted.slice(startIdx, startIdx+SURVEY_FORM_PAGE_SIZE);
-    html += `<table><thead><tr><th>Thời gian</th><th>Mã NV</th><th>Họ & Tên PGs</th><th>Trainer</th><th>Nhóm</th><th>Số khảo sát</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>`;
-    pageItems.forEach(s=>{
-      const count=pgCounts.get(coachingSurveyPgKey_(s))||0;
-      const done=count>=COACHING_SESSIONS_TO_COMPLETE;
-      html += `<tr>
-        <td>${s.timestamp ? new Date(s.timestamp).toLocaleString('vi-VN') : '—'}</td>
-        <td>${s.code||'—'}</td>
-        <td>${s.pgName||'—'}</td>
-        <td>${s.trainerName||'—'}</td>
-        <td>${s.pgGroup||'—'}</td>
-        <td><span class="pill ${done?'pill-ok':'pill-warn'}">${count}</span></td>
-        ${isAdmin()?`<td><button class="danger" data-del-survey="${s.id}">Xóa</button></td>`:''}
+  html+=`<p class="section-desc" style="margin:0 0 8px;">Mỗi PG hiển thị một dòng. Bộ lọc đang hiển thị <strong>${filteredGroups.length}/${groups.length} PG · ${filteredEntries}/${monthEntries} phiếu khảo sát</strong>. Mở chi tiết để xem từng phiếu.</p>`;
+  if(!filteredGroups.length){
+    html+='<div class="empty">Chưa có khảo sát nào khớp bộ lọc trong tháng này.</div>';
+  }else{
+    const totalPages=Math.max(1,Math.ceil(filteredGroups.length/SURVEY_FORM_PAGE_SIZE));
+    surveyFormPage_=Math.max(1,Math.min(surveyFormPage_,totalPages));
+    const startIdx=(surveyFormPage_-1)*SURVEY_FORM_PAGE_SIZE;
+    const pageGroups=filteredGroups.slice(startIdx,startIdx+SURVEY_FORM_PAGE_SIZE);
+    html+='<table><thead><tr><th>Khảo sát gần nhất</th><th>Mã NV</th><th>Họ &amp; Tên PGs</th><th>Trainer</th><th>Nhóm</th><th>Số khảo sát</th><th>Chi tiết</th></tr></thead><tbody>';
+    pageGroups.forEach(group=>{
+      const s=group.latest,done=group.count>=COACHING_SESSIONS_TO_COMPLETE;
+      const history=group.responses.map(response=>`<div style="display:flex;align-items:center;gap:8px;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);">
+        <span>${response.timestamp?new Date(response.timestamp).toLocaleString('vi-VN'):'—'}</span>
+        ${isAdmin()&&response.id?`<button class="danger" data-del-survey="${escapeHtml(response.id)}">Xóa phiếu</button>`:''}
+      </div>`).join('');
+      html+=`<tr data-survey-pg-row>
+        <td>${s.timestamp?new Date(s.timestamp).toLocaleString('vi-VN'):'—'}</td>
+        <td>${escapeHtml(s.code||'—')}</td>
+        <td>${escapeHtml(s.pgName||'—')}</td>
+        <td>${escapeHtml(trainer.name)}</td>
+        <td>${escapeHtml(s.pgGroup||'—')}</td>
+        <td><span class="pill ${done?'pill-ok':'pill-warn'}" data-survey-count>${group.count}</span></td>
+        <td><details><summary style="cursor:pointer;white-space:nowrap;">Xem ${group.count} phiếu</summary><div style="font-size:var(--cap);">${history}</div></details></td>
       </tr>`;
     });
-    html += `</tbody></table>`;
-    html += `<div class="pagination-bar" id="surveyFormPagination"></div>`;
+    html+='</tbody></table><div class="pagination-bar" id="surveyFormPagination"></div>';
   }
-
-  box.innerHTML = html;
-  const luotSel = document.getElementById('surveyFormLuotSel');
-  if(luotSel) luotSel.addEventListener('change', ()=>{ surveyFormLuotFilter_=luotSel.value; surveyFormPage_=1; renderSurveyForm(); });
-  if(filteredResponses.length>0) renderSurveyFormPagination_(filteredResponses.length);
-
+  box.innerHTML=html;
+  const luotSel=document.getElementById('surveyFormLuotSel');
+  if(luotSel)luotSel.addEventListener('change',()=>{surveyFormLuotFilter_=luotSel.value;surveyFormPage_=1;renderSurveyForm();});
+  if(filteredGroups.length)renderSurveyFormPagination_(filteredGroups.length);
   box.querySelectorAll('[data-del-survey]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      if(!isAdmin()) return;
-      surveyResponses = surveyResponses.filter(s=>s.id!==btn.getAttribute('data-del-survey'));
-      await dbSet('surveyResponses:'+currentMonth, surveyResponses);
+    btn.addEventListener('click',async()=>{
+      if(!isAdmin())return;
+      surveyResponses=surveyResponses.filter(s=>s.id!==btn.getAttribute('data-del-survey'));
+      await dbSet('surveyResponses:'+currentMonth,surveyResponses);
       syncAllPg01Actuals();
-      await dbSet('records:'+currentMonth, records);
+      await dbSet('records:'+currentMonth,records);
       renderKpiCategory('noibo');
     });
   });
@@ -13400,7 +13400,7 @@ function renderSurveyFormPagination_(totalItems){
   const from = (surveyFormPage_-1)*SURVEY_FORM_PAGE_SIZE + 1;
   const to = Math.min(surveyFormPage_*SURVEY_FORM_PAGE_SIZE, totalItems);
   box.innerHTML = `
-    <span class="pagination-info">Hiển thị ${from}-${to} / ${totalItems} lượt</span>
+    <span class="pagination-info">Hiển thị ${from}-${to} / ${totalItems} PG</span>
     <button data-survey-form-page="${surveyFormPage_-1}" ${surveyFormPage_<=1?'disabled':''}>‹</button>
     ${pageButtons}
     <button data-survey-form-page="${surveyFormPage_+1}" ${surveyFormPage_>=totalPages?'disabled':''}>›</button>

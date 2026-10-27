@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "synthetic_data_only": true,
+  "remote_writes": 0,
+  "unexpectedRequests": 0,
+  "checks": [
+    {
+      "viewport": 1440,
+      "passed": true,
+      "checks": [
+        "8 unique PG / totals sum to 14 surveys / 6 completed PG",
+        "actual green and orange badge colors",
+        "same-code Trainer isolation",
+        "6 PG >=2 reconcile to 12/14 surveys; one-survey filter reconciles to 2/14",
+        "pagination by unique PG with sums preserved",
+        "expandable source history remains intact",
+        "delete one mocked source survey without deleting other PG or Trainer",
+        "Trainer and region selectors, role and empty scope",
+        "no remote writes or page errors"
+      ]
+    },
+    {
+      "viewport": 390,
+      "passed": true,
+      "checks": [
+        "8 unique PG / totals sum to 14 surveys / 6 completed PG",
+        "actual green and orange badge colors",
+        "same-code Trainer isolation",
+        "6 PG >=2 reconcile to 12/14 surveys; one-survey filter reconciles to 2/14",
+        "pagination by unique PG with sums preserved",
+        "expandable source history remains intact",
+        "delete one mocked source survey without deleting other PG or Trainer",
+        "Trainer and region selectors, role and empty scope",
+        "no remote writes or page errors"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "scope": "Test",
+  "date": "2026-10-27",
+  "filename": "Dashboard-Test-2026-10-27-Coaching-Moi-PG-Mot-Dong.html",
+  "bytes": 2456530,
+  "characters": 2393139,
+  "sha256": "e5b6295f4090ddd7813a4b4a0316dc905314d6d179c1c1b7b53d5f906e1886db",
+  "git_blob_sha": "3b9f9199ab5e4e6811cc841b27402e024ed82a0c",
+  "changes": [
+    "One PG per row, scoped by Trainer and staff code",
+    "Survey totals reconcile with displayed PG totals",
+    "Filtered PG/survey coverage shown explicitly",
+    "Expandable individual survey history; per-survey delete retained",
+    "Green >=2; orange <2"
+  ],
+  "database_changes": false,
+  "backend_changes": false
+}
