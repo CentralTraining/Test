@@ -1,0 +1,42 @@
+{
+  "html": {
+    "scope": "Test",
+    "date": "2026-10-27",
+    "filename": "Dashboard-Test-2026-10-27-TikTok-Tracking-Hashtag.html",
+    "bytes": 2503566,
+    "characters": 2439466,
+    "sha256": "038359dda50a78035c0be62cac4a25d7c9623416f1627f409c15efb4699b3494",
+    "git_blob_sha": "0275a02aa11b90fd0e3eda9b8827ce5aa2374d66",
+    "base_test_commit": "fe84bce866740535c4aa15e41eabbd713d64e9cb",
+    "changes": [
+      "Hashtag tracking within connected Trainer channels and existing period/region filters",
+      "Shared Admin-managed watchlist; exact Unicode/case-normalized hashtag matching",
+      "Read-only TikTok caption and engagement queries using the existing video.list grant",
+      "Unique-video totals, Trainer breakdown, caption-read coverage and video details",
+      "No shared API, Main function, grants or baseline changes"
+    ],
+    "backend_function": "trainer-channel-test",
+    "shared_api_changed": false,
+    "main_function_changed": false,
+    "secrets_changed": false,
+    "database_schema_changes": false,
+    "watchlist_key": "channelHashtagWatchlist:v1",
+    "backend_version": 16,
+    "backend_sha256": "d0543df26d593bd325f9e2e135049293029627285a0fe27a422a7ef18ffa3aba",
+    "backend_files": [
+      "index.ts",
+      "api-proxy.ts",
+      "access.ts",
+      "team-overview.ts",
+      "sandboxes.ts",
+      "followers.ts",
+      "deno.json"
+    ]
+  },
+  "backend_source": {
+    "filename": "Edge-Function-Test-2026-10-27-TikTok-Hashtag-Full-Source.zip",
+    "bytes": 22815,
+    "base64_length": 30420,
+    "sha256": "8cf39a86dd203a0f8e17460501f847e3430cf9064e387f7721d68e0af3c738ab"
+  }
+}
