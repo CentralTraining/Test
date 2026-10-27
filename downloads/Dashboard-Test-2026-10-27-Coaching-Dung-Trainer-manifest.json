@@ -1,0 +1,17 @@
+{
+  "scope": "Test",
+  "date": "2026-10-27",
+  "filename": "Dashboard-Test-2026-10-27-Coaching-Dung-Trainer.html",
+  "bytes": 2455863,
+  "characters": 2392486,
+  "sha256": "895cd1370d32d379daf1d5ddfdb1fd5310a55dce7baf5afe184b122259c798b4",
+  "git_blob_sha": "e8b59cdba0f52d462a05dfad2a700993b97bbfb1",
+  "changes": [
+    "Trainer-scoped survey history and PG counters",
+    "One survey per row with chronological occurrence labels",
+    "Aligned Trainer/region selectors",
+    "PG >=2 survey filter"
+  ],
+  "database_changes": false,
+  "backend_changes": false
+}

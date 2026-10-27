@@ -12592,11 +12592,19 @@ let coachingListFinalized=false;
 let coachStatusFilter='';
 let coachingAddMode=false;
 const COACHING_SESSIONS_TO_COMPLETE = 2; // Target 1 PG 0*/1* = đủ 2 lượt khảo sát/coaching trong tháng
-function surveyCountForCode(code){
-  if(!code) return 0;
-  const c = String(code).trim();
-  if(!c) return 0;
-  return surveyResponses.filter(s=>String(s.code||'').trim()===c).length;
+function coachingScopedTrainerList_(){
+  const allowed = isTrainer() ? config.trainers.filter(t=>t.id===session.trainerId) : visibleTrainers();
+  const ids = noiboFilteredTrainerIds_(new Set(allowed.map(t=>t.id)));
+  return allowed.filter(t=>ids.has(t.id));
+}
+function coachingSurveyPgKey_(response){
+  const code=String(response.code||'').trim();
+  return code && response.trainerId ? JSON.stringify([response.trainerId,code]) : '';
+}
+function surveyCountForCode(code,trainerId){
+  const c=String(code||'').trim();
+  if(!c || !trainerId) return 0;
+  return surveyResponses.filter(s=>s.trainerId===trainerId && String(s.code||'').trim()===c).length;
 }
 function syncPg01ActualFromCoaching(trainerId, source=surveyResponses, targetRecords=records){
   const rec = targetRecords[trainerId] || (targetRecords[trainerId]=emptyRecord());
@@ -12685,8 +12693,8 @@ function renderPg01Panel(){
 function renderCoachingRegistration(){
   const box=document.getElementById('coachingRegBox');
   if(!box) return;
-  const tList = isTrainer() ? config.trainers.filter(t=>t.id===session.trainerId) : visibleTrainers();
-  if(tList.length===0){ box.innerHTML='<div class="empty">Chưa có Trainer trong phạm vi đang xem.</div>'; return; }
+  const tList = coachingScopedTrainerList_();
+  if(tList.length===0){ coachRegTrainerId=null; box.innerHTML='<div class="empty">Chưa có Trainer trong phạm vi đang xem.</div>'; return; }
   if(!coachRegTrainerId || !tList.some(t=>t.id===coachRegTrainerId)) coachRegTrainerId=tList[0].id;
 
   let candidates = pgs.filter(p=> p.brand==='OPPO' && p.trainerId===coachRegTrainerId && (Number(p.star)===0 || Number(p.star)===1) && (p.status==='Đang làm' || p.statusChangedAt));
@@ -12761,7 +12769,7 @@ function renderCoachingRegistration(){
         <td class="stars">${starDisplay(p.star)}</td>
         <td>${statusSelectHtml_(p, canEdit)}</td>
         <td style="text-align:center;"><input type="checkbox" class="coach-reg-checkbox" data-pg="${p.id}" ${checked?'checked':''} ${(canEdit && !rowLocked)?'':'disabled'} style="width:18px;height:18px;cursor:pointer;"></td>
-        <td style="text-align:center;"><span class="pill ${surveyCountForCode(p.code)>=COACHING_SESSIONS_TO_COMPLETE?'pill-ok':'pill-warn'}">${surveyCountForCode(p.code)}/${COACHING_SESSIONS_TO_COMPLETE}</span></td>
+        <td style="text-align:center;"><span class="pill ${surveyCountForCode(p.code,p.trainerId)>=COACHING_SESSIONS_TO_COMPLETE?'pill-ok':'pill-warn'}">${surveyCountForCode(p.code,p.trainerId)}/${COACHING_SESSIONS_TO_COMPLETE}</span></td>
       </tr>`;
     });
     html += `</tbody></table>`;
@@ -12781,7 +12789,7 @@ function renderCoachingRegistration(){
   wirePgStatusSelects_(box);
 
   const sel=document.getElementById('coachRegTrainerSelect');
-  if(sel) sel.addEventListener('change', (e)=>{ coachRegTrainerId=e.target.value; coachRegPage=1; coachingListFinalized=false; coachingAddMode=false; renderCoachingRegistration(); });
+  if(sel) sel.addEventListener('change', (e)=>{ coachRegTrainerId=e.target.value; coachRegPage=1; surveyFormPage_=1; coachingListFinalized=false; coachingAddMode=false; renderCoachingRegistration(); renderSurveyForm(); });
 
   const statusSel=document.getElementById('coachStatusFilterSelect');
   if(statusSel) statusSel.addEventListener('change', (e)=>{ coachStatusFilter=e.target.value; coachRegPage=1; renderCoachingRegistration(); });
@@ -13218,28 +13226,40 @@ function renderSurveyForm(){
   const box=document.getElementById('surveyFormBox');
   if(!box) return;
 
-  const tList = isTrainer() ? config.trainers.filter(t=>t.id===session.trainerId) : visibleTrainers();
-  const trainerIds = noiboFilteredTrainerIds_(new Set(tList.map(t=>t.id)));
-  const scopedResponses = surveyResponses.filter(s=> trainerIds.has(s.trainerId));
+  const tList = coachingScopedTrainerList_();
+  const trainer = tList.find(t=>t.id===coachRegTrainerId);
+  const scopedResponses = trainer ? surveyResponses.filter(s=>s.trainerId===trainer.id) : [];
+  // Cùng mã PG ở Trainer khác không được cộng vào tổng hay thứ tự khảo sát.
+  const pgCounts=new Map(), surveyOrdinals=new Map();
+  [...scopedResponses].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)).forEach(s=>{
+    const key=coachingSurveyPgKey_(s);
+    if(!key){ surveyOrdinals.set(s,1); return; }
+    const ordinal=(pgCounts.get(key)||0)+1;
+    pgCounts.set(key,ordinal); surveyOrdinals.set(s,ordinal);
+  });
 
   let html = '';
   const monthEntries = scopedResponses.length;
-  const completedCount = coachingReg.filter(r=> surveyCountForCode(r.code) >= COACHING_SESSIONS_TO_COMPLETE).length;
+  const completedCount = [...pgCounts.values()].filter(count=>count>=COACHING_SESSIONS_TO_COMPLETE).length;
   html += `<div class="scope-filters" style="justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span class="scope-label">Đã nhập <strong>${monthEntries}</strong> lượt khảo sát trong ${monthLabel(currentMonth)} (khớp bộ lọc)</span>
-      <span class="scope-label">Lượt:</span>
-      <select id="surveyFormLuotSel" style="max-width:100px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
+      <span class="scope-label">${trainer?escapeHtml(trainer.name)+' · ':''}Tổng <strong>${monthEntries}</strong> phiếu khảo sát trong ${monthLabel(currentMonth)}</span>
+      <span class="scope-label">Lọc PG:</span>
+      <select id="surveyFormLuotSel" style="max-width:145px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-family:inherit;font-size:var(--cap);">
         <option value="" ${surveyFormLuotFilter_===''?'selected':''}>Tất cả</option>
-        <option value="1" ${surveyFormLuotFilter_==='1'?'selected':''}>1/${COACHING_SESSIONS_TO_COMPLETE}</option>
-        <option value="2" ${surveyFormLuotFilter_==='2'?'selected':''}>${COACHING_SESSIONS_TO_COMPLETE}/${COACHING_SESSIONS_TO_COMPLETE}</option>
+        <option value="1" ${surveyFormLuotFilter_==='1'?'selected':''}>Có 1 lượt</option>
+        <option value="2" ${surveyFormLuotFilter_==='2'?'selected':''}>Đủ ≥${COACHING_SESSIONS_TO_COMPLETE} lượt</option>
       </select>
     </div>
-    <span class="scope-label">PG đã đủ ${COACHING_SESSIONS_TO_COMPLETE} lượt (hoàn thành Target): <strong>${completedCount}</strong></span>
+    <span class="scope-label">PG đủ ${COACHING_SESSIONS_TO_COMPLETE} lượt của Trainer đang chọn: <strong>${completedCount}</strong></span>
   </div>`;
 
   let filteredResponses = scopedResponses;
-  if(surveyFormLuotFilter_) filteredResponses = filteredResponses.filter(s=> String(surveyCountForCode(s.code))===surveyFormLuotFilter_);
+  if(surveyFormLuotFilter_) filteredResponses = filteredResponses.filter(s=>{
+    const count=pgCounts.get(coachingSurveyPgKey_(s))||0;
+    return surveyFormLuotFilter_==='2' ? count>=COACHING_SESSIONS_TO_COMPLETE : count===1;
+  });
+  html += `<p class="section-desc" style="margin:0 0 8px;">Mỗi dòng là 1 phiếu khảo sát. Cột “Lần khảo sát” ghi thứ tự từng lần của PG.</p>`;
 
   if(filteredResponses.length===0){
     html += `<div class="empty">Chưa có khảo sát nào khớp bộ lọc trong tháng này.</div>`;
@@ -13251,18 +13271,17 @@ function renderSurveyForm(){
     if(surveyFormPage_<1) surveyFormPage_ = 1;
     const startIdx = (surveyFormPage_-1)*SURVEY_FORM_PAGE_SIZE;
     const pageItems = sorted.slice(startIdx, startIdx+SURVEY_FORM_PAGE_SIZE);
-    html += `<table><thead><tr><th>Thời gian</th><th>Mã NV</th><th>Họ & Tên PGs</th><th>Trainer</th><th>Nhóm</th><th>Buổi thứ</th><th>Lượt/2</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>`;
+    html += `<table><thead><tr><th>Thời gian</th><th>Mã NV</th><th>Họ & Tên PGs</th><th>Trainer</th><th>Nhóm</th><th>Lần khảo sát</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>`;
     pageItems.forEach(s=>{
-      const cnt = surveyCountForCode(s.code);
-      const done = cnt >= COACHING_SESSIONS_TO_COMPLETE;
+      const ordinal=surveyOrdinals.get(s)||1;
+      const done=ordinal>=COACHING_SESSIONS_TO_COMPLETE;
       html += `<tr>
         <td>${s.timestamp ? new Date(s.timestamp).toLocaleString('vi-VN') : '—'}</td>
         <td>${s.code||'—'}</td>
         <td>${s.pgName||'—'}</td>
         <td>${s.trainerName||'—'}</td>
         <td>${s.pgGroup||'—'}</td>
-        <td>${s.sessionNo||'—'}</td>
-        <td><span class="pill ${done?'pill-ok':'pill-warn'}">${cnt}/${COACHING_SESSIONS_TO_COMPLETE}</span></td>
+        <td><span class="pill ${done?'pill-ok':'pill-warn'}">Lần ${ordinal}/${COACHING_SESSIONS_TO_COMPLETE}</span></td>
         ${isAdmin()?`<td><button class="danger" data-del-survey="${s.id}">Xóa</button></td>`:''}
       </tr>`;
     });
@@ -13350,8 +13369,10 @@ function noiboFilteredTrainerIds_(baseTrainerIds){
   return ids;
 }
 function rerenderNoiboLists_(){
+  coachRegPage=1; surveyFormPage_=1;
   renderNewPgList();
   renderNewPgList25_();
+  renderCoachingRegistration();
   renderSurveyForm();
 }
 /* PGs mới dùng cùng ô trạng thái và quy trình duyệt với PGs 0★/1★ và Tổng quan. */

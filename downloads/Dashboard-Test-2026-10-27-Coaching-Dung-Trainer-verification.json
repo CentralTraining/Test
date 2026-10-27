@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "synthetic_data_only": true,
+  "remote_writes": 0,
+  "unexpectedRequests": 0,
+  "checks": [
+    {
+      "viewport": 1440,
+      "passed": true,
+      "checks": [
+        "14 surveys / 6 completed PG with no registrations",
+        "same-code Trainer isolation",
+        "chronological labels across pages",
+        "1 and >=2 filters",
+        "local selector updates history",
+        "global Trainer and region selectors stay aligned",
+        "Trainer role and empty scope",
+        "no writes or page errors"
+      ]
+    },
+    {
+      "viewport": 390,
+      "passed": true,
+      "checks": [
+        "14 surveys / 6 completed PG with no registrations",
+        "same-code Trainer isolation",
+        "chronological labels across pages",
+        "1 and >=2 filters",
+        "local selector updates history",
+        "global Trainer and region selectors stay aligned",
+        "Trainer role and empty scope",
+        "no writes or page errors"
+      ]
+    }
+  ]
+}
