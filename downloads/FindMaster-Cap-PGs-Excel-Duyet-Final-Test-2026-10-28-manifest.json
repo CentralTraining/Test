@@ -1,0 +1,23 @@
+{
+  "scope": "Test",
+  "date": "2026-10-28",
+  "filename": "Dashboard-Test-2026-10-28-FindMaster-Cap-PGs-Excel-Duyet-Final.html",
+  "bytes": 2566518,
+  "characters": 2500489,
+  "sha256": "31dc1feb6eb042d088201108cc6de619ac7916be56c6869bec8ca6917f900dda",
+  "git_blob_sha": "509670ce48bbe0faee075c94d404abcaa315229f",
+  "base_commit": "27a0bc155e55eee5c52fcd03da9bb1395b4fb159",
+  "environment": "test",
+  "new_table": "pgsm_pair_workflows",
+  "function": "pgsm-pairs-test",
+  "legacy_groups_changed": false,
+  "main_changed": false,
+  "secrets_changed": false,
+  "function_version": 2,
+  "function_sha256": "a6f4ba9365c073c0ad063b3da7496e5b5ae873a033987e884f6315d9ac07f3bb",
+  "source_zip": {
+    "filename": "FindMaster-Cap-PGs-Excel-Duyet-Final-Test-2026-10-28-Full-Source.zip",
+    "bytes": 25554,
+    "sha256": "58bc7ec4028694f2c785270651948e950f9076d695da9ccbd9e37b3fc4b51a70"
+  }
+}

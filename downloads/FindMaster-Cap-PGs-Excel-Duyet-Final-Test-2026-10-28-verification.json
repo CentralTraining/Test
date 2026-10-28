@@ -1,0 +1,147 @@
+{
+  "passed": true,
+  "scope": "Test",
+  "date": "2026-10-28",
+  "backend": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "real_data_writes": 0,
+    "tests": [
+      "legacy groups preserved without auto approval",
+      "Trainer own writes and region-limited reads/export",
+      "submit full list only",
+      "pending and final lists locked",
+      "Admin-only final/return with required reason",
+      "version conflict prevents stale changes",
+      "roster changes invalidate pending/final status",
+      "milestone sync does not invalidate final",
+      "missing or failed transport preserves saved data",
+      "locked account and month rejected",
+      "Test namespace isolated from Main and legacy",
+      "Excel last column is pair name",
+      "all members exported across channel filter",
+      "code, employee code and shop ID remain strings"
+    ]
+  },
+  "browser": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "real_data_writes": 0,
+    "results": [
+      {
+        "width": 1440,
+        "passed": true,
+        "layout": {
+          "name": "pairs-final",
+          "width": 1440,
+          "documentWidth": 1425,
+          "overflow": []
+        },
+        "trainer_draft_submit_admin_final_return": true,
+        "pending_and_final_edits_locked": true,
+        "real_xlsx_download_read_back": true,
+        "leading_zero_codes_and_shop_ids_preserved": true,
+        "all_pair_members_exported": true,
+        "last_column_pair_name": true,
+        "failed_save_preserves_data": true,
+        "legacy_unchanged": true
+      },
+      {
+        "width": 768,
+        "passed": true,
+        "layout": {
+          "name": "pairs-final",
+          "width": 768,
+          "documentWidth": 768,
+          "overflow": []
+        },
+        "trainer_draft_submit_admin_final_return": true,
+        "pending_and_final_edits_locked": true,
+        "real_xlsx_download_read_back": true,
+        "leading_zero_codes_and_shop_ids_preserved": true,
+        "all_pair_members_exported": true,
+        "last_column_pair_name": true,
+        "failed_save_preserves_data": true,
+        "legacy_unchanged": true
+      },
+      {
+        "width": 390,
+        "passed": true,
+        "layout": {
+          "name": "pairs-final",
+          "width": 390,
+          "documentWidth": 390,
+          "overflow": []
+        },
+        "trainer_draft_submit_admin_final_return": true,
+        "pending_and_final_edits_locked": true,
+        "real_xlsx_download_read_back": true,
+        "leading_zero_codes_and_shop_ids_preserved": true,
+        "all_pair_members_exported": true,
+        "last_column_pair_name": true,
+        "failed_save_preserves_data": true,
+        "legacy_unchanged": true
+      },
+      {
+        "width": 320,
+        "passed": true,
+        "layout": {
+          "name": "pairs-final",
+          "width": 320,
+          "documentWidth": 320,
+          "overflow": []
+        },
+        "trainer_draft_submit_admin_final_return": true,
+        "pending_and_final_edits_locked": true,
+        "real_xlsx_download_read_back": true,
+        "leading_zero_codes_and_shop_ids_preserved": true,
+        "all_pair_members_exported": true,
+        "last_column_pair_name": true,
+        "failed_save_preserves_data": true,
+        "legacy_unchanged": true
+      }
+    ]
+  },
+  "live": {
+    "passed": true,
+    "probes": [
+      {
+        "probe": "view_without_session",
+        "status": 401,
+        "denied": true
+      },
+      {
+        "probe": "export_with_forged_session",
+        "status": 401,
+        "denied": true
+      },
+      {
+        "probe": "private_workflow_table",
+        "status": 401,
+        "denied": true
+      }
+    ],
+    "real_business_records_created": 0,
+    "authorized_live_workflow_not_exercised": true
+  },
+  "deployed_function": {
+    "name": "pgsm-pairs-test",
+    "version": 2,
+    "source_exact": true,
+    "verify_jwt": true,
+    "ezbr_sha256": "a6f4ba9365c073c0ad063b3da7496e5b5ae873a033987e884f6315d9ac07f3bb"
+  },
+  "storage": {
+    "table": "pgsm_pair_workflows",
+    "environment": "test",
+    "rls_enabled": true,
+    "anon_and_authenticated_grants": false,
+    "backend_service_role_only": true,
+    "initial_test_and_main_rows": 0,
+    "legacy_hash_unchanged": true,
+    "security_advisor": "INFO rls_enabled_no_policy is intentional; direct roles have no grants."
+  },
+  "main_html_unchanged": true,
+  "all_other_functions_unchanged": true,
+  "secrets_changed": false
+}
