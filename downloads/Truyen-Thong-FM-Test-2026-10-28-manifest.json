@@ -1,0 +1,25 @@
+{
+  "scope": "Test",
+  "date": "2026-10-28",
+  "filename": "Dashboard-Test-2026-10-28-Truyen-Thong-FM.html",
+  "bytes": 2509223,
+  "characters": 2444810,
+  "sha256": "732ce5173a7f5d031c2368c4ce616b77c62ec42a08363277eb2f44a5b254380d",
+  "git_blob_sha": "0a1ce66ad51cd7361c95781c44ee94273f57029b",
+  "base_test_commit": "c209507d6819189e5f0a0be3134ffa988bdf7467",
+  "new_function": "otraining-media-test",
+  "production_function_changed": false,
+  "database_changed_by_release": false,
+  "secrets_changed": false,
+  "changes": [
+    "Per-campaign media source selection: legacy noibo or fm",
+    "Send and validate campaign type, campaign ID and program ID end to end",
+    "FM program ID matching is exact; no array-position fallback",
+    "Retain stale-response guards and existing campaign/region write scopes"
+  ],
+  "backend_version": 1,
+  "backend_sha256": "8fe6c1ea98351f297aea83bdf11b4b3731e519f9e80b9f8021af978e5c0a0e01",
+  "backend_files": [
+    "index.ts"
+  ]
+}

@@ -6642,6 +6642,12 @@ function mediaNameSim_(a,b){
   let common=0; ta.forEach(t=>{ if(tb.has(t)) common++; });
   return common/Math.max(ta.size,tb.size);
 }
+function mediaCampaignType_(camp){
+ return String(document.getElementById('otrMediaCampaignType')?.value||camp?.mediaCampaignType||'noibo');
+}
+function mediaOtrainingUrl_(){
+ return SUPABASE_URL+'/functions/v1/'+(location.pathname.startsWith('/Test/')?'otraining-media-test':'otraining-media');
+}
 async function updateMediaFromOtraining_(){
   const msg=document.getElementById('mediaImportMsg');
   const show=(t,c)=>campaignUpdateMessage_('mediaImportMsg',t,c);
@@ -6652,17 +6658,23 @@ async function updateMediaFromOtraining_(){
   if(!campaignId){ show(isAdmin()?'Hãy nhập ID chiến dịch.':'Admin chưa thiết lập ID chiến dịch cho tháng này.','var(--red)'); if(idInput) idInput.focus(); return; }
   const progInput=document.getElementById('otrMediaProgramId');
   const programId=(progInput&&progInput.value||'').trim() || String((camp&&camp.programId)||''); // Trainer dùng programId đã lưu
-  const stillCurrent=campaignUpdateContext_(camp,'otrMediaCampaignId',mediaScopeKey);
+  const campaignType=mediaCampaignType_(camp);
+  if(!['noibo','fm'].includes(campaignType)){show('Chọn nguồn Truyền thông hợp lệ.','var(--red)');return;}
+  if(campaignType==='fm'&&!/^[1-9]\d*$/.test(programId)){show('Nguồn FM cần nhập Program ID. Chương trình Diện mạo mới - Trải nghiệm mới dùng ID chiến dịch 6, Program ID 8.','var(--red)');return;}
+  if(isAdmin()&&otrEditing_.has(otrEditKey_('medianoibo',camp))){show('Bấm Lưu nguồn và ID trước khi cập nhật dữ liệu.','var(--red)');return;}
+  const sameContext=campaignUpdateContext_(camp,'otrMediaCampaignId',mediaScopeKey);
+  const stillCurrent=()=>sameContext()&&mediaCampaignType_(camp)===campaignType&&String(document.getElementById('otrMediaProgramId')?.value||camp.programId||'').trim()===programId;
   show('⏳ Đang lấy Truyền thông từ otraining...');
   try{
-    const res=await fetch(OTRAINING_FN_URL_,{
+    const res=await fetch(mediaOtrainingUrl_(),{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},
-      body:JSON.stringify({campaignId, type:'media'})
+      body:JSON.stringify({campaignId,programId,campaignType,type:'media'})
     });
     const out=await res.json();
     if(!res.ok||out.error){ throw new Error(out.error||('HTTP '+res.status)); }
     if(!stillCurrent())return;
+    if(out.campaignType!==campaignType||String(out.campaignId)!==campaignId||String(out.programId)!==(programId||'1'))throw Error('Dữ liệu trả về không khớp nguồn, chiến dịch hoặc chương trình đang chọn. Dữ liệu cũ được giữ nguyên.');
     const emps=Array.isArray(out.employees)?out.employees:[];
     if(!emps.length){ show('otraining trả 0 nhân sự. Kiểm tra lại ID chiến dịch.','var(--red)'); return; }
     // Với mỗi nhân sự: tìm program khớp tên chiến dịch (~90%), lấy approved; approved≥1 => hoàn thành.
@@ -6674,7 +6686,7 @@ async function updateMediaFromOtraining_(){
         // Lấy đúng program theo Program ID đã nhập
         progObj=(e.programs||[]).find(p=>String(p.programId||p.program_id||'')===String(programId)) || null;
         // (Edge chỉ trả name/approved/target; nếu không có program_id thì fallback theo thứ tự)
-        if(!progObj){ const idx=Number(programId)-1; if(idx>=0 && e.programs && e.programs[idx]) progObj=e.programs[idx]; }
+        if(!progObj&&campaignType==='noibo'&&(e.programs||[]).every(p=>p.programId==null&&p.program_id==null)){ const idx=Number(programId)-1; if(idx>=0 && e.programs && e.programs[idx]) progObj=e.programs[idx]; }
       } else {
         // Khớp theo tên ~90%
         const best=(e.programs||[]).map(p=>({p,sim:mediaNameSim_(p.name,camp.name)}))
@@ -6710,7 +6722,7 @@ async function updateMediaFromOtraining_(){
     await saveCampaignData_([['mediaResponses:'+(mediaScopeKey||camp.id),nextResponses]]);
     mediaResponses=nextResponses;invalidateMediaCampaignsDataCache_();
     await renderKpiCategory('truyenthong');
-    const srcTxt = programId ? ('Program ID '+programId) : ('khớp tên: "'+(matchedProgName||camp.name)+'"');
+    const srcTxt = (campaignType==='fm'?'FM':'Nội bộ')+' · '+(programId ? ('Program ID '+programId) : ('khớp tên: "'+(matchedProgName||camp.name)+'"'));
     show(`✅ Đã cập nhật: ${uniquePg} PG hoàn thành · ${totalApproved} bài hợp lệ (approved). Nguồn: ${srcTxt}.`,'var(--green-ok)');
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
@@ -7422,13 +7434,14 @@ function renderMediaImportBox(){
   const isDoitacTT = (mediaActiveSubtype==='doitac');
   box.innerHTML = `<div class="form-card" style="max-width:none;">
     ${showSys?`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+      ${!isDoitacTT?`<select id="otrMediaCampaignType" aria-label="Nguồn truyền thông" style="width:190px;${isAdmin()?'':'display:none;'}"><option value="noibo" ${((campaigns.find(c=>c.id===mediaScopeKey)||{}).mediaCampaignType||'noibo')==='noibo'?'selected':''}>Nguồn: Nội bộ (cũ)</option><option value="fm" ${(campaigns.find(c=>c.id===mediaScopeKey)||{}).mediaCampaignType==='fm'?'selected':''}>Nguồn: FM</option></select>`:''}
       <input type="number" id="otrMediaCampaignId" placeholder="ID chiến dịch (VD 21)" style="width:150px;${isAdmin()?'':'display:none;'}" value="${escapeHtml(String((campaigns.find(c=>c.id===mediaScopeKey)||{}).otrId||''))}">
       <input type="number" id="otrMediaProgramId" placeholder="Program ID (nếu có)" style="width:150px;${isAdmin()?'':'display:none;'}" value="${escapeHtml(String((campaigns.find(c=>c.id===mediaScopeKey)||{}).programId||''))}">
       ${isAdmin()?`<button class="secondary otr-save-btn" data-save="${isDoitacTT?'mediadoitac':'medianoibo'}" type="button" title="Lưu cố định ID cho tháng này">💾 Lưu</button>`:''}
       <button class="primary" id="otrMediaBtn" type="button">↻ Cập nhật Truyền thông từ hệ thống</button>
       <span class="save-msg" id="mediaImportMsg" style="display:none;"></span>
     </div>
-    <div class="section-desc" style="margin-bottom:8px;">Lấy trực tiếp từ otraining. <strong>Để trống Program ID</strong> → tự khớp theo tên chiến dịch (~90%). <strong>Nhập Program ID</strong> → lấy đúng chương trình đó. Chỉ tính bài <strong>approved ≥ 1</strong>.</div>
+    <div class="section-desc" style="margin-bottom:8px;">Lấy trực tiếp từ otraining. ${!isDoitacTT?'<strong>Nguồn FM</strong>: Diện mạo mới - Trải nghiệm mới → ID chiến dịch <strong>6</strong>, Program ID <strong>8</strong>. Chọn nguồn rồi bấm <strong>Lưu</strong>. ':''}<strong>Để trống Program ID (nguồn cũ)</strong> → tự khớp theo tên chiến dịch (~90%). <strong>Nhập Program ID</strong> → lấy đúng chương trình đó. Chỉ tính bài <strong>approved ≥ 1</strong>.</div>
     <details><summary style="cursor:pointer;font-size:var(--cap);color:var(--muted);">Nhập thủ công (file / Google Sheet) — chỉ dùng khi cần</summary>`:''}
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;${showSys?'margin-top:10px;':''}">
       <input type="file" id="mediaImportInput" accept=".xlsx,.xls" ${canEdit?'':'disabled'}>
@@ -11074,7 +11087,7 @@ const OTR_ID_FIELDS_={
  testonline:['otrCampaignId'], aicheck:['otrAiCampaignId'],
  wsnoibo:['otrWsCampaignId'],ftf:['otrFtfCampaignId'],
  wsdoitac:['otrWsDtCampaignId'],
- medianoibo:['otrMediaCampaignId','otrMediaProgramId'],
+ medianoibo:['otrMediaCampaignId','otrMediaProgramId','otrMediaCampaignType'],
  mediadoitac:['otrMediaCampaignId','otrMediaProgramId']
 };
 function otrCampaignForKind_(kind){
@@ -11102,7 +11115,7 @@ function initOtrSaveButtons_(){
    (OTR_ID_FIELDS_[kind]||[]).forEach((id,i)=>{
      const el=document.getElementById(id);if(!el)return;
      if(saved&&!editing){
-       el.value=String(i===0?camp.otrId:(camp.programId||''));
+       el.value=String(i===0?camp.otrId:i===1?(camp.programId||''):(camp.mediaCampaignType||'noibo'));
      }
      el.disabled=!canEdit||(saved&&!editing);
      el.readOnly=!canEdit||(saved&&!editing);
@@ -11147,16 +11160,21 @@ document.addEventListener('click',async e=>{
  const idVal=String(document.getElementById(fields[0])?.value||'').trim();
  const progVal=fields[1]?String(document.getElementById(fields[1])?.value||'').trim():'';
  if(!idVal){alert('Hãy nhập ID chiến dịch trước khi lưu.');return;}
+ const source=fields[2]?String(document.getElementById(fields[2])?.value||'noibo'):null;
+ if(source&&!['noibo','fm'].includes(source)){alert('Chọn nguồn truyền thông hợp lệ.');return;}
+ if(source==='fm'&&(!/^[1-9]\d*$/.test(idVal)||!/^[1-9]\d*$/.test(progVal))){alert('Nguồn FM cần ID chiến dịch và Program ID hợp lệ.');return;}
  btn.disabled=true;
- const oldId=camp.otrId,oldProgram=camp.programId;
+ const oldId=camp.otrId,oldProgram=camp.programId,oldSource=camp.mediaCampaignType;
  camp.otrId=idVal;
  if(fields[1])camp.programId=progVal;
+ if(source)camp.mediaCampaignType=source;
  try{
    const ok=await dbSet('campaigns',campaigns);
    if(!ok)throw Error('Supabase chưa xác nhận lưu thành công');
    otrEditing_.delete(key);
  }catch(err){
    camp.otrId=oldId;camp.programId=oldProgram;
+   if(fields[2]){if(oldSource===undefined)delete camp.mediaCampaignType;else camp.mediaCampaignType=oldSource;}
    alert('Không lưu được ID: '+(err?.message||err));
  }finally{initOtrSaveButtons_();}
 });

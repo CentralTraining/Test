@@ -1,0 +1,61 @@
+{
+  "backend": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "remote_writes": 0,
+    "exact_fm_6_8_url": true,
+    "legacy_noibo_1_default": true,
+    "invalid_sources_and_ids_rejected": true,
+    "safe_upstream_failures": true,
+    "field_allowlist_preserved": true,
+    "no_database_calls": true
+  },
+  "ui": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "remote_writes": 0,
+    "results": [
+      {
+        "width": 1440,
+        "passed": true,
+        "source_and_ids_saved_together": true,
+        "exact_program_only": true,
+        "failure_and_stale_response_preserve_data": true,
+        "trainer_region_preserved": true,
+        "layout": {
+          "name": "media-fm",
+          "width": 1440,
+          "documentWidth": 1425,
+          "overflow": []
+        }
+      },
+      {
+        "width": 390,
+        "passed": true,
+        "source_and_ids_saved_together": true,
+        "exact_program_only": true,
+        "failure_and_stale_response_preserve_data": true,
+        "trainer_region_preserved": true,
+        "layout": {
+          "name": "media-fm",
+          "width": 390,
+          "documentWidth": 390,
+          "overflow": []
+        }
+      }
+    ]
+  },
+  "live_api": {
+    "passed": true,
+    "live_status": 200,
+    "campaignType": "fm",
+    "campaignId": "6",
+    "programId": "8",
+    "program_name": "DIỆN MẠO MỚI - TRẢI NGHIỆM MỚI",
+    "employees": 472,
+    "unauthenticated_status": 401,
+    "read_only": true,
+    "database_writes": 0,
+    "production_function_unchanged": true
+  }
+}
