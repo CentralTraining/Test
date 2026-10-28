@@ -1,0 +1,29 @@
+{
+  "scope": "Test",
+  "date": "2026-10-28",
+  "filename": "Dashboard-Test-2026-10-28-Find-Master-Bat-Cap.html",
+  "bytes": 2548981,
+  "characters": 2483605,
+  "sha256": "10f2891f41fc811842364eb0aa7a2b2e3af2aa4b0953c92f844c9becc7e13dfa",
+  "git_blob_sha": "b401b285c9f7b46bbe42982c5ddd81779b238f73",
+  "base_test_commit": "626590bc4eceecab93ce60cd5a7a4b73ba95fa2b",
+  "new_function": "pgsm-pairs-test",
+  "new_table": "pgsm_pair_groups",
+  "secrets_changed": false,
+  "main_changed": false,
+  "individual_results_changed": false,
+  "changes": [
+    "Group registered PGs owned by one Trainer, 2 members or a single triple for an odd roster",
+    "Automatic member-based group name and channel union",
+    "Each milestone requires all members to pass its OTraining done flag",
+    "Trainer/region summaries count groups and expand via plus into group progress",
+    "Fresh account checks, private table and per-Trainer compare-and-swap writes"
+  ],
+  "function_version": 1,
+  "function_sha256": "620e427e358b311ea541e3972e1d1a8a30efdb2a9374668d64747c04b19c9b2a",
+  "source_zip": {
+    "filename": "Find-Master-Bat-Cap-Test-2026-10-28-Full-Source.zip",
+    "bytes": 19776,
+    "sha256": "49ffe44d18086a647b3d6b68021c60f6ea641744dc23f237ab781ad64fc0ea37"
+  }
+}
