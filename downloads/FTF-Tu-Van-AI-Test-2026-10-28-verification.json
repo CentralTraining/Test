@@ -1,0 +1,85 @@
+{
+  "backend": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "remote_writes": 0,
+    "simulation_map_only": true,
+    "passed_failed_not_started_unknown_distinct": true,
+    "shop_user_deduplication": true,
+    "cross_shop_attribution_preserved": true,
+    "region_filter": true,
+    "campaign_and_shop_validation": true,
+    "missing_map_and_transport_failures_explicit": true,
+    "no_private_credentials_in_dto": true,
+    "fresh_dashboard_session_required": true,
+    "forged_locked_changed_accounts_rejected": true,
+    "trainer_scope_filtered_by_admin_target": true,
+    "outside_shop_rejected": true,
+    "configured_campaign_and_month_required": true
+  },
+  "ui": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "remote_writes": 0,
+    "results": [
+      {
+        "width": 1440,
+        "passed": true,
+        "strict_ai_pass": true,
+        "shop_modal_matches_count": true,
+        "other_ftf_metrics_preserved": true,
+        "admin_channel_targets_preserved": true,
+        "failed_and_stale_updates_preserve_data": true,
+        "trainer_region_preserved": true,
+        "manual_file_rule_matches": true,
+        "layout": {
+          "name": "ftf-ai",
+          "width": 1440,
+          "documentWidth": 1425,
+          "overflow": []
+        }
+      },
+      {
+        "width": 390,
+        "passed": true,
+        "strict_ai_pass": true,
+        "shop_modal_matches_count": true,
+        "other_ftf_metrics_preserved": true,
+        "admin_channel_targets_preserved": true,
+        "failed_and_stale_updates_preserve_data": true,
+        "trainer_region_preserved": true,
+        "manual_file_rule_matches": true,
+        "layout": {
+          "name": "ftf-ai",
+          "width": 390,
+          "documentWidth": 390,
+          "overflow": []
+        }
+      }
+    ]
+  },
+  "live_auth": {
+    "passed": true,
+    "checks": [
+      {
+        "case": "no_gateway",
+        "status": 401,
+        "no_partner_data_returned": true
+      },
+      {
+        "case": "no_dashboard",
+        "status": 401,
+        "no_partner_data_returned": true
+      },
+      {
+        "case": "forged_dashboard",
+        "status": 401,
+        "no_partner_data_returned": true
+      }
+    ],
+    "authorized_pipeline_tested_with_synthetic_sessions": true,
+    "live_authorized_pipeline_not_claimed": true,
+    "database_writes": 0,
+    "upstream_schema_previously_verified": true
+  }
+}

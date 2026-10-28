@@ -6406,7 +6406,7 @@ function renderDoitacF2FChart(mode){
    Google Sheet thật của người dùng có thêm/bớt/đổi thứ tự cột so với file mẫu gốc (trước đây dùng
    row[14] để lấy Trạng Thái — nếu Sheet thật lỡ có thêm 1 cột ở đâu đó, mọi thứ phía sau bị lệch
    hoàn toàn mà không báo lỗi gì, khiến Shop status luôn đọc sai/rỗng → tiến độ hoàn thành không lên). */
-async function processFtfWorkbook_(wb){
+async function processFtfWorkbook_(wb,options={}){
   // QUAN TRỌNG: cột "Người Train" trong "Tong Hop F2F"/"Chi Tiet Check-in" KHÔNG PHẢI lúc nào cũng là
   // Trainer — có thể là Sale, PG, hoặc người khác tuỳ Shop. KHÔNG dùng cột này để xác định Trainer.
   // Thay vào đó: mỗi Shop được xác định thuộc Trainer/Khu vực nào theo đúng dữ liệu đã map sẵn ở mục
@@ -6418,6 +6418,7 @@ async function processFtfWorkbook_(wb){
   if(ftfCamp){
     targetRowsForMonth = (ftfTargetRows && ftfTargetRows.length) ? ftfTargetRows : ((await dbGet('ftfTargetRows:'+ftfCamp.id)) || []);
   }
+  if(options.isCurrent&&!options.isCurrent())return false;
   // Chuẩn hoá tên Shop để tra khi KHÔNG có Mã Shop (nhiều Shop trong thực tế chưa được gán mã) — bỏ
   // dấu, viết thường, gộp khoảng trắng, để "Shop A" và "shop  a" vẫn khớp nhau.
   const normShopName_ = s => normalizeVN(String(s||'')).toLowerCase().replace(/\s+/g,' ').trim();
@@ -6507,7 +6508,7 @@ async function processFtfWorkbook_(wb){
     const aiVal=String(V2(row,'Trạng thái tư vấn mẫu','Trang thai tu van mau')||'').trim();
     const surveyVal=String(V2(row,'Khảo sát','Khao sat')||'').trim();
     const testPass = testVal.toUpperCase()==='PASS';
-    const aiDone = !!aiVal && aiVal.toUpperCase()!=='CHƯA LÀM'.toUpperCase() && normTrName_(aiVal)!=='CHUA LAM';
+    const aiDone = ftfAiStatus_(aiVal)==='dat';
     const surveyDone = surveyVal.toUpperCase()==='DONE';
     s.testTotal++; if(testPass) s.testPass++;
     s.aiTotal++; if(aiDone) s.aiDone++;
@@ -6524,6 +6525,8 @@ async function processFtfWorkbook_(wb){
   });
 
   let shopArr = Object.values(shopMap);
+  if(!options.aiSnapshot)for(const shop of shopArr){shop.aiPeople=(shop.people||[]).map(p=>({id:p.code||'',name:p.name,status:ftfAiStatus_(p.ai),passed:ftfAiStatus_(p.ai)==='dat'}));shop.aiSource='file';shop.aiUpdatedAt=new Date().toISOString();}
+
   let matchedShop=0, unmatchedShop=0;
   const unmatchedCodes = new Set();
   // Map Khu vực -> Trainer (phương án dự phòng khi Target khớp Shop nhưng trainerId của Target rỗng).
@@ -6567,6 +6570,7 @@ async function processFtfWorkbook_(wb){
   } else {
     nextShops = shopArr;
   }
+  if(options.aiSnapshot)ftfAiApply_(shopArr,options.aiSnapshot,options.campaignId);
   const nextRecords=JSON.parse(JSON.stringify(records));
 
   visibleTrainers().forEach(t=>{
@@ -6584,6 +6588,7 @@ async function processFtfWorkbook_(wb){
     rec.ftfKhaoSatActual = shopsOfTrainer.reduce((sum,s)=>sum+s.surveyDone,0);
     rec.updatedAt = new Date().toISOString();
   });
+  if(options.isCurrent&&!options.isCurrent())return false;
   await saveCampaignData_([['ftfShopList:'+currentMonth,nextShops],['records:'+currentMonth,nextRecords]]);
   ftfShopList=nextShops;records=nextRecords;
   // QUAN TRỌNG: renderKpiCategory('doitac') dựng lại toàn bộ khung Đối tác — kể cả phần tử thông báo
@@ -7862,6 +7867,7 @@ async function openFtfShopDetail_(shop, metric){
   const camp=campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf');
   const campaignId=(camp&&camp.otrId)||'';
   const fail=(msg)=>{ ov.innerHTML=head(`<div class="empty" style="padding:20px 0;color:var(--red);">${escapeHtml(String(msg))}</div>`); bind(); };
+  if(metric==='ai'){await ftfAiDetail_(shop,String(campaignId),ov,head,bind,fail);return;}
   if(!shop.shopIdOtr || !campaignId){ fail('Thiếu shop_id hoặc ID chiến dịch — hãy "Cập nhật FTF từ hệ thống" lại.'); return; }
 
   // ===== THẺ BÀI TEST: dùng endpoint shop-test-scores (Pass/Fail/Chưa làm + Số lần + Điểm cao) =====
@@ -11484,7 +11490,7 @@ async function updateFtfFromOtraining_(){
   const stillCurrent=campaignUpdateContext_(_ftfCamp,'otrFtfCampaignId');
   show('⏳ Đang lấy FTF từ otraining (ID '+campaignId+')...');
   try{
-    const {data:arr, detail}=await fetchFtfRows_(campaignId, currentMonth);
+    const [{data:arr, detail},aiSnapshot]=await Promise.all([fetchFtfRows_(campaignId,currentMonth),fetchFtfAi_(campaignId)]);
     if(!stillCurrent())return;
     if(!arr.length){
       show('otraining trả 0 dòng tổng hợp (không ghi đè data cũ). Kiểm tra lại ID chiến dịch.','var(--red)');
@@ -11518,7 +11524,7 @@ async function updateFtfFromOtraining_(){
     // Lưu ID chiến dịch.
     const camp=campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf');
     await saveCampaignSourceIfMissing_(camp,campaignId);
-    await processFtfWorkbook_(wb);
+    await processFtfWorkbook_(wb,{aiSnapshot,campaignId,isCurrent:stillCurrent});
   }catch(err){
     show('Lỗi gọi otraining: '+(err&&err.message?err.message:err),'var(--red)');
   }
@@ -20642,6 +20648,69 @@ function channelAssign_(){
   schedule();
 })();
 
+</script><style id="ftf-ai-detail-style-20261028">#ftfShopDetailOverlay .ftf-ai-people-table{width:100%!important;min-width:0!important;table-layout:fixed}#ftfShopDetailOverlay .ftf-ai-people-table th,#ftfShopDetailOverlay .ftf-ai-people-table td{white-space:normal!important;overflow-wrap:anywhere;padding:8px 5px!important}#ftfShopDetailOverlay .table-scroll:has(>.ftf-ai-people-table):before{display:none!important}#ftfShopDetailOverlay .ftf-ai-people-table .pill{white-space:normal;max-width:100%;box-sizing:border-box}.mobile-layout #ftfShopDetailOverlay .ftf-ai-people-table{font-size:10px}</style>
+<script id="ftf-ai-status-20261028">
+function ftfAiStatus_(value){
+ const s=String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[Đđ]/g,'d').trim().toLowerCase().replace(/[\s-]+/g,'_');
+ return s==='dat'?'dat':s==='chua_dat'?'chua_dat':!s||s==='chua_lam'||s==='—'?'chua_lam':'unknown';
+}
+function ftfAiUrl_(){return SUPABASE_URL+'/functions/v1/'+(location.pathname.startsWith('/Test/')?'otraining-ftf-ai-test':'otraining-ftf-ai');}
+async function fetchFtfAi_(campaignId,shopId){
+ const owner=JSON.stringify([session?.userId,session?.role,session?.region]),month=currentMonth,tokenRequest=workshopNoiboToken_();
+ const authTitle=document.querySelector('#wsnbAuthOverlay h3');if(authTitle)authTitle.textContent='Xác thực dữ liệu FTF';
+ const token=await tokenRequest;
+ if(owner!==JSON.stringify([session?.userId,session?.role,session?.region])||month!==currentMonth)throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy cập nhật FTF lại.');
+ const res=await fetch(ftfAiUrl_(),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OTRAINING_ANON_KEY_},body:JSON.stringify({type:'ftfai',month,dashboardToken:token,campaignId:String(campaignId),...(shopId?{shopId:String(shopId)}:{})}),signal:AbortSignal.timeout(55000)});
+ let out;try{out=await res.json();}catch{throw Error('Chưa đọc được Tư vấn mẫu AI. Dữ liệu đã lưu được giữ nguyên.');}
+ if(res.status===401)sessionStorage.removeItem('workshop_private_session');
+ if(!res.ok||!out.ok)throw Error(out.error||'Chưa lấy được Tư vấn mẫu AI.');
+ if(out.campaignId!==String(campaignId)||out.source!=='simulationStatusMap'||!Array.isArray(out.shops)||!Number.isFinite(Date.parse(out.readAt)))throw Error('Nguồn Tư vấn mẫu AI chưa khớp chiến dịch. Dữ liệu đã lưu được giữ nguyên.');
+ for(const shop of out.shops){
+  if(!shop?.shopId||!Array.isArray(shop.people)||shop.people.some(p=>!p?.id||!['dat','chua_dat','chua_lam','unknown'].includes(p.status)))throw Error('Danh sách Tư vấn mẫu AI chưa hợp lệ.');
+  const ids=shop.people.map(p=>String(p.id));if(new Set(ids).size!==ids.length)throw Error('Danh sách Tư vấn mẫu AI còn trùng người trong shop.');
+ }
+ if(shopId&&(out.shops.length!==1||String(out.shops[0].shopId)!==String(shopId)))throw Error('Danh sách Tư vấn mẫu AI chưa đúng shop.');
+ return out;
+}
+function ftfAiApply_(shops,snapshot,campaignId){
+ if(!snapshot||snapshot.campaignId!==String(campaignId)||snapshot.source!=='simulationStatusMap'||!Array.isArray(snapshot.shops))throw Error('Thiếu nguồn Tư vấn mẫu AI hợp lệ.');
+ const byId=new Map(),byCode=new Map();
+ for(const row of snapshot.shops){
+  const sid=String(row.shopId);if(byId.has(sid))throw Error('Nguồn AI bị trùng shop.');byId.set(sid,row);
+  const code=String(row.shopCode||'').trim();if(code)byCode.set(code,byCode.has(code)?null:row);
+ }
+ for(const shop of shops){
+  const row=byId.get(String(shop.shopIdOtr||''))||(!shop.shopIdOtr?byCode.get(String(shop.shopCode||'').trim()):null);
+  if(!row)throw Error('Nguồn tổng hợp và Tư vấn AI chưa khớp đủ shop. Hãy cập nhật lại; dữ liệu cũ được giữ nguyên.');
+  shop.aiPeople=row.people.map(p=>({id:String(p.id),name:String(p.name||'').trim(),status:p.status,passed:p.status==='dat'}));
+  shop.aiTotal=shop.aiPeople.length;shop.aiDone=shop.aiPeople.filter(p=>p.status==='dat').length;
+  shop.aiFailed=shop.aiPeople.filter(p=>p.status==='chua_dat').length;
+  shop.aiNotStarted=shop.aiPeople.filter(p=>p.status==='chua_lam').length;
+  shop.aiSource='simulationStatusMap';shop.aiCampaignId=String(campaignId);shop.aiUpdatedAt=snapshot.readAt;
+ }
+}
+async function ftfAiDetail_(shop,campaignId,ov,head,bind,fail){
+ const owner=JSON.stringify([session?.userId,session?.role,session?.region]),month=currentMonth;
+ const current=()=>ov.isConnected&&currentMonth===month&&owner===JSON.stringify([session?.userId,session?.role,session?.region])&&String(campaigns.find(c=>c.month===currentMonth&&c.group==='doitac'&&campaignSubtype(c)==='ftf')?.otrId||'')===String(campaignId);
+ let people,readAt;
+ try{
+  if(Array.isArray(shop.aiPeople)&&(shop.aiSource==='file'||shop.aiCampaignId===String(campaignId))){people=shop.aiPeople;readAt=shop.aiUpdatedAt;}
+  else{
+   if(!shop.shopIdOtr||!campaignId)throw Error('Hãy Cập nhật FTF từ hệ thống để lấy trạng thái tư vấn mẫu theo đúng shop.');
+   const out=await fetchFtfAi_(campaignId,shop.shopIdOtr);if(!current())return;
+   people=out.shops[0].people;readAt=out.readAt;
+  }
+ }catch(error){if(current())fail(error.message||error);return;}
+ if(!current())return;
+ const counts={dat:0,chua_dat:0,chua_lam:0,unknown:0};for(const p of people)counts[p.status in counts?p.status:'unknown']++;
+ const label={dat:'Đạt',chua_dat:'Chưa đạt',chua_lam:'Chưa làm',unknown:'Chưa xác định'};
+ const rows=people.map((p,i)=>`<tr><td>${i+1}</td><td><strong>${escapeHtml(p.name||'Chưa có tên')}</strong></td><td style="text-align:center"><span class="pill ${p.status==='dat'?'pill-ok':'pill-warn'}" style="${p.status==='chua_lam'?'color:var(--muted);background:#EEF2F0;':''}">${label[p.status]||label.unknown}</span></td></tr>`).join('');
+ const summary=`<p class="section-desc">Chỉ trạng thái <strong>Đạt</strong> được tính hoàn thành. Chưa đạt là đã làm nhưng chưa đạt yêu cầu.</p><div style="display:flex;gap:14px;flex-wrap:wrap;margin:12px 0;font-weight:700"><span style="color:var(--green-ok)">Đạt: ${counts.dat}</span><span style="color:var(--orange,#b45309)">Chưa đạt: ${counts.chua_dat}</span><span style="color:var(--muted)">Chưa làm: ${counts.chua_lam}</span>${counts.unknown?'<span>Chưa xác định: '+counts.unknown+'</span>':''}</div>`;
+ ov.innerHTML=head(summary+`<div class="table-scroll"><table class="ftf-ai-people-table"><thead><tr><th style="width:8%">STT</th><th style="width:54%">Tên đối tác</th><th style="text-align:center;width:38%">Trạng thái tư vấn mẫu</th></tr></thead><tbody>${rows||'<tr><td colspan="3" class="empty">Shop chưa có người tham gia trong dữ liệu nguồn.</td></tr>'}</tbody></table></div><p class="section-desc">${readAt?'Dữ liệu lúc '+escapeHtml(new Date(readAt).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}))+'. ':''}Bấm Cập nhật FTF từ hệ thống để làm mới số liệu toàn bảng.</p>`,`${counts.dat}/${people.length} đạt`);
+ bind();
+}
+
 </script>
+
 </body>
 </html>

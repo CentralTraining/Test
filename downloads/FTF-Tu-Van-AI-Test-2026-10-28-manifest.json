@@ -1,0 +1,29 @@
+{
+  "scope": "Test",
+  "date": "2026-10-28",
+  "filename": "Dashboard-Test-2026-10-28-FTF-Tu-Van-AI.html",
+  "bytes": 2516941,
+  "characters": 2452205,
+  "sha256": "47ee0558be0260d961bcace01b45d0c4ee13ac6f94af9f1d14e311520830b06a",
+  "git_blob_sha": "55b2ea10f1a496381ec8ab06e8b28b60a116545d",
+  "base_test_commit": "492b7299b546847fdcf3180560c2d8578feddee4",
+  "new_function": "otraining-ftf-ai-test",
+  "production_function_changed": false,
+  "secrets_changed": false,
+  "database_changed_by_release": false,
+  "changes": [
+    "Use simulationStatusMap instead of fabricated not-started AI data",
+    "Only dat completes AI; chua_dat remains visible but incomplete",
+    "Join real attendees to shops and deduplicate within each shop",
+    "Keep existing FTF test/HR/survey data flow and Admin channel targets",
+    "Show per-shop AI statuses with saved source time and scope/stale guards"
+  ],
+  "backend_version": 4,
+  "backend_sha256": "8dbb28e2f46a30d45e42a042738a968a9a4386b58eaf92da5f81b673276415ef",
+  "backend_files": [
+    "index.ts",
+    "access.ts"
+  ],
+  "dashboard_session_required": true,
+  "trainer_read_scope": "Admin Target FTF shop IDs within assigned region"
+}
