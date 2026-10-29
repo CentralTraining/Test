@@ -14613,7 +14613,7 @@ function renderCampaignList(){
       <td>${monthLabel(c.month)}</td>
       <td><span class="group-badge group-${c.group}">${CAMPAIGN_GROUP_LABELS[c.group]||c.group}</span></td>
       <td>${campaignSubtypeLabel(c.group, campaignSubtype(c))}</td>
-      <td>${isAdmin()?`${c.group==='truyenthong'?`<button type="button" class="secondary media-a-campaign-btn" data-media-target-a="${escapeHtml(String(c.id))}">${c.mediaTargetPostsPerPg?'A = '+c.mediaTargetPostsPerPg+' bài/PG':'Số bài/PG (A)'}</button>`:''}<button class="secondary" data-edit-campaign="${c.id}" style="margin-right:6px;">Sửa</button><button class="secondary" data-dup-campaign="${c.id}" style="margin-right:6px;">Nhân bản</button><button class="danger" data-remove-campaign="${c.id}">Xóa</button>`:''}</td>
+      <td>${isAdmin()?`<button class="secondary" data-edit-campaign="${c.id}" style="margin-right:6px;">Sửa</button><button class="secondary" data-dup-campaign="${c.id}" style="margin-right:6px;">Nhân bản</button><button class="danger" data-remove-campaign="${c.id}">Xóa</button>`:''}</td>
     </tr>`).join('');
   body.querySelectorAll('[data-remove-campaign]').forEach(btn=>btn.addEventListener('click', async ()=>{
     campaigns = campaigns.filter(c=>c.id!==btn.getAttribute('data-remove-campaign'));
@@ -14623,7 +14623,6 @@ function renderCampaignList(){
   }));
   body.querySelectorAll('[data-edit-campaign]').forEach(btn=>btn.addEventListener('click', ()=>startEditCampaign(btn.getAttribute('data-edit-campaign'))));
   body.querySelectorAll('[data-dup-campaign]').forEach(btn=>btn.addEventListener('click', ()=>duplicateCampaign_(btn.getAttribute('data-dup-campaign'))));
-  body.querySelectorAll('[data-media-target-a]').forEach(btn=>btn.addEventListener('click', ()=>mediaTargetAModalOpen_(btn.dataset.mediaTargetA)));
 }
 /* Nhân bản 1 chiến dịch — tạo bản sao (tên có thể sửa lại sau), tùy chọn sao chép Target hiện tại
    của từng Trainer sang tháng mới để khỏi phải set lại Target từ đầu cho chiến dịch tương tự. */
@@ -15814,6 +15813,13 @@ async function renderTargetTable(){
     (isFrequencyNoiboCampaign_(camp) ? `<span style="display:inline-flex;align-items:center;gap:6px;margin-left:12px;padding:5px 9px;background:${locked?'var(--bg)':'#fff'};border:1px solid var(--line);border-radius:8px;opacity:${locked?'.55':'1'};"><strong>X lần/PG:</strong><input id="frequencyTargetXInput" type="number" min="1" step="1" value="${campaignFrequencyX_(camp)}" style="width:64px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-family:inherit;" ${(!isAdmin()||locked)?'disabled':''}><span style="font-size:8pt;color:var(--muted);">${sub==='tuvanai_checkshop'?'Tư vấn AI đạt khi Kết quả Luyện TV ≥ X lần · Target = số PG Đang làm':'Target = số PG Đang làm · X chỉ là ngưỡng đạt/PG'}</span></span>` : '') +
     (isPartnerTrainingTargetCampaign_(camp) ? `<span style="display:inline-flex;align-items:center;gap:6px;margin-left:12px;padding:5px 9px;background:${locked?'var(--bg)':'#fff'};border:1px solid var(--line);border-radius:8px;opacity:${locked?'.55':'1'};"><strong>Điểm TB khảo sát X:</strong><input id="partnerSurveyTargetXInput" type="number" min="0" max="10" step="0.1" value="${Number(camp.partnerSurveyTargetX??0)}" style="width:70px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-family:inherit;" ${(isAdmin()&&!locked)?'':'disabled'}><span style="font-size:8pt;color:var(--muted);">Áp dụng cho tất cả Khu vực</span></span>` : '');
 
+
+  if(camp.group==='truyenthong' && ['noibo','doitac'].includes(sub)){
+    const helper=document.createElement('div');helper.className='media-a-target-control';helper.dataset.mediaACampaign=String(camp.id);
+    helper.innerHTML=`<span><strong>Target theo PG đang làm</strong><small>A = số bài trên 1 PG · Target mỗi Trainer = A × số PG OPPO Đang làm do Trainer phụ trách.</small></span>${isAdmin()?`<button type="button" class="secondary" id="mediaTargetAOpenBtn" ${locked?'disabled':''}>Nhập A — Số bài/PG</button>`:''}${locked&&isAdmin()?'<small>Target đã chốt. Bấm “Sửa Target” để nhập A hoặc chỉnh tay.</small>':''}`;
+    ctx.appendChild(helper);helper.querySelector('#mediaTargetAOpenBtn')?.addEventListener('click',()=>mediaTargetAModalOpen_(String(camp.id)));
+  }
+
   const viewModeBox = document.getElementById('targetDoitacViewModeBox');
   const summaryBox = document.getElementById('targetDoitacSummaryBox');
   if(sub==='ftf'){
@@ -16001,7 +16007,14 @@ document.getElementById('saveTargetBtn').addEventListener('click', async ()=>{
   const camp = campaigns.find(c=>c.id===campId);
   if(!camp) return;
   if(camp.group==='truyenthong'){
-    await mediaTargetAManualSave_(camp);return;
+    // Chiến dịch Truyền thông: lưu Target RIÊNG theo đúng chiến dịch (mediaTargets:<campaignId>),
+    // để trang Tiến độ KPI ▸ Truyền thông đọc đúng theo từng chiến dịch nhỏ (VD: WAVE 1, WAVE 2...).
+    const campTargets = (await dbGet('mediaTargets:'+camp.id)) || {};
+    document.querySelectorAll('.target-input').forEach(inp=>{ campTargets[inp.dataset.trainer] = Number(inp.value)||0; });
+    await dbSet('mediaTargets:'+camp.id, campTargets);
+    invalidateMediaCampaignsDataCache_();
+    camp.mediaTargetsCache = campTargets;
+    if(mediaScopeKey===camp.id) mediaTargets = campTargets;
   } else if(campaignSubtype(camp)==='ftf'){
     // FTF (Đối tác): mỗi input có data-chan="KA"/"MWG" — lưu riêng từng kênh, đồng thời tự tính lại
     // Target tổng (KA+MWG) để các % hoàn thành/thẻ KPI ở nơi khác vẫn đọc đúng.
@@ -21048,6 +21061,7 @@ async function exportFtfShopExcel_(){
 }
 
 </script><style id="media-target-a-style-20261029">.media-a-overlay{position:fixed;inset:0;z-index:100000;background:rgba(20,44,36,.42);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}.media-a-dialog{width:800px;max-width:100%;max-height:90dvh;display:flex;flex-direction:column;background:var(--card,#fff);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 70px #173e3533;overflow:hidden}.media-a-dialog header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:20px 24px;background:var(--green-pale);border-bottom:1px solid var(--line)}.media-a-dialog h3{margin:0 0 6px;color:var(--green-dark);font-size:18px}.media-a-dialog header p{font-size:12px;margin:0;color:var(--muted);overflow-wrap:anywhere}.media-a-body{padding:18px 24px;overflow:auto;min-height:0}.media-a-input-row{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:12px;align-items:stretch;margin:14px 0}.media-a-input-row label{display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:700}.media-a-input-row input{box-sizing:border-box;width:100%;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font:inherit;background:#fff}.media-a-total{background:var(--green-pale);border-radius:10px;padding:12px;display:flex;flex-direction:column;justify-content:center;gap:7px}.media-a-total small{font-size:11px;color:var(--muted)}.media-a-total b{font-size:23px;color:var(--green-dark)}.media-a-error{font-size:12px;color:var(--orange,#a65a14);line-height:1.6;overflow-wrap:anywhere}.media-a-error:empty{display:none}.media-a-table{overflow:auto;max-height:340px}.media-a-table table{width:100%;border-collapse:collapse;font-size:12px;min-width:440px}.media-a-table th{position:sticky;top:0;background:var(--green-pale);z-index:1}.media-a-table th,.media-a-table td{padding:10px 12px}.media-a-table td:last-child{white-space:nowrap;color:var(--green-dark)}.media-a-dialog footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:16px 24px;border-top:1px solid var(--line)}.media-a-dialog footer span{font-size:11px;line-height:1.6;color:var(--muted);flex:1 1 260px}.media-a-dialog [hidden]{display:none!important}.media-a-campaign-btn{margin:0 6px 6px 0;white-space:nowrap}@media(max-width:600px){.media-a-overlay{padding:10px}.media-a-dialog{border-radius:14px;max-height:94dvh}.media-a-dialog header,.media-a-body,.media-a-dialog footer{padding:14px}.media-a-input-row{grid-template-columns:1fr 1fr}.media-a-input-row label{grid-column:1/-1}.media-a-dialog footer span{flex-basis:100%}.media-a-dialog footer button{font-size:11px}.media-a-dialog h3{font-size:16px}.media-a-table{max-height:300px}}
+.media-a-target-control{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--green-pale)}.media-a-target-control>span{display:flex;flex-direction:column;gap:4px;flex:1 1 320px}.media-a-target-control small{font-size:11px;line-height:1.6;color:var(--muted)}.media-a-target-control button{white-space:nowrap}@media(max-width:600px){.media-a-target-control{padding:10px}.media-a-target-control>span{flex-basis:100%}.media-a-target-control button{font-size:11px}}
 </style><script id="media-target-a-model-20261029">
 const MediaTargetAModel=(()=>{
  const code=v=>String(v??'').trim().replace(/\.0+$/,'').toUpperCase().replace(/^0+(?=\d+$)/,'');
@@ -21108,7 +21122,7 @@ async function mediaTargetAModalOpen_(id){
  ov.innerHTML='<section class="media-a-dialog"><header><div><h3>Target truyền thông theo PG</h3><p id="mediaATitle">Đang tải chiến dịch…</p></div><button type="button" class="secondary" data-media-a-close aria-label="Đóng">✕</button></header><div class="media-a-body"><p class="section-desc">Target mỗi Trainer = <strong>A × số PG OPPO đang làm</strong> trong Nhân sự của đúng tháng. Mỗi PG chỉ tính một lần theo Code.</p><div class="media-a-input-row"><label for="mediaAInput">Số bài trên 1 PG (A)<input id="mediaAInput" type="number" min="1" step="1" inputmode="numeric" placeholder="Ví dụ: 2" disabled></label><div class="media-a-total"><small>PG đang làm được gán Trainer</small><b id="mediaAActive">—</b></div><div class="media-a-total"><small>Tổng Target (bài)</small><b id="mediaATotal">—</b></div></div><p id="mediaANote" class="section-desc"></p><p id="mediaAError" class="media-a-error" role="alert"></p><div id="mediaAPreview" class="media-a-table" role="status">Đang lấy danh sách PG và Trainer…</div></div><footer><span>Target chốt theo nhân sự tại thời điểm lưu. Khi nhân sự thay đổi, mở nút này để tính lại.</span><button type="button" class="secondary" id="mediaAReload">Tải lại dữ liệu</button><button type="button" class="secondary" id="mediaAEdit" hidden>Sửa Target</button><button type="button" class="primary" id="mediaASave" disabled>Lưu Target</button></footer></section>';
  document.body.appendChild(ov);let source=null,busy=false,editable=false,result=null;
  const input=ov.querySelector('#mediaAInput'),save=ov.querySelector('#mediaASave'),edit=ov.querySelector('#mediaAEdit'),error=ov.querySelector('#mediaAError');
- const current=()=>ov.isConnected&&isAdmin()&&owner===mediaTargetAOwner_()&&viewMonth===currentMonth;
+ const current=()=>ov.isConnected&&isAdmin()&&owner===mediaTargetAOwner_()&&viewMonth===currentMonth&&String(document.getElementById('targetCampaignSelect')?.value||'')===String(id);
  const close=()=>{if(!busy)ov.remove();};ov.querySelector('[data-media-a-close]').onclick=close;ov.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
  function draw(){
   result=null;error.textContent='';const locked=!source||source.locked||!!source.camp.targetLocked&&!editable;
@@ -21131,27 +21145,14 @@ async function mediaTargetAModalOpen_(id){
    const fresh=await mediaTargetARead_(id);if(!current())return ov.remove();
    if(fresh.signature!==source.signature){source=fresh;throw Error('Nhân sự, phân công hoặc Target vừa thay đổi. Đã tải dữ liệu mới; hãy kiểm tra lại trước khi bấm Lưu Target.');}
    if(fresh.locked)throw Error('Tháng đã khóa. Chưa lưu Target.');
-   const calculated=MediaTargetAModel.calculate(fresh.roster,fresh.trainers,a),nextCamp={...fresh.camp,mediaTargetPostsPerPg:calculated.a,mediaTargetPgCounts:calculated.counts,mediaTargetCalculatedAt:new Date().toISOString(),targetLocked:true};
+   const calculated=MediaTargetAModel.calculate(fresh.roster,fresh.trainers,a),nextCamp={...fresh.camp,mediaTargetPostsPerPg:calculated.a,mediaTargetPgCounts:calculated.counts,mediaTargetCalculatedAt:new Date().toISOString(),targetLocked:true};delete nextCamp.mediaTargetsCache;
    const nextTargets={...fresh.targets,...calculated.targets};if(!current())return ov.remove();
    await saveCampaignData_([['campaigns',fresh.list.map(c=>String(c.id)===String(id)?nextCamp:c)],['mediaTargets:'+id,nextTargets]]);
-   if(!current())return ov.remove();mediaTargetAApplied_(fresh,nextCamp,nextTargets);ov.remove();renderCampaignList();const msg=document.getElementById('campaignSaveMsg');if(msg){msg.style.display='block';msg.style.color='var(--green-ok)';msg.textContent='Đã lưu A = '+calculated.a+' bài/PG · '+calculated.active+' PG đang làm · Tổng Target '+calculated.total+' bài cho chiến dịch “'+nextCamp.name+'”.';}
+   if(!current())return ov.remove();mediaTargetAApplied_(fresh,nextCamp,nextTargets);ov.remove();await renderTargetTable();const msg=document.getElementById('targetSaveMsg');if(msg){msg.style.display='block';msg.style.color='var(--green-ok)';msg.textContent='Đã lưu A = '+calculated.a+' bài/PG · '+calculated.active+' PG đang làm · Tổng Target '+calculated.total+' bài cho chiến dịch “'+nextCamp.name+'”.';}
   }catch(e){if(current()){busy=false;draw();error.textContent=e.message;}}
   finally{busy=false;}
  };
  await load();
-}
-async function mediaTargetAManualSave_(camp){
- const msg=document.getElementById('targetSaveMsg'),owner=mediaTargetAOwner_(),month=currentMonth;
- try{
-  if(!isAdmin())return;const fresh=await mediaTargetARead_(camp.id);
-  if(owner!==mediaTargetAOwner_()||month!==currentMonth||document.getElementById('targetCampaignSelect')?.value!==camp.id)return;
-  if(fresh.locked||fresh.camp.targetLocked)throw Error('Target hoặc tháng đã khóa. Hãy tải lại trước khi chỉnh sửa.');
-  const targets={...fresh.targets};for(const inp of document.querySelectorAll('.target-input')){if(!/^\d+$/.test(inp.value)||!Number.isSafeInteger(Number(inp.value)))throw Error('Target phải là số nguyên không âm.');targets[inp.dataset.trainer]=Number(inp.value);}
-  const nextCamp={...fresh.camp,targetLocked:true};delete nextCamp.mediaTargetPostsPerPg;delete nextCamp.mediaTargetPgCounts;delete nextCamp.mediaTargetCalculatedAt;
-  await saveCampaignData_([['campaigns',fresh.list.map(c=>c.id===camp.id?nextCamp:c)],['mediaTargets:'+camp.id,targets]]);
-  if(owner!==mediaTargetAOwner_()||month!==currentMonth)return;mediaTargetAApplied_(fresh,nextCamp,targets);await renderTargetTable();renderKpiAll();
-  if(msg){msg.style.display='block';msg.style.color='var(--green-ok)';msg.textContent='Đã lưu Target nhập tay cho chiến dịch này.';}
- }catch(e){if(msg){msg.style.display='block';msg.style.color='var(--red)';msg.textContent=e.message;}}
 }
 
 </script>

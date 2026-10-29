@@ -2,11 +2,14 @@
   "scope": "Test",
   "date": "2026-10-29",
   "filename": "Dashboard-Test-2026-10-29-Target-Truyen-Thong-A-PG.html",
-  "bytes": 2587859,
-  "characters": 2521118,
-  "sha256": "9e2c67228e5b78fa8409f1abcf36ffcac7f02a61a0301b6b23612b0e0d1f4d4e",
-  "git_blob_sha": "e0f072cebeb7be04c08e7677d207c8e7e59eaa65",
-  "base_commit": "920f4d791899cef05d5ffaa59d9cfb52eb8566aa",
+  "bytes": 2588108,
+  "characters": 2521321,
+  "sha256": "6e05e58cb432d6b69942e7bd338b767622aa889de03cbc86bf40d9b61f6e7462",
+  "git_blob_sha": "837abf7655b02d32b276bcd9764b098ccc3aa35b",
+  "base_commit": "6c1daf6519a1cdefb722763666db361647c6fcde",
+  "location": "Cài đặt > Target",
+  "wrong_campaign_list_change_removed": true,
+  "manual_target_handler_unchanged": true,
   "main_changed": false,
   "backend_changed": false,
   "schema_changed": false,
@@ -14,11 +17,11 @@
   "real_data_changed": false,
   "source_zip": {
     "filename": "Target-Truyen-Thong-A-PG-Test-2026-10-29-Full-Source.zip",
-    "bytes": 9004,
-    "sha256": "a3413c33ef1c80dca40d384d5fd593c21f76239874fa1ba53c7f5259e5cf00e2"
+    "bytes": 10446,
+    "sha256": "577edb1d40e3d802e7f8edc18c044685fda8339b181fbd3bade8e09a8b239a86"
   },
   "artifacts": {
-    "README.md": "bd1e12cde88fdf203947eac3daee8fa8d7073b5286268334e45eb8e1abc98e1f",
-    "verification.json": "16cfeb522251a4aac9b6d24bbd00ed93d03198398f6799ffcd0066f8d9e14f63"
+    "README.md": "595acb390fecaa4d1ba863dd62f441821ad81126c54f8001573d5c71c922a4e1",
+    "verification.json": "cee380fa1c0b5567770008adce5f33a43abb56094c71ab6a502b7ec17a09b142"
   }
 }
