@@ -1,0 +1,84 @@
+{
+  "scope": "Test",
+  "date": "2026-10-29",
+  "passed": true,
+  "model": {
+    "passed": true,
+    "unique_pg_identity": true,
+    "inactive_and_other_brands_excluded": true,
+    "unassigned_reported": true,
+    "zero_pg_target": true,
+    "invalid_a_rejected": true,
+    "conflicting_duplicates_rejected": true,
+    "safe_integer_guard": true
+  },
+  "browser": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "real_data_writes": 0,
+    "results": [
+      {
+        "width": 1440,
+        "passed": true,
+        "subtypes_separate": true,
+        "unique_active_oppo_only": true,
+        "month_specific_roster": true,
+        "atomic_snapshot": true,
+        "errors_and_roster_changes_preserve_data": true,
+        "admin_only": true,
+        "manual_targets_preserved": true,
+        "layout": {
+          "name": "media-a",
+          "width": 1440,
+          "documentWidth": 1425,
+          "overflow": []
+        }
+      },
+      {
+        "width": 390,
+        "passed": true,
+        "subtypes_separate": true,
+        "unique_active_oppo_only": true,
+        "month_specific_roster": true,
+        "atomic_snapshot": true,
+        "errors_and_roster_changes_preserve_data": true,
+        "admin_only": true,
+        "manual_targets_preserved": true,
+        "layout": {
+          "name": "media-a",
+          "width": 390,
+          "documentWidth": 390,
+          "overflow": []
+        }
+      },
+      {
+        "width": 320,
+        "passed": true,
+        "subtypes_separate": true,
+        "unique_active_oppo_only": true,
+        "month_specific_roster": true,
+        "atomic_snapshot": true,
+        "errors_and_roster_changes_preserve_data": true,
+        "admin_only": true,
+        "manual_targets_preserved": true,
+        "layout": {
+          "name": "media-a",
+          "width": 320,
+          "documentWidth": 320,
+          "overflow": []
+        }
+      }
+    ]
+  },
+  "stale_context": {
+    "passed": true,
+    "synthetic_data_only": true,
+    "real_data_writes": 0,
+    "month_change_during_save_prevents_write": true,
+    "owner_change_during_save_prevents_write": true
+  },
+  "backend_changed": false,
+  "schema_changed": false,
+  "secrets_changed": false,
+  "real_data_changed": false
+}

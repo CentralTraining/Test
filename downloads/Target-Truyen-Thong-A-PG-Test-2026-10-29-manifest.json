@@ -1,0 +1,24 @@
+{
+  "scope": "Test",
+  "date": "2026-10-29",
+  "filename": "Dashboard-Test-2026-10-29-Target-Truyen-Thong-A-PG.html",
+  "bytes": 2587859,
+  "characters": 2521118,
+  "sha256": "9e2c67228e5b78fa8409f1abcf36ffcac7f02a61a0301b6b23612b0e0d1f4d4e",
+  "git_blob_sha": "e0f072cebeb7be04c08e7677d207c8e7e59eaa65",
+  "base_commit": "920f4d791899cef05d5ffaa59d9cfb52eb8566aa",
+  "main_changed": false,
+  "backend_changed": false,
+  "schema_changed": false,
+  "secrets_changed": false,
+  "real_data_changed": false,
+  "source_zip": {
+    "filename": "Target-Truyen-Thong-A-PG-Test-2026-10-29-Full-Source.zip",
+    "bytes": 9004,
+    "sha256": "a3413c33ef1c80dca40d384d5fd593c21f76239874fa1ba53c7f5259e5cf00e2"
+  },
+  "artifacts": {
+    "README.md": "bd1e12cde88fdf203947eac3daee8fa8d7073b5286268334e45eb8e1abc98e1f",
+    "verification.json": "16cfeb522251a4aac9b6d24bbd00ed93d03198398f6799ffcd0066f8d9e14f63"
+  }
+}
