@@ -19494,10 +19494,17 @@ async function pgsmProgressChanges_(camp){
  if(!keys.every(key=>Object.prototype.hasOwnProperty.call(bundle||{},key)))throw Error('request_history_unavailable');
  return keys.flatMap(key=>Array.isArray(bundle[key])?bundle[key]:[]).filter(r=>r&&pgsmCanSeeRegion_(r.pg?.region||r.requester?.region||''));
 }
+// Display-only HR flag: never writes or synthesizes a Trainer removal request.
+function pgsmHrInactiveStatus_(row){
+ const current=findPgByCode_(pgs,row.code),status=String(current?.status??'').trim();
+ return status&&pgsmNorm_(status)!=='danglam'?status:'';
+}
+function pgsmProgressIsRemoved_(row){return row._pgsmChange?.action==='remove'||!!row._pgsmHrInactiveStatus;}
+function pgsmProgressRowClass_(row){return pgsmProgressIsRemoved_(row)?'pgsm-change-remove':row._pgsmChange?'pgsm-change-'+row._pgsmChange.action:'';}
 function pgsmProgressRows_(d,requests){
  const key=r=>pgsmCode_(r)+'|'+pgsmNorm_(r.region);
  const rows=new Map();
- const record=(r,inTarget,change=null)=>({...r,code:pgsmCode_(r),channel:pgsmRecordChannel_(r),_pgsmInTarget:inTarget,_pgsmChange:change});
+ const record=(r,inTarget,change=null)=>({...r,code:pgsmCode_(r),channel:pgsmRecordChannel_(r),_pgsmInTarget:inTarget,_pgsmChange:change,_pgsmHrInactiveStatus:pgsmHrInactiveStatus_(r)});
  (d.registered||[]).filter(r=>pgsmCanSeeRegion_(r.region)).forEach(r=>rows.set(key(r),record(r,true)));
  const approved=new Set(d.approvedRequestIds||[]),removed=new Set((d.manualRemove||[]).map(code=>pgsmCode_({code})));
  const history=(requests||[]).filter(r=>{
@@ -19527,7 +19534,8 @@ function pgsmProgressRows_(d,requests){
 }
 function pgsmChangeLabel_(row){
  const change=row._pgsmChange;
- return change?(change.action==='remove'?'Loại':'Thêm')+(change.pending?' · Chờ duyệt':''):'Trong danh sách';
+ const label=change?(change.action==='remove'?'Loại':'Thêm')+(change.pending?' · Chờ duyệt':''):(row._pgsmHrInactiveStatus?'':'Trong danh sách');
+ return [label,row._pgsmHrInactiveStatus?'HR: '+row._pgsmHrInactiveStatus:''].filter(Boolean).join(' · ');
 }
 let pgsmExcelJsPromise_;
 function pgsmLoadExcelJs_(){
@@ -19552,8 +19560,8 @@ async function pgsmWriteProgressExcel_(records,sourceRows,filename){
  records.forEach((data,index)=>{
    const row=sheet.addRow(data),change=sourceRows[index]._pgsmChange;
    row.alignment={vertical:'middle',wrapText:true};
-   if(change){
-     const color=change.action==='remove'?{fill:'FFFFEBEE',font:'FFB91C1C'}:{fill:'FFE8F5E9',font:'FF166534'};
+   if(change||sourceRows[index]._pgsmHrInactiveStatus){
+     const color=pgsmProgressIsRemoved_(sourceRows[index])?{fill:'FFFFEBEE',font:'FFB91C1C'}:{fill:'FFE8F5E9',font:'FF166534'};
      row.eachCell({includeEmpty:true},cell=>{cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:color.fill}};});
      ['Mã PGs','Họ tên','Trạng thái'].forEach(key=>{row.getCell(key).font={bold:true,color:{argb:color.font}};});
      row.height=60;
@@ -19615,12 +19623,12 @@ async function pgsmDrawProgress_(camp){
   <label>Khu vực<select id="pgsmProgressRegion"><option value="">Tất cả khu vực</option>${regions.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}</select></label>
   <label>Trainer<select id="pgsmProgressTrainer"><option value="">Tất cả Trainer</option>${trainerIds.map(id=>`<option value="${escapeHtml(id)}">${escapeHtml(trainerOf(id)?.name||rows.find(r=>String(r.trainerId)===id)?.trainerName||id)}</option>`).join('')}</select></label>
   <label>Kênh<select id="pgsmProgressChannel"><option value="">Tất cả kênh</option></select></label>
-  <label>Trạng thái<select id="pgsmProgressStatus"><option value="">Tất cả trạng thái</option><option value="current">Trong danh sách</option><option value="add">Thêm</option><option value="remove">Loại</option><option value="pending">Chờ duyệt</option></select></label>
+  <label>Trạng thái<select id="pgsmProgressStatus"><option value="">Tất cả trạng thái</option><option value="current">Trong danh sách</option><option value="add">Thêm</option><option value="remove">Loại / HR khác Đang làm</option><option value="hr">HR khác Đang làm</option><option value="pending">Chờ duyệt</option></select></label>
   <label>Tên / Code PGs<input id="pgsmProgressPgSearch" placeholder="Tìm mã hoặc tên PGs"></label>
   <label>Tên shop<input id="pgsmProgressShop" placeholder="Tìm shop"></label>
   <button type="button" class="secondary" id="pgsmExportProgress" title="Xuất Excel tiến độ PGs theo bộ lọc">⬇ Xuất Excel</button>
  </div>
- <p class="section-desc">Thêm: màu xanh · Loại: màu đỏ, kèm lý do Trainer. Yêu cầu chờ duyệt được ghi rõ; tổng tiến độ chỉ tính danh sách chính thức.</p>
+ <p class="section-desc">Thêm: màu xanh · Loại hoặc HR khác Đang làm: màu đỏ. Dòng HR ghi rõ trạng thái theo DATA nhân sự của tháng đang xem; yêu cầu của Trainer vẫn có lý do và trạng thái duyệt riêng. Dấu đỏ HR là cảnh báo; tổng tiến độ căn cứ danh sách Master đã chốt.</p>
  <div class="table-scroll" id="pgsmProgressTableWrap"><table id="pgsmProgressTable" aria-label="Danh sách PGs Master và tiến độ từng mốc"><colgroup>${[3,5,isTrainer()?10:11,6,isTrainer()?9:10,6,isTrainer()?8:9,4,isTrainer()?9:10,...PGSM_STAGES_.map(()=>isTrainer()?5.6:6),6,...(isTrainer()?[6]:[])].map(width=>`<col style="width:${width}%">`).join('')}</colgroup><thead><tr><th scope="col">STT</th><th scope="col">Mã PGs</th><th scope="col">Họ tên</th><th scope="col" class="pgsm-col-seniority">Thâm niên<span class="pgsm-stage-target">(tháng)</span></th><th scope="col">Shop</th><th scope="col">Khu vực</th><th scope="col">Trainer</th><th scope="col">Kênh</th><th scope="col">Trạng thái</th>${PGSM_STAGES_.map(m=>`<th scope="col" class="pgsm-col-step" title="${escapeHtml(m.label)}">${escapeHtml(m.id.toUpperCase())}<span class="pgsm-stage-name">${escapeHtml(m.label.replace(/^M\d\s*·\s*/,''))}</span><small class="pgsm-stage-target">Target: ${Number(d.thresholds[m.id]||0)}</small></th>`).join('')}<th scope="col">Kết quả</th>${isTrainer()?'<th scope="col">Thao tác</th>':''}</tr></thead><tbody id="pgsmProgressRows"></tbody></table></div>
  <div id="pgsmProgressPagination"></div>
  </div><div id="pgsmTrainerChanges"></div></div>`;
@@ -19672,7 +19680,7 @@ async function pgsmDrawProgress_(camp){
  const filtered=()=>rows.filter(r=>(!regionSel.value||pgsmNorm_(regionOf(r))===pgsmNorm_(regionSel.value))
    &&(!trainerSel.value||String(r.trainerId)===trainerSel.value)
    &&(!channelSel.value||pgsmNorm_(r.channel)===pgsmNorm_(channelSel.value))
-   &&(!statusSel.value||(statusSel.value==='pending'?!!r._pgsmChange?.pending:statusSel.value==='current'?!r._pgsmChange:r._pgsmChange?.action===statusSel.value))
+   &&(!statusSel.value||(statusSel.value==='pending'?!!r._pgsmChange?.pending:statusSel.value==='hr'?!!r._pgsmHrInactiveStatus:statusSel.value==='remove'?pgsmProgressIsRemoved_(r):statusSel.value==='current'?!r._pgsmChange&&!r._pgsmHrInactiveStatus:r._pgsmChange?.action===statusSel.value))
    &&(!pgInput.value||pgsmNorm_(r.name).includes(pgsmNorm_(pgInput.value))||pgsmNorm_(r.code).includes(pgsmNorm_(pgInput.value)))
    &&(!shopInput.value||pgsmNorm_(r.shop).includes(pgsmNorm_(shopInput.value))||pgsmNorm_(r.shopId).includes(pgsmNorm_(shopInput.value))));
  function draw(){
@@ -19680,7 +19688,7 @@ async function pgsmDrawProgress_(camp){
    const start=(page-1)*pageSize;
    $('pgsmProgressRows').innerHTML=subset.slice(start,start+pageSize).map((r,i)=>{
      const n=achieved(r);
-     return `<tr class="${r._pgsmChange?'pgsm-change-'+r._pgsmChange.action:''}"><td class="pgsm-col-number" data-label="STT">${start+i+1}</td><td class="pgsm-col-code" data-label="Mã PGs">${escapeHtml(r.code)}</td><td class="pgsm-person-name pgsm-col-person" data-label="Họ tên">${escapeHtml(r.name)}</td><td class="pgsm-col-seniority" data-label="Thâm niên (tháng)">${escapeHtml(pgsmSeniorityText_(r))}</td><td class="pgsm-col-shop" data-label="Shop"><span class="pgsm-shop-name" title="${escapeHtml(r.shop)}">${escapeHtml(r.shop)}</span></td><td class="pgsm-col-region" data-label="Khu vực">${escapeHtml(r.region)}</td><td class="pgsm-col-trainer" data-label="Trainer">${escapeHtml(r.trainerName)}</td><td class="pgsm-col-channel" data-label="Kênh">${escapeHtml(r.channel||'—')}</td><td class="pgsm-col-change" data-label="Trạng thái"><span class="pgsm-change-label">${escapeHtml(pgsmChangeLabel_(r))}</span>${r._pgsmChange?`<span class="pgsm-change-reason">Lý do: ${escapeHtml(r._pgsmChange.reason)}</span>`:''}</td>${PGSM_STAGES_.map(m=>{
+     return `<tr class="${pgsmProgressRowClass_(r)}"><td class="pgsm-col-number" data-label="STT">${start+i+1}</td><td class="pgsm-col-code" data-label="Mã PGs">${escapeHtml(r.code)}</td><td class="pgsm-person-name pgsm-col-person" data-label="Họ tên">${escapeHtml(r.name)}</td><td class="pgsm-col-seniority" data-label="Thâm niên (tháng)">${escapeHtml(pgsmSeniorityText_(r))}</td><td class="pgsm-col-shop" data-label="Shop"><span class="pgsm-shop-name" title="${escapeHtml(r.shop)}">${escapeHtml(r.shop)}</span></td><td class="pgsm-col-region" data-label="Khu vực">${escapeHtml(r.region)}</td><td class="pgsm-col-trainer" data-label="Trainer">${escapeHtml(r.trainerName)}</td><td class="pgsm-col-channel" data-label="Kênh">${escapeHtml(r.channel||'—')}</td><td class="pgsm-col-change" data-label="Trạng thái"><span class="pgsm-change-label">${escapeHtml(pgsmChangeLabel_(r))}</span>${r._pgsmChange?`<span class="pgsm-change-reason">Lý do: ${escapeHtml(r._pgsmChange.reason)}</span>`:''}</td>${PGSM_STAGES_.map(m=>{
        const st=stageStatus(r,m);
        if(!st.fromSystem){
          return `<td class="pgsm-score-cell" data-label="${escapeHtml(m.label)}"><span class="pgsm-fm-status pgsm-fm-unknown">Chưa có dữ liệu</span></td>`;
@@ -21207,6 +21215,6 @@ async function exportMediaReportExcel_(){
  finally{mediaReportExportBusy_=false;const b=document.getElementById('mediaReportExportBtn');if(b){b.disabled=!isAdmin()&&!isTrainer();b.textContent='⇩ Xuất Excel truyền thông (2 sheet)';}if(same()&&!current())mediaReportExportMessage_('Bộ lọc hoặc danh sách PG vừa thay đổi. Hãy bấm xuất lại theo bảng hiện tại.',true);}
 }
 
-</script><style id="fm-seniority-20261101">#pgsmProgressTable .pgsm-col-seniority{text-align:center;font-variant-numeric:tabular-nums;}#pgsmProgressTable th.pgsm-col-seniority{overflow-wrap:normal;}</style>
+</script><style id="fm-seniority-20261101">#pgsmProgressTable .pgsm-col-seniority{text-align:center;font-variant-numeric:tabular-nums;}#pgsmProgressTable th.pgsm-col-seniority{overflow-wrap:normal;}</style><style id="fm-hr-status-20261101">.mobile-layout #pgsmProgressTable tr.pgsm-change-remove>td.mobile-pg-name-cell{color:#b91c1c!important;}</style>
 </body>
 </html>

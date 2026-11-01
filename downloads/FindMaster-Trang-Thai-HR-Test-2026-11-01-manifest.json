@@ -1,0 +1,19 @@
+{
+  "scope": "Test",
+  "date": "2026-11-01",
+  "filename": "Dashboard-Test-2026-11-01-FindMaster-Trang-Thai-HR.html",
+  "base_commit": "d6ee84aa6e274ff223ec9637deb3c40b8d1dd54e",
+  "bytes": 2598812,
+  "characters": 2531628,
+  "sha256": "2c64cd2fcdbc9eb716f66d901454c39defc0286cbd3b21c29d4116263cb3924f",
+  "git_blob_sha": "fcdb9f1e0f30c91097fc89ee40dc973b7b099998",
+  "backend_changed": false,
+  "business_data_changed": false,
+  "master_target_changed": false,
+  "approval_changed": false,
+  "main_changed": false,
+  "artifacts": {
+    "README.md": "345a757956ac3fdc2ab398c526b04fd13efba2549c60d255b8ffd4502cb95983",
+    "verification.json": "87f0fa7fd4de084deb76c652324dfd3548cfc5accf2cf01da63ca7c06f1dd39e"
+  }
+}

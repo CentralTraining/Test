@@ -1,0 +1,118 @@
+{
+  "passed": true,
+  "synthetic_data_only": true,
+  "real_data_writes": 0,
+  "results": [
+    {
+      "width": 1440,
+      "passed": true,
+      "hr_non_active_red": true,
+      "manual_and_hr_filters": true,
+      "missing_hr_not_guessed": true,
+      "normalized_active_status": true,
+      "manual_pending_and_reasons_preserved": true,
+      "red_over_pending_add": true,
+      "active_again_clears_warning": true,
+      "trainer_scope": true,
+      "official_target_unchanged": true,
+      "excel_downloaded": true,
+      "read_only": true,
+      "layout": {
+        "name": "fm-hr-status",
+        "width": 1440,
+        "documentWidth": 1425,
+        "overflow": []
+      }
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "hr_non_active_red": true,
+      "manual_and_hr_filters": true,
+      "missing_hr_not_guessed": true,
+      "normalized_active_status": true,
+      "manual_pending_and_reasons_preserved": true,
+      "red_over_pending_add": true,
+      "active_again_clears_warning": true,
+      "trainer_scope": true,
+      "official_target_unchanged": true,
+      "excel_downloaded": true,
+      "read_only": true,
+      "layout": {
+        "name": "fm-hr-status",
+        "width": 390,
+        "documentWidth": 390,
+        "overflow": []
+      }
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "hr_non_active_red": true,
+      "manual_and_hr_filters": true,
+      "missing_hr_not_guessed": true,
+      "normalized_active_status": true,
+      "manual_pending_and_reasons_preserved": true,
+      "red_over_pending_add": true,
+      "active_again_clears_warning": true,
+      "trainer_scope": true,
+      "official_target_unchanged": true,
+      "excel_downloaded": true,
+      "read_only": true,
+      "layout": {
+        "name": "fm-hr-status",
+        "width": 320,
+        "documentWidth": 320,
+        "overflow": []
+      }
+    }
+  ],
+  "excel_readback_checks": [
+    {
+      "width": 1440,
+      "actual_xlsx_rows": 5,
+      "all_hr_rows_red": true,
+      "hr_status_preserved": true,
+      "code_text_preserved": true
+    },
+    {
+      "width": 390,
+      "actual_xlsx_rows": 5,
+      "all_hr_rows_red": true,
+      "hr_status_preserved": true,
+      "code_text_preserved": true
+    },
+    {
+      "width": 320,
+      "actual_xlsx_rows": 5,
+      "all_hr_rows_red": true,
+      "hr_status_preserved": true,
+      "code_text_preserved": true
+    }
+  ],
+  "html_sha256": "2c64cd2fcdbc9eb716f66d901454c39defc0286cbd3b21c29d4116263cb3924f",
+  "final_mobile_color_checks": [
+    {
+      "width": 390,
+      "passed": true,
+      "red_row_and_name": true,
+      "layout": {
+        "name": "fm-hr-final",
+        "width": 390,
+        "documentWidth": 390,
+        "overflow": []
+      }
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "red_row_and_name": true,
+      "layout": {
+        "name": "fm-hr-final",
+        "width": 320,
+        "documentWidth": 320,
+        "overflow": []
+      }
+    }
+  ]
+}
