@@ -1,0 +1,97 @@
+{
+  "passed": true,
+  "synthetic_data_only": true,
+  "real_data_writes": 0,
+  "results": [
+    {
+      "width": 1440,
+      "passed": true,
+      "zero_and_text_numeric_from_hr": true,
+      "invalid_or_unknown_shows_dash": true,
+      "legacy_record_fallback": true,
+      "export_matches_table": true,
+      "mobile_column_and_detail_visible": true,
+      "admin_trainer_columns_and_empty_state_aligned": true,
+      "existing_scope_unchanged": true,
+      "read_only": true,
+      "layout": {
+        "name": "fm-seniority",
+        "width": 1440,
+        "documentWidth": 1425,
+        "overflow": []
+      }
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "zero_and_text_numeric_from_hr": true,
+      "invalid_or_unknown_shows_dash": true,
+      "legacy_record_fallback": true,
+      "export_matches_table": true,
+      "mobile_column_and_detail_visible": true,
+      "admin_trainer_columns_and_empty_state_aligned": true,
+      "existing_scope_unchanged": true,
+      "read_only": true,
+      "layout": {
+        "name": "fm-seniority",
+        "width": 390,
+        "documentWidth": 390,
+        "overflow": []
+      }
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "zero_and_text_numeric_from_hr": true,
+      "invalid_or_unknown_shows_dash": true,
+      "legacy_record_fallback": true,
+      "export_matches_table": true,
+      "mobile_column_and_detail_visible": true,
+      "admin_trainer_columns_and_empty_state_aligned": true,
+      "existing_scope_unchanged": true,
+      "read_only": true,
+      "layout": {
+        "name": "fm-seniority",
+        "width": 320,
+        "documentWidth": 320,
+        "overflow": []
+      }
+    }
+  ],
+  "final_layout_checks": [
+    {
+      "width": 1440,
+      "passed": true,
+      "tenure_visible_without_clipping": true,
+      "layout": {
+        "name": "fm-seniority-final",
+        "width": 1440,
+        "documentWidth": 1425,
+        "overflow": []
+      }
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "tenure_visible_without_clipping": true,
+      "layout": {
+        "name": "fm-seniority-final",
+        "width": 390,
+        "documentWidth": 390,
+        "overflow": []
+      }
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "tenure_visible_without_clipping": true,
+      "layout": {
+        "name": "fm-seniority-final",
+        "width": 320,
+        "documentWidth": 320,
+        "overflow": []
+      }
+    }
+  ],
+  "html_sha256": "4e7bb827022f1819b5231540b7c4f55aea9ba279a25173c420ccd18a0de31bc7"
+}

@@ -17959,7 +17959,7 @@ function syncMobileRecordHeading_(table,type,layout){
  let heading=table._mobileRecordHeading;
  if(!heading?.isConnected){heading=document.createElement('div');heading.className='mobile-record-heading';heading.setAttribute('aria-hidden','true');table.before(heading);table._mobileRecordHeading=heading;}
  heading.hidden=!layout?.length;if(!layout?.length)return;
- const labels={code:'Mã PG',codepg:'Mã PG',codepgs:'Mã PG',manv:'Mã NV',hovaten:'Họ tên',hoten:'Họ tên',solanhoanthanh:'Số lần',sokhaosat:'Khảo sát',sophone:'S.O Phone',mochoanthanhshop:'Mốc',hoanthanhtargetshop:'% Target',ketqualuyentv:'Luyện TV',trangthaiai:'Trạng thái AI',ketquacheckshop:'Check shop',tenworkshop:'Workshop',xuatexcel:'Excel'};
+ const labels={code:'Mã PG',codepg:'Mã PG',codepgs:'Mã PG',manv:'Mã NV',hovaten:'Họ tên',hoten:'Họ tên',solanhoanthanh:'Số lần',sokhaosat:'Khảo sát',sophone:'S.O Phone',mochoanthanhshop:'Mốc',hoanthanhtargetshop:'% Target',ketqualuyentv:'Luyện TV',trangthaiai:'Trạng thái AI',ketquacheckshop:'Check shop',tenworkshop:'Workshop',xuatexcel:'Excel',thamnienthang:'Thâm niên'};
  const spec=layout.map(slot=>({...slot,full:type.headers[slot.index]||'Thao tác',label:labels[type.keys[slot.index]]||type.headers[slot.index]||'Thao tác'})),signature=JSON.stringify(spec);
  if(heading.dataset.signature===signature)return;heading.dataset.signature=signature;
  heading.replaceChildren(...spec.map(slot=>{const cell=document.createElement('span');cell.textContent=slot.label;cell.title=slot.full;cell.style.gridColumn=slot.start+' / span '+slot.span;return cell;}));
@@ -17988,6 +17988,7 @@ function syncCompactPgRows_(table){
   add(control);
   const resultKeys=['ketqua','sokhaosat','thamgia','hoanthanhtargetshop','solanhoanthanh','training','hr','sloppo'];
   add(resultKeys.map(key=>items.find(x=>x.key===key&&x!==name)).find(Boolean)||items.find(x=>x.key==='trangthai'));
+  if(table.id==='pgsmProgressTable')add(items.find(x=>x.cell.classList.contains('pgsm-col-seniority')));
   if(inline.length<4)add(items.find(x=>x!==name&&x!==control&&x.cell.querySelector('button')&&x.cell.querySelectorAll('button').length===1));
   if(inline.length<4)add(items.find(x=>['code','codepg','codepgs','mapg','mapgs','manv','staffid','codeshop','storeid','idshop'].includes(x.key)&&x!==name));
   if(inline.length<3)add(items.find(x=>x!==name&&!['code','codepg','codepgs','mapg','mapgs','manv','staffid','codeshop','storeid','idshop','stt','ngayvao','thamnien'].includes(x.key)&&!x.cell.querySelector('input,select,button')&&/^[+-]?\d/.test(x.cell.textContent.trim())));
@@ -17999,7 +18000,7 @@ function syncCompactPgRows_(table){
   inline.sort((a,b)=>order(a)-order(b));
   if(layout)inline.splice(0,inline.length,...layout.map(slot=>items[slot.index]).filter(Boolean));
   items.forEach(x=>{if(!inline.includes(x))delete x.cell.dataset.mobileInline;});
-  if(!layout){const weight=x=>table.closest('#wsnbPeopleData')?(x===name?14:5):soList?(x===name?9:({sophone:4,hoanthanhtargetshop:5,mochoanthanhshop:6}[x.key]||3)):x===name?10:x.cell.querySelector('select')?5:3,total=inline.reduce((n,x)=>n+weight(x),0);let column=1,remaining=24;
+  if(!layout){const weight=x=>table.id==='pgsmProgressTable'&&x.cell.classList.contains('pgsm-col-seniority')?4:table.closest('#wsnbPeopleData')?(x===name?14:5):soList?(x===name?9:({sophone:4,hoanthanhtargetshop:5,mochoanthanhshop:6}[x.key]||3)):x===name?10:x.cell.querySelector('select')?5:3,total=inline.reduce((n,x)=>n+weight(x),0);let column=1,remaining=24;
    layout=inline.map((item,i)=>{const span=i===inline.length-1?remaining:Math.max(1,Math.min(remaining-(inline.length-i-1),Math.round(weight(item)/total*24))),slot={index:items.indexOf(item),start:column,span};column+=span;remaining-=span;return slot;});}
   layout.forEach(slot=>{const item=items[slot.index];if(!item)return;item.cell.dataset.mobileInline='1';item.cell.style.setProperty('--pg-inline-start',slot.start);item.cell.style.setProperty('--pg-inline-span',slot.span);});
   name.cell.classList.add('mobile-pg-name-cell');name.cell.dataset.mobileDetailTitle=name.cell.dataset.shopFull||name.cell.textContent.trim();
@@ -19568,6 +19569,14 @@ async function pgsmWriteProgressExcel_(records,sourceRows,filename){
  const link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
  setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
+// Read-only join to the HR roster for the month currently displayed.
+function pgsmSeniorityMonths_(row){
+ const current=findPgByCode_(pgs,row.code);
+ const value=current?current.seniority:row.seniority;
+ if(value===null||value===undefined||String(value).trim()===''||!['number','string'].includes(typeof value))return null;
+ const months=Number(value);return Number.isFinite(months)&&months>=0?months:null;
+}
+function pgsmSeniorityText_(row){const months=pgsmSeniorityMonths_(row);return months===null?'—':months.toLocaleString('vi-VN')+' tháng';}
 async function pgsmDrawProgress_(camp){
  const el=document.getElementById('pgsmProgressContent');if(!el||!camp)return;
  const d=await pgsmData_(camp,true);
@@ -19612,7 +19621,7 @@ async function pgsmDrawProgress_(camp){
   <button type="button" class="secondary" id="pgsmExportProgress" title="Xuất Excel tiến độ PGs theo bộ lọc">⬇ Xuất Excel</button>
  </div>
  <p class="section-desc">Thêm: màu xanh · Loại: màu đỏ, kèm lý do Trainer. Yêu cầu chờ duyệt được ghi rõ; tổng tiến độ chỉ tính danh sách chính thức.</p>
- <div class="table-scroll" id="pgsmProgressTableWrap"><table id="pgsmProgressTable" aria-label="Danh sách PGs Master và tiến độ từng mốc"><colgroup>${[3,6,isTrainer()?11:12,isTrainer()?10:11,6,isTrainer()?9:10,4,isTrainer()?11:12,...PGSM_STAGES_.map(()=>isTrainer()?5.6:6),6,...(isTrainer()?[6]:[])].map(width=>`<col style="width:${width}%">`).join('')}</colgroup><thead><tr><th scope="col">STT</th><th scope="col">Mã PGs</th><th scope="col">Họ tên</th><th scope="col">Shop</th><th scope="col">Khu vực</th><th scope="col">Trainer</th><th scope="col">Kênh</th><th scope="col">Trạng thái</th>${PGSM_STAGES_.map(m=>`<th scope="col" class="pgsm-col-step" title="${escapeHtml(m.label)}">${escapeHtml(m.id.toUpperCase())}<span class="pgsm-stage-name">${escapeHtml(m.label.replace(/^M\d\s*·\s*/,''))}</span><small class="pgsm-stage-target">Target: ${Number(d.thresholds[m.id]||0)}</small></th>`).join('')}<th scope="col">Kết quả</th>${isTrainer()?'<th scope="col">Thao tác</th>':''}</tr></thead><tbody id="pgsmProgressRows"></tbody></table></div>
+ <div class="table-scroll" id="pgsmProgressTableWrap"><table id="pgsmProgressTable" aria-label="Danh sách PGs Master và tiến độ từng mốc"><colgroup>${[3,5,isTrainer()?10:11,6,isTrainer()?9:10,6,isTrainer()?8:9,4,isTrainer()?9:10,...PGSM_STAGES_.map(()=>isTrainer()?5.6:6),6,...(isTrainer()?[6]:[])].map(width=>`<col style="width:${width}%">`).join('')}</colgroup><thead><tr><th scope="col">STT</th><th scope="col">Mã PGs</th><th scope="col">Họ tên</th><th scope="col" class="pgsm-col-seniority">Thâm niên<span class="pgsm-stage-target">(tháng)</span></th><th scope="col">Shop</th><th scope="col">Khu vực</th><th scope="col">Trainer</th><th scope="col">Kênh</th><th scope="col">Trạng thái</th>${PGSM_STAGES_.map(m=>`<th scope="col" class="pgsm-col-step" title="${escapeHtml(m.label)}">${escapeHtml(m.id.toUpperCase())}<span class="pgsm-stage-name">${escapeHtml(m.label.replace(/^M\d\s*·\s*/,''))}</span><small class="pgsm-stage-target">Target: ${Number(d.thresholds[m.id]||0)}</small></th>`).join('')}<th scope="col">Kết quả</th>${isTrainer()?'<th scope="col">Thao tác</th>':''}</tr></thead><tbody id="pgsmProgressRows"></tbody></table></div>
  <div id="pgsmProgressPagination"></div>
  </div><div id="pgsmTrainerChanges"></div></div>`;
  const $=id=>el.querySelector('#'+id);
@@ -19671,7 +19680,7 @@ async function pgsmDrawProgress_(camp){
    const start=(page-1)*pageSize;
    $('pgsmProgressRows').innerHTML=subset.slice(start,start+pageSize).map((r,i)=>{
      const n=achieved(r);
-     return `<tr class="${r._pgsmChange?'pgsm-change-'+r._pgsmChange.action:''}"><td class="pgsm-col-number" data-label="STT">${start+i+1}</td><td class="pgsm-col-code" data-label="Mã PGs">${escapeHtml(r.code)}</td><td class="pgsm-person-name pgsm-col-person" data-label="Họ tên">${escapeHtml(r.name)}</td><td class="pgsm-col-shop" data-label="Shop"><span class="pgsm-shop-name" title="${escapeHtml(r.shop)}">${escapeHtml(r.shop)}</span></td><td class="pgsm-col-region" data-label="Khu vực">${escapeHtml(r.region)}</td><td class="pgsm-col-trainer" data-label="Trainer">${escapeHtml(r.trainerName)}</td><td class="pgsm-col-channel" data-label="Kênh">${escapeHtml(r.channel||'—')}</td><td class="pgsm-col-change" data-label="Trạng thái"><span class="pgsm-change-label">${escapeHtml(pgsmChangeLabel_(r))}</span>${r._pgsmChange?`<span class="pgsm-change-reason">Lý do: ${escapeHtml(r._pgsmChange.reason)}</span>`:''}</td>${PGSM_STAGES_.map(m=>{
+     return `<tr class="${r._pgsmChange?'pgsm-change-'+r._pgsmChange.action:''}"><td class="pgsm-col-number" data-label="STT">${start+i+1}</td><td class="pgsm-col-code" data-label="Mã PGs">${escapeHtml(r.code)}</td><td class="pgsm-person-name pgsm-col-person" data-label="Họ tên">${escapeHtml(r.name)}</td><td class="pgsm-col-seniority" data-label="Thâm niên (tháng)">${escapeHtml(pgsmSeniorityText_(r))}</td><td class="pgsm-col-shop" data-label="Shop"><span class="pgsm-shop-name" title="${escapeHtml(r.shop)}">${escapeHtml(r.shop)}</span></td><td class="pgsm-col-region" data-label="Khu vực">${escapeHtml(r.region)}</td><td class="pgsm-col-trainer" data-label="Trainer">${escapeHtml(r.trainerName)}</td><td class="pgsm-col-channel" data-label="Kênh">${escapeHtml(r.channel||'—')}</td><td class="pgsm-col-change" data-label="Trạng thái"><span class="pgsm-change-label">${escapeHtml(pgsmChangeLabel_(r))}</span>${r._pgsmChange?`<span class="pgsm-change-reason">Lý do: ${escapeHtml(r._pgsmChange.reason)}</span>`:''}</td>${PGSM_STAGES_.map(m=>{
        const st=stageStatus(r,m);
        if(!st.fromSystem){
          return `<td class="pgsm-score-cell" data-label="${escapeHtml(m.label)}"><span class="pgsm-fm-status pgsm-fm-unknown">Chưa có dữ liệu</span></td>`;
@@ -19679,7 +19688,7 @@ async function pgsmDrawProgress_(camp){
        const stars=st.stars===null?'—':String(st.stars);
        return `<td class="pgsm-score-cell" data-label="${escapeHtml(m.label)}"><div class="pgsm-fm-stage"><span class="pgsm-fm-stars" title="Số sao từ OTraining">★ ${escapeHtml(stars)}</span><span class="pgsm-fm-status ${st.done?'pgsm-fm-pass':st.known?'pgsm-fm-fail':'pgsm-fm-unknown'}">${st.done?'✓ Đạt':st.known?'Chưa đạt':'Chưa có kết quả'}</span></div></td>`;
      }).join('')}<td class="pgsm-col-result" data-label="Kết quả"><span class="pgsm-result-badge ${n===5?'pgsm-result-done':''}">${n===5?'🏆 Đạt Master':`${n}/5 mốc`}</span></td>${isTrainer()?`<td class="pgsm-col-action" data-label="Thao tác">${r._pgsmInTarget&&String(r.trainerId||'')===String(session?.trainerId||'')?`<button type="button" class="secondary" data-pgsm-progress-remove="${escapeHtml(r.code)}">Loại PGs</button>`:'—'}</td>`:''}</tr>`;
-   }).join('')||`<tr><td class="pgsm-empty" colspan="${isTrainer()?15:14}">Không có PGs phù hợp bộ lọc</td></tr>`;
+   }).join('')||`<tr><td class="pgsm-empty" colspan="${isTrainer()?16:15}">Không có PGs phù hợp bộ lọc</td></tr>`;
    pager.innerHTML=pgsmPager_(subset.length,page,pageSize,'data-pgsm-progress-page','PGs');
    summary();
  }
@@ -19699,7 +19708,7 @@ async function pgsmDrawProgress_(camp){
    // Xuất toàn bộ PGs trong bộ lọc, kể cả 0 mốc; kiểm tra lại quyền tại lúc tải file.
    const sourceRows=filtered().filter(r=>pgsmCanSeeRegion_(r.region));
    const exportRows=sourceRows.map((r,i)=>{
-     const record={'STT':i+1,'Mã PGs':r.code,'Họ tên':r.name,'ID Shop':r.shopId||'','Tên shop':r.shop,'Khu vực':r.region,'Trainer':r.trainerName,'Kênh':r.channel||'',
+     const record={'STT':i+1,'Mã PGs':r.code,'Họ tên':r.name,'Thâm niên (tháng)':pgsmSeniorityMonths_(r)??'','ID Shop':r.shopId||'','Tên shop':r.shop,'Khu vực':r.region,'Trainer':r.trainerName,'Kênh':r.channel||'',
        'Trạng thái':pgsmChangeLabel_(r)+(r._pgsmChange?'\nLý do: '+r._pgsmChange.reason:'')};
      PGSM_STAGES_.forEach(m=>{
        const st=stageStatus(r,m);
@@ -21198,6 +21207,6 @@ async function exportMediaReportExcel_(){
  finally{mediaReportExportBusy_=false;const b=document.getElementById('mediaReportExportBtn');if(b){b.disabled=!isAdmin()&&!isTrainer();b.textContent='⇩ Xuất Excel truyền thông (2 sheet)';}if(same()&&!current())mediaReportExportMessage_('Bộ lọc hoặc danh sách PG vừa thay đổi. Hãy bấm xuất lại theo bảng hiện tại.',true);}
 }
 
-</script>
+</script><style id="fm-seniority-20261101">#pgsmProgressTable .pgsm-col-seniority{text-align:center;font-variant-numeric:tabular-nums;}#pgsmProgressTable th.pgsm-col-seniority{overflow-wrap:normal;}</style>
 </body>
 </html>

@@ -1,0 +1,17 @@
+{
+  "scope": "Test",
+  "date": "2026-11-01",
+  "filename": "Dashboard-Test-2026-11-01-FindMaster-Tham-Nien-PGs.html",
+  "base_commit": "3bb7fed1dfcdc62f4d2218278dc707d27f2fe7b2",
+  "bytes": 2597575,
+  "characters": 2530427,
+  "sha256": "4e7bb827022f1819b5231540b7c4f55aea9ba279a25173c420ccd18a0de31bc7",
+  "git_blob_sha": "ec195b9a10ec4dc4bf7d61b87a7c60b1d5700ef8",
+  "backend_changed": false,
+  "business_data_changed": false,
+  "main_changed": false,
+  "artifacts": {
+    "README.md": "a9af952cd3ae128f249bd7fe27e67b880228e4f96788ff6492f1bfb2e33dee87",
+    "verification.json": "203800fdc69f8277d106b89535705d49cea35dfdf4b695ad550d59e7b14bb377"
+  }
+}
