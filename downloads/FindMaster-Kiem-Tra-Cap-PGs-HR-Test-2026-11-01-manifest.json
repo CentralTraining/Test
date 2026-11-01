@@ -1,0 +1,34 @@
+{
+  "scope": "Test",
+  "date": "2026-11-01",
+  "filename": "Dashboard-Test-2026-11-01-FindMaster-Kiem-Tra-Cap-PGs-HR.html",
+  "base_commit": "c7e1d76fa21c4ed91d2f596422e35bc5ccaa29a7",
+  "bytes": 2603084,
+  "characters": 2535675,
+  "sha256": "5e8ddea76126421bfc2dd56721950c7837bbce2e751258a087feecd0015f729d",
+  "git_blob_sha": "e709aacad7bbe6a12715eda43547470ad0a19b29",
+  "function": "pgsm-pairs-test",
+  "environment": "test",
+  "main_changed": false,
+  "schema_changed": false,
+  "secrets_changed": false,
+  "business_data_changed": false,
+  "deployment": {
+    "slug": "pgsm-pairs-test",
+    "version": 3,
+    "verify_jwt": true,
+    "ezbr_sha256": "dda01226c4810fef87a890ba92518713a83f7bce4bb83375732a0ae5509a7f67",
+    "files_exact": true,
+    "environment": "test",
+    "other_functions_unchanged": true
+  },
+  "source_zip": {
+    "filename": "FindMaster-Kiem-Tra-Cap-PGs-HR-Test-2026-11-01-Full-Source.zip",
+    "bytes": 27772,
+    "sha256": "dd051c6fb3617de61055af795fa897d6fd28f5fb7235e274055661bb9145f591"
+  },
+  "artifacts": {
+    "README.md": "2d12cf0f5450f7b471c75f59c8b83bfaad356197da99e65bc298d93f329e281d",
+    "verification.json": "aad13d111cf661cadb8293a79a3a8452e5a63aecb3cb281498e7cc5bad4691b8"
+  }
+}
