@@ -8,8 +8,8 @@
   "function": {
     "scope": "Test",
     "function": "trainer-channel-test",
-    "version": 18,
-    "sha256": "a294a8b834b2dd45bdd273e6e703eb037699618f6a143b810d7411bf6f948b9c",
+    "version": 19,
+    "sha256": "c6048c4427166769d878dfaf95bfb612f2c9ca74636e95be9807faa747fc8826",
     "full_source_exact": true,
     "existing_auth_proxy_callback_files_unchanged": true,
     "all_other_functions_unchanged": true,
@@ -23,18 +23,18 @@
     "deno.json": "7f85a404ccda69833d972ff83a60db9305536d340f561a5b02f0c136f583a5fa",
     "followers.ts": "cebbb2aafd1d501275ef4cb269c59784fdefaee739101ae32338c6ab2205bc49",
     "index.ts": "5f5f3a1b905f34bfaeb886c84ce00950aab4735ec3a0781c03e03ef39eca1d61",
-    "month-baseline.ts": "9970a0d19fcfe08083d58190981fda46b0c5336e71804a32885b00ebb6156f42",
+    "month-baseline.ts": "e39d0f47f5cd325fad123f38cbe67ddff348bc277d9e319ac128a9b2ccb1b5a4",
     "sandboxes.ts": "0d00de545ecd8fbbf135d8b82618695159acf1ec3641e6661bcffc39e8b97cc0",
     "team-overview.ts": "bdfa75a3fe1e133ceec14bc94ebe69db2c2c34bb84d4605a2414f80c1bd59886"
   },
   "artifacts": {
     "README.md": "4c459950388f755616b89f1d95be788b48b703b6ec8680c2d7cddc0e6c3678f8",
-    "verification.json": "439b6f3fbe495c6fe6da0810bd371f5a3bd5fd9aa7386198db64b8c0bf8f458f"
+    "verification.json": "d4c97a5e386fb60b89b52f9544248e8cda0426dce86910c1470638fe976967fb"
   },
   "private_source_archive": {
     "filename": "TikTok-Moc-Follower-01-11-Test-2026-11-02-Full-Source.zip",
-    "bytes": 21439,
-    "sha256": "f39783f79e526130cc3f3ab402f48eecce32760c1c2225fcb3680e3e88765153",
+    "bytes": 21503,
+    "sha256": "721cbd45c72df1b9d041ddb15fbb364ddd206a4a746661f2338e875a205b8236",
     "delivery": "private_workspace_only"
   }
 }

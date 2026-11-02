@@ -36,6 +36,7 @@
       "different_account_baseline_rejected": true,
       "team_read_scope_preserved": true,
       "second_sandbox_supported": true,
+      "legacy_grant_refresh_preserves_baseline": true,
       "errors_preserve_data": true,
       "shared_api_proxy_callback_unchanged": true,
       "no_private_data_in_dto": true,
@@ -128,8 +129,8 @@
     "deployment": {
       "scope": "Test",
       "function": "trainer-channel-test",
-      "version": 18,
-      "sha256": "a294a8b834b2dd45bdd273e6e703eb037699618f6a143b810d7411bf6f948b9c",
+      "version": 19,
+      "sha256": "c6048c4427166769d878dfaf95bfb612f2c9ca74636e95be9807faa747fc8826",
       "full_source_exact": true,
       "existing_auth_proxy_callback_files_unchanged": true,
       "all_other_functions_unchanged": true,
