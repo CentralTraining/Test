@@ -1,0 +1,19 @@
+{
+  "scope": "Test",
+  "date": "2026-11-02",
+  "filename": "Dashboard-Test-2026-11-02-FindMaster-Target-PGs-Con-Hieu-Luc.html",
+  "base_commit": "a0c64d8c456e70628bbccec94b9db0c1f69f7cfc",
+  "bytes": 2603814,
+  "characters": 2536349,
+  "sha256": "1b9f7b3f13cb3ebdc319419b402231be0db0d033b00a8c17a2b12d9d8a87b34c",
+  "git_blob_sha": "083749409ca88c18fecb770c20718ca4420f3ead",
+  "backend_changed": false,
+  "schema_changed": false,
+  "secrets_changed": false,
+  "business_data_changed": false,
+  "main_changed": false,
+  "artifacts": {
+    "README.md": "bcbd056e26c42f2f83f24b0b397b29ca7ba225964c7c0f771ca88eff8bca17f6",
+    "verification.json": "028d9e0c0dceebcd70de4ddb6c9a1af0e95c5d09f83a1710fb1d6495da941bab"
+  }
+}
