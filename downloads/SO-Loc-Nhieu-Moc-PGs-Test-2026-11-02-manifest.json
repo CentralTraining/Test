@@ -1,0 +1,19 @@
+{
+  "scope": "Test",
+  "date": "2026-11-02",
+  "filename": "Dashboard-Test-2026-11-02-SO-Loc-Nhieu-Moc-PGs.html",
+  "base_commit": "65169da06f431044ad4a7077f3050a88d04e28dd",
+  "bytes": 2607785,
+  "characters": 2540261,
+  "sha256": "ce5d81ca5aafc8c6d57e88c491a33f902a37abf7394cb48096c8d15e4e3387c6",
+  "git_blob_sha": "05cd476a6e7ed34dbf95b6d20b2d056b9e927f33",
+  "backend_changed": false,
+  "schema_changed": false,
+  "secrets_changed": false,
+  "business_data_changed": false,
+  "main_changed": false,
+  "artifacts": {
+    "README.md": "73d876f7cfc0010b84c82820e740610123f4804a987ee57daaa1025bbee04618",
+    "verification.json": "2aa84c9e29d0f58f1a788e234e6a5106d0bc0088e67876e0e5b446eb2827894b"
+  }
+}

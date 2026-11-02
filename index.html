@@ -2746,6 +2746,27 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
 .mobile-layout #channelTool .channel-hashtag-pagination{font-size:8px;gap:6px;}
 
 </style>
+<style id="so-multi-milestone-20261102">
+#sotab-list .so-filter-fields{grid-template-columns:1.3fr 1fr 1.1fr .65fr;}
+#soListFilterMilestone{min-width:0;margin:0 0 16px;padding:9px 12px 11px;border:1px solid var(--line);border-radius:12px;background:#fff;}
+#soListFilterMilestone legend{padding:0 6px;font-size:var(--cap);font-weight:750;color:var(--green-dark);}
+#soListFilterMilestone .so-list-milestone-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;}
+#soListMilestoneSelection{min-width:0;color:var(--muted);font-size:var(--cap);overflow-wrap:anywhere;}
+#soListMilestoneClear{flex:none;min-height:28px;padding:4px 10px;font-size:11px;}
+#soListFilterMilestone .so-list-milestone-options{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;}
+#soListFilterMilestone .so-list-milestone-options label{display:flex;align-items:center;gap:8px;min-width:0;margin:0;padding:8px 10px;min-height:36px;border:1px solid #DAE8E0;border-radius:8px;background:#F8FBF9;color:var(--green-dark);font-size:var(--cap);font-weight:650;cursor:pointer;box-sizing:border-box;}
+#soListFilterMilestone .so-list-milestone-options label:has(input:checked){background:#E4F4EC;border-color:#158656;}
+#soListFilterMilestone .so-list-milestone-options input[type="checkbox"]{appearance:auto;flex:0 0 16px;width:16px!important;height:16px!important;min-height:16px!important;min-width:16px!important;margin:0;padding:0;accent-color:var(--green-dark);cursor:pointer;}
+#soListFilterMilestone .so-list-milestone-options input:focus-visible{outline:2px solid #0B8152;outline-offset:3px;}
+#soListFilterMilestone .so-list-milestone-options span{min-width:0;line-height:1.4;overflow-wrap:anywhere;}
+#soListMilestoneHelp{margin:8px 0 0;color:var(--muted);font-size:11px;line-height:1.5;}
+@media(max-width:1000px){#soListFilterMilestone .so-list-milestone-options{grid-template-columns:repeat(3,minmax(0,1fr));}}
+.mobile-layout #soListFilterMilestone{padding:7px 8px 9px;margin-bottom:10px;}
+.mobile-layout #soListFilterMilestone .so-list-milestone-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;}
+.mobile-layout #soListFilterMilestone .so-list-milestone-options label{padding:6px;gap:5px;font-size:10px;min-height:40px;}
+.mobile-layout #soListFilterMilestone legend,.mobile-layout #soListMilestoneSelection{font-size:11px;}
+.mobile-layout #soListMilestoneHelp{font-size:10px;}
+</style>
 </head>
 <body>
 
@@ -3179,17 +3200,15 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
             <option value="3">3 ★</option><option value="4">4 ★</option><option value="5">5 ★</option>
             </select>
           </label>
-          <label class="so-filter-field"><span class="scope-label">Mốc hoàn thành</span>
-            <select id="soListFilterMilestone">
-              <option value="">Tất cả mốc</option>
-              <option value="moc 1">Mốc 1</option><option value="moc 2">Mốc 2</option><option value="moc 3">Mốc 3</option>
-              <option value="chua dat">Chưa đạt</option><option value="khong co">Không có</option>
-              <option value="__unmatched__">Chưa có dữ liệu Shop</option>
-            </select>
-          </label>
         </div>
         <span class="scope-label so-filter-count" id="soListRowCount"></span>
       </div>
+      <fieldset id="soListFilterMilestone" class="so-list-milestones" aria-describedby="soListMilestoneHelp">
+        <legend>PGs đạt mốc</legend>
+        <div class="so-list-milestone-tools"><span id="soListMilestoneSelection" aria-live="polite">Tất cả mốc</span><button type="button" class="secondary" id="soListMilestoneClear" disabled>Xóa chọn</button></div>
+        <div class="so-list-milestone-options"><label><input type="checkbox" value="moc 1" data-label="Mốc 1"><span>Mốc 1</span></label><label><input type="checkbox" value="moc 2" data-label="Mốc 2"><span>Mốc 2</span></label><label><input type="checkbox" value="moc 3" data-label="Mốc 3"><span>Mốc 3</span></label><label><input type="checkbox" value="chua dat" data-label="Chưa đạt"><span>Chưa đạt</span></label><label><input type="checkbox" value="khong co" data-label="Không có mốc"><span>Không có mốc</span></label><label><input type="checkbox" value="__unmatched__" data-label="Chưa có dữ liệu Shop"><span>Chưa có dữ liệu Shop</span></label></div>
+        <p id="soListMilestoneHelp">Chọn nhiều nhóm để xem chung danh sách. Không chọn ô nào: hiển thị tất cả mốc.</p>
+      </fieldset>
       <table>
         <thead><tr><th>Code PG</th><th>Tên PG</th><th>Khu vực</th><th>Trainer</th><th>Shop</th><th>Sao</th><th>S.O Phone</th><th>% Hoàn thành target<br>(Shop)</th><th>Mốc hoàn thành<br>(Shop)</th><th>Tổng S.O</th><th></th></tr></thead>
         <tbody id="soListBody"></tbody>
@@ -17596,21 +17615,30 @@ function renderSoKpiRow_(){
     <div class="kpi-card"><div class="label">S.O Accessories TB/PG</div><div class="value">${avg(e=>e.accessories)}</div><div class="frac">sản phẩm/PG</div></div>
   `;
 }
+function soListMilestones_(){
+  return Array.from(document.querySelectorAll('#soListFilterMilestone input[type="checkbox"]:checked'),input=>input.value);
+}
+function syncSoListMilestones_(){
+  const selected=Array.from(document.querySelectorAll('#soListFilterMilestone input[type="checkbox"]:checked'));
+  document.getElementById('soListMilestoneSelection').textContent=selected.length?'Đang chọn: '+selected.map(input=>input.dataset.label).join(', '):'Tất cả mốc';
+  document.getElementById('soListMilestoneClear').disabled=!selected.length;
+}
 function renderSoListTab_(){
   populateSoListFilters_();
+  syncSoListMilestones_();
   renderSoKpiRow_();
   const term = soListSearchTerm.trim().toLowerCase();
   const regionVal = document.getElementById('soListFilterRegion').value;
   const trainerVal = document.getElementById('soListFilterTrainer').value;
   const starVal = document.getElementById('soListFilterStar').value;
-  const milestoneVal = document.getElementById('soListFilterMilestone').value;
+  const milestoneValues=soListMilestones_();
   const shopIndex=soShopProgressIndex_();
   let list = soJoinedList_();
   if(term) list = list.filter(e=> (e.code||'').toLowerCase().includes(term) || (e.name||'').toLowerCase().includes(term));
   if(regionVal) list = list.filter(e=> e.region===regionVal);
   if(trainerVal) list = list.filter(e=> e.trainerId===trainerVal);
   if(starVal) list = list.filter(e=> e.star===Number(starVal));
-  if(milestoneVal) list = list.filter(e=>soShopMatchesMilestone_(e,shopIndex,milestoneVal));
+  if(milestoneValues.length) list = list.filter(e=>milestoneValues.some(stage=>soShopMatchesMilestone_(e,shopIndex,stage)));
   list.sort((a,b)=> (b.phone+b.iot+b.accessories) - (a.phone+a.iot+a.accessories));
   document.getElementById('soListRowCount').textContent = `${list.length} PG Đang làm`;
   const body = document.getElementById('soListBody');
@@ -17661,7 +17689,11 @@ document.getElementById('soListSearchInput').addEventListener('input', (e)=>{ so
 document.getElementById('soListFilterRegion').addEventListener('change', ()=>{ soListCurrentPage=1; renderSoListTab_(); });
 document.getElementById('soListFilterTrainer').addEventListener('change', ()=>{ soListCurrentPage=1; renderSoListTab_(); });
 document.getElementById('soListFilterStar').addEventListener('change', ()=>{ soListCurrentPage=1; renderSoListTab_(); });
-document.getElementById('soListFilterMilestone').addEventListener('change', ()=>{ soListCurrentPage=1; renderSoListTab_(); });
+document.getElementById('soListFilterMilestone').addEventListener('change', e=>{ if(!e.target.matches('input[type="checkbox"]'))return; soListCurrentPage=1; renderSoListTab_(); });
+document.getElementById('soListMilestoneClear').addEventListener('click', ()=>{
+  document.querySelectorAll('#soListFilterMilestone input[type="checkbox"]').forEach(input=>input.checked=false);
+  soListCurrentPage=1;renderSoListTab_();
+});
 
 /* ============ THỐNG KÊ S.O Phone trung bình ============ */
 const SO_CHART_COLORS = ['#016C38','#2E9E5B','#6FBF3E','#E8C023','#E8862A','#C0392B','#2F6FB0','#9B59B6'];
