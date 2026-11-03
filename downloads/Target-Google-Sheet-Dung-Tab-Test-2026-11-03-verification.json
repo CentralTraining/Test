@@ -1,0 +1,60 @@
+{
+  "version": "2026-11-03",
+  "environment": "Test",
+  "passed": true,
+  "html_sha256": "73dbcf653e1a60893d7e5054a241207d69e3fec4aaf019427cd2289db11d620a",
+  "synthetic_backend_checks": [
+    "server_auth_and_revoked_user",
+    "admin_only_write",
+    "region_scoped_read",
+    "code_and_name_validation",
+    "code_precedence",
+    "duplicate_merge_and_conflicts",
+    "off_exclusion",
+    "trainer_region_from_hr",
+    "preview_no_writes",
+    "stale_hr_fingerprint",
+    "version_conflict",
+    "campaign_month_lock",
+    "empty_list_rejected",
+    "main_test_isolation",
+    "unavailable_read_fails_closed",
+    "raw_results_unchanged",
+    "preview_sheet_admin_only",
+    "locked_preview_does_not_fetch_google",
+    "verified_gid_preview_no_writes"
+  ],
+  "sheet_checks": [
+    "exact_trailing_space_retained",
+    "trimmed_title_resolves_actual_tab",
+    "validated_numeric_gid",
+    "no_name_based_csv_fetch",
+    "wrong_tab_fails_closed_before_csv",
+    "explicit_name_wins_over_workbook_default_gid",
+    "ambiguous_names_require_gid",
+    "no_remote_script_evaluation",
+    "metadata_bound_to_document_and_host",
+    "private_and_offline_preserve_state",
+    "size_limit",
+    "csv_errors_and_quoting"
+  ],
+  "ui_widths": [
+    1440,
+    768,
+    390,
+    320
+  ],
+  "source_read_only_check": {
+    "actual_network": true,
+    "passed": true,
+    "read_only": true,
+    "eligible": 25,
+    "issues": 0,
+    "duplicates": 0,
+    "source_gid_correct": true,
+    "source_title_preserved": true,
+    "did_not_save_target": true
+  },
+  "main_modified": false,
+  "real_rosters_saved": 0
+}

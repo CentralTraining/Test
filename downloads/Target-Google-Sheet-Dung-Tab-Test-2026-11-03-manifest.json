@@ -1,0 +1,23 @@
+{
+  "version": "2026-11-03",
+  "environment": "Test",
+  "html": {
+    "filename": "Dashboard-Test-2026-11-03-Target-Google-Sheet-Dung-Tab.html",
+    "bytes": 2640216,
+    "sha256": "73dbcf653e1a60893d7e5054a241207d69e3fec4aaf019427cd2289db11d620a",
+    "git_blob": "b41b09df0bc52bdf4574d201aebc69969ab1db64"
+  },
+  "backend": {
+    "name": "campaign-target-roster-test",
+    "version": 3,
+    "verify_jwt": true,
+    "files": {
+      "access.ts": "409f617a97012938d9d34eda8b0990a345872f626bb17cb87442cb1a0c4a3cee",
+      "index.ts": "c58a999adb05a924fb155553868668a9bd14b58e833b987a84cedbf5430126f0",
+      "model.js": "3e055b633aea3e89b9548d72409ca0e4debdd85d8c65e3c570b0f7ebab4480da",
+      "sheets.js": "fe4acf50e87c8002bd460a87e8b756374430894fbd78253c0fa9839a63e6fb0b"
+    }
+  },
+  "main_modified": false,
+  "real_rosters_saved": 0
+}
