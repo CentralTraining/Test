@@ -1,0 +1,37 @@
+{
+  "version": "2026-11-03",
+  "environment": "Test",
+  "passed": true,
+  "synthetic_only": true,
+  "backend_checks": [
+    "server_auth_and_revoked_user",
+    "admin_only_write",
+    "region_scoped_read",
+    "code_and_name_validation",
+    "code_precedence",
+    "duplicate_merge_and_conflicts",
+    "off_exclusion",
+    "trainer_region_from_hr",
+    "preview_no_writes",
+    "stale_hr_fingerprint",
+    "version_conflict",
+    "campaign_month_lock",
+    "empty_list_rejected",
+    "main_test_isolation",
+    "unavailable_read_fails_closed",
+    "raw_results_unchanged"
+  ],
+  "ui_widths": [
+    1440,
+    768,
+    390,
+    320
+  ],
+  "html_sha256": "35f667b07e384c19762331b12d5492bf03664af328615910eb0082341ef57596",
+  "raw_results_preserved": true,
+  "main_modified": false,
+  "private_rosters_created": 0,
+  "rls": true,
+  "anon_and_authenticated_table_access": false,
+  "live_missing_and_forged_session": 401
+}

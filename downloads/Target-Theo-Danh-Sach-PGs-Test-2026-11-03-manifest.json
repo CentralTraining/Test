@@ -1,0 +1,22 @@
+{
+  "version": "2026-11-03",
+  "environment": "Test",
+  "html": {
+    "file": "Dashboard-Test-2026-11-03-Target-Theo-Danh-Sach-PGs.html",
+    "bytes": 2639264,
+    "sha256": "35f667b07e384c19762331b12d5492bf03664af328615910eb0082341ef57596",
+    "blob": "6c5aca72722f2d814917fb43a65efb9a42077a5f"
+  },
+  "backend": {
+    "function": "campaign-target-roster-test",
+    "version": 2,
+    "verify_jwt": true,
+    "source_sha256": {
+      "access.ts": "409f617a97012938d9d34eda8b0990a345872f626bb17cb87442cb1a0c4a3cee",
+      "index.ts": "95d57a57778f5a92f61bd2a0ef1ab37fd4e5fcb9a4c54fe7afb9b8c61402d283",
+      "model.js": "91d46f5d9fb4b10920ca6e22dd20ac0bf6c8e55caac48ff003b98e4dccbe0a63"
+    }
+  },
+  "main_modified": false,
+  "real_rosters_imported": 0
+}
