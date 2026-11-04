@@ -5,7 +5,7 @@
   "sha256": "c7cbe93000a3fdc07992708e05f517545aedb6387553039d4cd5d2b47cda2695",
   "bytes": 2641190,
   "backend": "campaign-clone-test",
-  "backendVersion": 1,
+  "backendVersion": 2,
   "tests": [
     "backend-verification.json",
     "cumulative-verification.json",

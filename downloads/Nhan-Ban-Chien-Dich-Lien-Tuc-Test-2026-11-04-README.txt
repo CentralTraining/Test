@@ -9,7 +9,7 @@ HR tháng đích tiếp tục xác minh Off/đã loại/thiếu HR; nhóm không
 Các kết quả tháng thông thường (khảo sát/FTF/Truyền thông...) không sao chép thành kết quả tháng mới. Target trùng hạng mục nhưng khác số ở tháng đích bị chặn để giữ dữ liệu đã cài.
 Các bản sao đã tạo từ trước không tự bị sửa; thao tác mới chỉ chạy khi Admin bấm Nhân bản.
 
-Backend: campaign-clone-test v1, JWT gateway true + Dashboard Admin auth mới; RPC clone_campaign_test_v1 security invoker, chỉ service_role. Một transaction CAS cho campaigns/KV/private scopes/pairs. Test chỉ ghi environment=test; không sửa legacy/Main pair rows.
+Backend: campaign-clone-test v2, JWT gateway true + Dashboard Admin auth mới; RPC clone_campaign_test_v1 security invoker, chỉ service_role. Một transaction CAS cho campaigns/KV/private scopes/pairs. Test chỉ ghi environment=test; không sửa legacy/Main pair rows.
 Kiểm thử fixture: PostgreSQL PGlite 0.3.14 (gồm rollback lỗi giữa chừng), crypto/session auth, scope/lock/stale/idempotency, tích lũy và Off, browser 1440/768/390/320. Không nhân bản chiến dịch thật khi kiểm thử.
 Mã nguồn backend chỉ cung cấp riêng, không đăng ZIP xác thực lên repo công khai.
 Main chưa triển khai tính năng này.

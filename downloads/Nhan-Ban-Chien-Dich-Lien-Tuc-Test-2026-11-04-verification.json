@@ -94,7 +94,7 @@
   },
   "edgeFunction": {
     "name": "campaign-clone-test",
-    "version": 1,
+    "version": 2,
     "verify_jwt": true,
     "sourceExact": true
   }
