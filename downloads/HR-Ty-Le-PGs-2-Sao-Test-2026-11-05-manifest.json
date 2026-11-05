@@ -1,0 +1,17 @@
+{
+  "version": "2026-11-05",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "6b015cba1eaddaa766bc1a80983a991b47d92774",
+  "feature": "Ghi tỉ lệ PGs từ 2 sao dưới từng cột khu vực của biểu đồ Phân bổ PGs theo Sao",
+  "html": "Dashboard-Test-2026-11-05-HR-Ty-Le-PGs-2-Sao.html",
+  "html_sha256": "da5b399baea9722c812904efa5d2fe4aede5c8be7b6c83d5dcf8139f729d0240",
+  "html_git_blob": "09107041d1bca2ee4c12d05c6e642e9c8c25773e",
+  "calculation": "PGs OPPO Đang làm có sao >= 2 / tổng PGs OPPO Đang làm, theo khu vực và bộ lọc hiện tại; tính trên số người trước khi làm tròn phần trăm biểu đồ.",
+  "behavior": [
+    "Ghi phần trăm dưới tên khu vực và cột Tổng.",
+    "Làm tròn tối đa 1 chữ số thập phân.",
+    "Cuộn ngang trên điện thoại để giữ đủ các nhãn."
+  ],
+  "scope": "Frontend Test only; no backend, data, target or Main changes."
+}
