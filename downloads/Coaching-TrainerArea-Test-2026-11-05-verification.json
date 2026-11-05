@@ -1,0 +1,56 @@
+{
+  "status": "passed",
+  "rules": {
+    "status": "passed",
+    "six_areas_accepted_without_central_region": true,
+    "normalization_exact_matching": true,
+    "legacy_mapping_byte_equivalent": true,
+    "month_and_status_filters_unchanged": true,
+    "sixty_minute_boundary_and_types_unchanged": true,
+    "trainer_region_guard_preserved": true,
+    "october_and_november_verified": true,
+    "real_data_writes": 0
+  },
+  "browser": [
+    {
+      "width": 1440,
+      "passed": true,
+      "update_button_uses_exact_sheet": true,
+      "area_rows_imported": true,
+      "month_status_and_dedup_preserved": true,
+      "new_pg_name_matching_preserved": true,
+      "targets_unchanged": true,
+      "one_atomic_three_key_write": true,
+      "trainer_other_region_data_preserved": true,
+      "failed_save_preserves_memory_and_storage": true,
+      "locked_month_blocks_fetch": true,
+      "no_page_errors": true,
+      "real_data_writes": 0,
+      "backend_requests": "mocked"
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "update_button_uses_exact_sheet": true,
+      "area_rows_imported": true,
+      "month_status_and_dedup_preserved": true,
+      "new_pg_name_matching_preserved": true,
+      "targets_unchanged": true,
+      "one_atomic_three_key_write": true,
+      "trainer_other_region_data_preserved": true,
+      "failed_save_preserves_memory_and_storage": true,
+      "locked_month_blocks_fetch": true,
+      "no_page_errors": true,
+      "real_data_writes": 0,
+      "backend_requests": "mocked"
+    }
+  ],
+  "legacy_processors_byte_exact": true,
+  "target_calculators_byte_exact": true,
+  "hr_chart_byte_exact": true,
+  "other_inline_scripts_byte_exact": true,
+  "source_sheet_headers_verified": true,
+  "source_private_aggregates_not_published": true,
+  "real_data_writes": 0,
+  "main_unchanged": true
+}

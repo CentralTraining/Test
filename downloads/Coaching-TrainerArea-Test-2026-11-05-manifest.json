@@ -1,0 +1,21 @@
+{
+  "version": "2026-11-05",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "19de08913b6dad57a6533642d5dd8377afcc8190",
+  "feature": "Bổ sung TrainerArea khi cập nhật Coaching PGs Dev từ COACHING_LOG",
+  "html": "Dashboard-Test-2026-11-05-Coaching-TrainerArea.html",
+  "sha256": "cfd99d5b33bb777e12c1cda3370b624dca4640e7d80a853f54bbc6ba4c3e3ba2",
+  "blob": "81a0450ba0337ed1f5df0ccda78f78bf60912191",
+  "rule": "TrainerRegion khớp MIEN TRUNG theo quy tắc cũ HOẶC TrainerArea khớp một trong HUE, DA NANG, BINH DINH, VUNG TAU, TAY NGUYEN, NHA TRANG.",
+  "unchanged": [
+    "Tháng chiến dịch / tháng đang xem",
+    "Lọc trạng thái",
+    "Gộp trùng trong 60 phút",
+    "Phân loại PG 0–1 sao và PG mới",
+    "Tra PG mới theo tên",
+    "Gán Trainer và giới hạn khu vực cập nhật",
+    "Target và lưu dữ liệu theo giao dịch hiện có"
+  ],
+  "scope": "Frontend Test only; no backend, source Sheet edits, real imports, Secrets, targets or Main changes."
+}
