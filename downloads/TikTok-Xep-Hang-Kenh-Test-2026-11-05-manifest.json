@@ -1,0 +1,17 @@
+{
+  "version": "2026-11-05",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "36bb346c414290aa4875da296199f6066008f778",
+  "feature": "Huy hiệu tăng follow / viral và xếp hạng các kênh TikTok",
+  "html": "Dashboard-Test-2026-11-05-TikTok-Xep-Hang-Kenh.html",
+  "sha256": "9b6306a56763f8ad74bfa389c4fdc900c04c47688f212013bc1809ebcce90ecd",
+  "blob": "5e21245c0ea0aa290365f9756fdf643306fa912d",
+  "ranking": "Tăng follow giảm dần; bằng nhau xét tổng View + Like + Share; bằng tiếp dùng Trainer ID ổn định. Thiếu số tăng follow xếp cuối.",
+  "awards": {
+    "growth": "Một kênh tăng follow dương cao nhất",
+    "viral": "Một kênh có tổng View + Like + Share dương cao nhất, đủ ba chỉ số"
+  },
+  "filter_scope": "Kỳ và khu vực / Trainer đang chọn; một kênh có thể nhận cả hai huy hiệu.",
+  "scope": "Frontend Test only; no business data, baselines, backend, Secrets, permissions or Main changes."
+}

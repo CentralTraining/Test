@@ -1,0 +1,73 @@
+{
+  "status": "passed",
+  "rules": {
+    "status": "passed",
+    "growth_descending_then_raw_viral_sum": true,
+    "one_winner_per_category": true,
+    "both_badges_same_channel_supported": true,
+    "stable_ties_independent_of_api_order": true,
+    "missing_values_not_zero": true,
+    "no_badge_for_zero_or_negative_growth": true,
+    "no_viral_badge_without_complete_positive_metrics": true,
+    "input_totals_and_bins_unchanged": true,
+    "real_data_writes": 0
+  },
+  "browser": [
+    {
+      "width": 1440,
+      "passed": true,
+      "growth_then_viral_order": true,
+      "both_badges_after_winner_name": true,
+      "all_channel_tables_consistent": true,
+      "filtered_and_monthly_winners_recalculated": true,
+      "missing_values_not_zero": true,
+      "no_awards_for_zero": true,
+      "trainer_team_access_preserved": true,
+      "sorted_follow_history_opens_correct_trainer": true,
+      "totals_and_source_data_unchanged": true,
+      "badges_visible_and_no_overflow": true,
+      "real_data_writes": 0,
+      "backend_requests": "mocked"
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "growth_then_viral_order": true,
+      "both_badges_after_winner_name": true,
+      "all_channel_tables_consistent": true,
+      "filtered_and_monthly_winners_recalculated": true,
+      "missing_values_not_zero": true,
+      "no_awards_for_zero": true,
+      "trainer_team_access_preserved": true,
+      "sorted_follow_history_opens_correct_trainer": true,
+      "totals_and_source_data_unchanged": true,
+      "badges_visible_and_no_overflow": true,
+      "real_data_writes": 0,
+      "backend_requests": "mocked"
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "growth_then_viral_order": true,
+      "both_badges_after_winner_name": true,
+      "all_channel_tables_consistent": true,
+      "filtered_and_monthly_winners_recalculated": true,
+      "missing_values_not_zero": true,
+      "no_awards_for_zero": true,
+      "trainer_team_access_preserved": true,
+      "sorted_follow_history_opens_correct_trainer": true,
+      "totals_and_source_data_unchanged": true,
+      "badges_visible_and_no_overflow": true,
+      "real_data_writes": 0,
+      "backend_requests": "mocked"
+    }
+  ],
+  "changed_inline_script_indices": [
+    7
+  ],
+  "all_changes_match_eight_expected_patches": true,
+  "channel_model_and_follower_model_byte_exact": true,
+  "all_other_inline_scripts_byte_exact": true,
+  "real_data_writes": 0,
+  "main_unchanged": true
+}
