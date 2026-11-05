@@ -1,0 +1,73 @@
+{
+  "status": "passed",
+  "synthetic_data_only": true,
+  "real_data_writes": 0,
+  "browser": [
+    {
+      "width": 1440,
+      "passed": true,
+      "five_cards": true,
+      "filtered_total": 45801,
+      "trainer_total": 35801,
+      "november_total": 800000,
+      "day_total_vietnam_timezone": 12345,
+      "zero_and_missing_distinct": true,
+      "incomplete_views_coverage": true,
+      "trainer_can_view_team": true,
+      "no_overflow": true,
+      "backend_requests": "mocked",
+      "real_data_writes": 0
+    },
+    {
+      "width": 768,
+      "passed": true,
+      "five_cards": true,
+      "filtered_total": 45801,
+      "trainer_total": 35801,
+      "november_total": 800000,
+      "day_total_vietnam_timezone": 12345,
+      "zero_and_missing_distinct": true,
+      "incomplete_views_coverage": true,
+      "trainer_can_view_team": true,
+      "no_overflow": true,
+      "backend_requests": "mocked",
+      "real_data_writes": 0
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "five_cards": true,
+      "filtered_total": 45801,
+      "trainer_total": 35801,
+      "november_total": 800000,
+      "day_total_vietnam_timezone": 12345,
+      "zero_and_missing_distinct": true,
+      "incomplete_views_coverage": true,
+      "trainer_can_view_team": true,
+      "no_overflow": true,
+      "backend_requests": "mocked",
+      "real_data_writes": 0
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "five_cards": true,
+      "filtered_total": 45801,
+      "trainer_total": 35801,
+      "november_total": 800000,
+      "day_total_vietnam_timezone": 12345,
+      "zero_and_missing_distinct": true,
+      "incomplete_views_coverage": true,
+      "trainer_can_view_team": true,
+      "no_overflow": true,
+      "backend_requests": "mocked",
+      "real_data_writes": 0
+    }
+  ],
+  "unchanged_inline_scripts": 15,
+  "changed_script_purpose": [
+    "ChannelModel.report view aggregate",
+    "channelCompactSummary_ View card"
+  ],
+  "main_unchanged": true
+}

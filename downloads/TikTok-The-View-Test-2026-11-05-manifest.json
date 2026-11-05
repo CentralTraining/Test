@@ -1,0 +1,16 @@
+{
+  "version": "2026-11-05",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "009d9b2fe40511ee0654bab1cb411beb317705c7",
+  "feature": "Thẻ View trong thống kê Xây kênh TikTok",
+  "html": "Dashboard-Test-2026-11-05-TikTok-The-View.html",
+  "html_sha256": "26181ec650afdbc81837ddca2e95f480170a86327cff75a922432adbd08c660f",
+  "html_git_blob": "fce1dedbec563eaa6a3484aa97f32b2e8dda44dd",
+  "behavior": [
+    "Tổng View video đăng trong kỳ, theo bộ lọc khu vực và Trainer.",
+    "Kênh chưa có số View không bị coi là 0; ghi rõ phạm vi có số liệu.",
+    "5 thẻ trên máy tính; 2 hàng cân đối trên điện thoại."
+  ],
+  "scope": "Frontend Test only; no backend, user data, OAuth, baseline or automation changes."
+}
