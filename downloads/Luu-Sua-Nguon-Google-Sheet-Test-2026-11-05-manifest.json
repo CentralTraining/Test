@@ -1,0 +1,18 @@
+{
+  "version": "2026-11-05",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "b098fbbe441eccb9492d744c15698afbe38cc8a4",
+  "feature": "Lưu và Sửa link Google Sheet / tên sheet riêng cho từng mục cập nhật",
+  "html": "Dashboard-Test-2026-11-05-Luu-Sua-Nguon-Google-Sheet.html",
+  "sha256": "7b2d3f54c1223dd232753cf116df1b98607c7d2df570093dfbcaef1cd06ce61e",
+  "blob": "8d37b0e15242ee663ee330465c56ab5994a051c7",
+  "behavior": [
+    "Lưu nguồn riêng, khóa ô nhập sau khi lưu, bấm Sửa để thay đổi.",
+    "Đọc lại nguồn đã lưu khi mở lại hoặc đổi thiết bị; ưu tiên cấu hình dùng chung hơn cache cũ.",
+    "Lưu và Test kết nối không chạy import dữ liệu. Cập nhật dùng nguồn đã lưu.",
+    "Nguồn một/nhiều tab, S.O Shop, PG Master và Target theo danh sách được hỗ trợ.",
+    "Lỗi lưu giữ cấu hình cũ; hủy sửa không áp dụng thay đổi."
+  ],
+  "scope": "Frontend Test only; existing gsync_config storage, no schema/Edge Function/Secrets changes; no real config or business data writes."
+}
