@@ -1,0 +1,90 @@
+/* CENTER HR TEST — Google Apps Script writer. No account password or JSON key here. */
+var CENTER_HR_PROTOCOL = 1;
+var CENTER_HR_ENVIRONMENT = 'test';
+var CENTER_HR_SECRET_PROPERTY = 'CENTER_HR_BRIDGE_SECRET';
+var CENTER_HR_TAB = 'DS GÁN SHOP PGS';
+
+function kiemTraCauHinh() {
+  var key = PropertiesService.getScriptProperties().getProperty(CENTER_HR_SECRET_PROPERTY);
+  if (!/^[a-f0-9]{64}$/.test(key || '')) throw new Error('Thêm CENTER_HR_BRIDGE_SECRET trong Cài đặt dự án → Thuộc tính tập lệnh.');
+  if (typeof Sheets === 'undefined') throw new Error('Bấm dấu + ở Dịch vụ, thêm Google Sheets API v4.');
+  SpreadsheetApp.getActiveSpreadsheet();
+  return 'Cấu hình hợp lệ. Triển khai dưới dạng Ứng dụng web, thực thi bằng tài khoản của bạn, quyền truy cập Bất kỳ ai.';
+}
+function doGet() { return centerHrOutput_({ok:false,code:'POST_REQUIRED',message:'Chỉ nhận yêu cầu đã xác thực từ Dashboard.'}); }
+function centerHrOutput_(data) { return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON); }
+function centerHrMac_(text,key) {
+  return Utilities.computeHmacSha256Signature(text,key,Utilities.Charset.UTF_8).map(function(b){return ('0'+((b+256)%256).toString(16)).slice(-2);}).join('');
+}
+function centerHrEqual_(a,b) {
+  if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;
+  var difference=0;for(var i=0;i<a.length;i++)difference|=a.charCodeAt(i)^b.charCodeAt(i);return difference===0;
+}
+function centerHrProblem_(code,message) { var e=new Error(message);e.centerCode=code;throw e; }
+function centerHrMonth_() { return Utilities.formatDate(new Date(),'Asia/Ho_Chi_Minh','yyyy-MM'); }
+function centerHrMatrix_(input) {
+  if(!Array.isArray(input)||input.length<2||input.length>60000||!Array.isArray(input[0])||input[0].length<1||input[0].length>100||input.length*input[0].length>250000)centerHrProblem_('MATRIX_SIZE','Dữ liệu Excel không hợp lệ hoặc quá lớn.');
+  var width=input[0].length;
+  input.forEach(function(row){if(!Array.isArray(row)||row.length!==width||row.some(function(v){return typeof v!=='string';}))centerHrProblem_('MATRIX_FORMAT','Dữ liệu cần là bảng chuỗi đồng nhất.');});
+  var norm=function(v){return String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[Đđ]/g,'d').toLowerCase().replace(/[^a-z0-9]/g,'');};
+  var found=false;
+  for(var r=0;r<Math.min(20,input.length);r++){
+    var headers=input[r].map(norm),required=[['staffid','idnhanvien','maidnhanvien'],['staffname','nhanvien','hovaten','tennhanvien'],['code','manv','manhanvien','staffcode'],['area','khuvuc','region'],['shopid','idshop','mashop'],['shop','tenshop','shopname'],['loaiganshop','loaigan','assignmenttype','type']];
+    if(required.every(function(a){return a.some(function(v){return headers.indexOf(v)>=0;});})){
+      var typeIndex=headers.findIndex(function(v){return required[6].indexOf(v)>=0;}),codeIndex=headers.findIndex(function(v){return required[2].indexOf(v)>=0;});
+      found=input.slice(r+1).some(function(row){return norm(row[typeIndex])==='pg'&&row[codeIndex].trim()!=='';});break;
+    }
+  }
+  if(!found)centerHrProblem_('EXPORT_HEADERS','File không có đúng mẫu DS gán Shop PG và dòng PG hợp lệ.');
+  return input;
+}
+function centerHrSheet_(id) {
+  if(typeof Sheets==='undefined')centerHrProblem_('SHEETS_SERVICE','Chưa thêm dịch vụ Google Sheets API v4 trong Apps Script.');
+  var book;try{book=Sheets.Spreadsheets.get(id,{fields:'spreadsheetId,sheets(properties(sheetId,title,gridProperties))'});}catch(e){centerHrProblem_('SHEET_ACCESS','Tài khoản triển khai Apps Script chưa đọc được Google Sheet đã chọn.');}
+  if(book.spreadsheetId!==id)centerHrProblem_('SHEET_ID','Google Sheet trả về sai mã file.');
+  var tabs=(book.sheets||[]).map(function(s){return s.properties;}),matches=tabs.filter(function(s){return s.title===CENTER_HR_TAB;});
+  if(!matches.length)matches=tabs.filter(function(s){return s.title.trim()===CENTER_HR_TAB;});
+  if(matches.length!==1)centerHrProblem_('SHEET_TAB','Cần duy nhất tab DS GÁN SHOP PGS; chưa ghi dữ liệu.');
+  return matches[0];
+}
+function centerHrWrite_(request,sheet) {
+  if(request.month!==centerHrMonth_())centerHrProblem_('CURRENT_MONTH_ONLY','Chỉ ghi dữ liệu cho tháng hiện tại theo giờ Việt Nam.');
+  if(request.sheetId!==sheet.sheetId||request.sheetTitle!==sheet.title)centerHrProblem_('SHEET_CHANGED','Tab vừa thay đổi; hãy kiểm tra lại kết nối.');
+  var matrix=centerHrMatrix_(request.matrix),width=matrix[0].length,batch=[];
+  if(matrix.length>sheet.gridProperties.rowCount||width>sheet.gridProperties.columnCount)batch.push({updateSheetProperties:{properties:{sheetId:sheet.sheetId,gridProperties:{rowCount:Math.max(matrix.length,sheet.gridProperties.rowCount),columnCount:Math.max(width,sheet.gridProperties.columnCount)}},fields:'gridProperties.rowCount,gridProperties.columnCount'}});
+  batch.push({updateCells:{range:{sheetId:sheet.sheetId},rows:matrix.map(function(row){return {values:row.map(function(value){return {userEnteredValue:{stringValue:value}};})};}),fields:'userEnteredValue'}});
+  try{Sheets.Spreadsheets.batchUpdate({requests:batch},request.spreadsheetId);}catch(e){centerHrProblem_('SHEET_WRITE','Google Sheet chưa xác nhận lần ghi; cần đối soát kết quả trước khi chạy lại.');}
+  var letters='',n=width;while(n>0){n--;letters=String.fromCharCode(65+n%26)+letters;n=Math.floor(n/26);}
+  var range="'"+sheet.title.replace(/'/g,"''")+"'!A1:"+letters+matrix.length,read;
+  try{read=Sheets.Spreadsheets.Values.get(request.spreadsheetId,range,{valueRenderOption:'UNFORMATTED_VALUE'});}catch(e){centerHrProblem_('SHEET_READBACK','Chưa đọc lại được dữ liệu sau khi ghi.');}
+  var actual=read.values||[],same=actual.length===matrix.length;
+  for(var r=0;same&&r<matrix.length;r++)for(var c=0;c<width;c++)if(String((actual[r]||[])[c]===undefined?'':actual[r][c])!==matrix[r][c]){same=false;break;}
+  if(!same)centerHrProblem_('SHEET_READBACK','Dữ liệu đọc lại chưa khớp Excel.');
+  return {matrix:matrix,rows:matrix.length,columns:width,sheetVerified:true};
+}
+function doPost(e) {
+  var key=PropertiesService.getScriptProperties().getProperty(CENTER_HR_SECRET_PROPERTY),request=null,authenticated=false,lock=null,locked=false;
+  var reply=function(data){var payload=JSON.stringify(Object.assign({version:CENTER_HR_PROTOCOL,environment:CENTER_HR_ENVIRONMENT,nonce:request.nonce,month:request.month,spreadsheetId:request.spreadsheetId,action:request.action,deploymentUrl:request.deploymentUrl},data));return centerHrOutput_({payload:payload,signature:centerHrMac_('CENTER_HR_RESPONSE_V1\n'+payload,key)});};
+  try {
+    if(!/^[a-f0-9]{64}$/.test(key||''))return centerHrOutput_({ok:false,code:'UNCONFIGURED'});
+    var raw=e&&e.postData&&e.postData.contents;if(typeof raw!=='string'||raw.length>16000000)return centerHrOutput_({ok:false,code:'INVALID_REQUEST'});
+    var envelope=JSON.parse(raw);
+    if(typeof envelope.payload!=='string'||typeof envelope.signature!=='string'||!centerHrEqual_(envelope.signature,centerHrMac_('CENTER_HR_REQUEST_V1\n'+envelope.payload,key)))return centerHrOutput_({ok:false,code:'UNAUTHORIZED'});
+    request=JSON.parse(envelope.payload);
+    if(request.version!==CENTER_HR_PROTOCOL||request.environment!==CENTER_HR_ENVIRONMENT||!['metadata','write'].includes(request.action)||typeof request.nonce!=='string'||!/^[a-f0-9-]{36}$/.test(request.nonce)||typeof request.timestamp!=='number'||Math.abs(Date.now()-request.timestamp)>180000||typeof request.month!=='string'||!/^20\d{2}-(0[1-9]|1[0-2])$/.test(request.month)||typeof request.spreadsheetId!=='string'||!/^[A-Za-z0-9_-]{20,160}$/.test(request.spreadsheetId))return centerHrOutput_({ok:false,code:'INVALID_REQUEST'});
+    authenticated=true;
+    if(request.deploymentUrl!==ScriptApp.getService().getUrl())centerHrProblem_('DEPLOYMENT_URL','Link triển khai chưa khớp. Dùng URL /exec của đúng bản triển khai này.');
+    lock=LockService.getScriptLock();if(!lock.tryLock(10000))centerHrProblem_('BRIDGE_BUSY','Một lượt ghi đang xử lý. Hãy chờ rồi kiểm tra trạng thái.');
+    locked=true;
+    var props=PropertiesService.getScriptProperties(),seen={};try{seen=JSON.parse(props.getProperty('CENTER_HR_NONCES')||'{}');}catch(ignore){}
+    Object.keys(seen).forEach(function(nonce){if(typeof seen[nonce]!=='number'||seen[nonce]<Date.now()-600000)delete seen[nonce];});
+    if(seen[request.nonce])centerHrProblem_('REPLAY','Yêu cầu này đã được xử lý.');
+    if(Object.keys(seen).length>=100)centerHrProblem_('BRIDGE_BUSY','Đã đạt hạn mức yêu cầu tạm thời.');
+    seen[request.nonce]=Date.now();props.setProperty('CENTER_HR_NONCES',JSON.stringify(seen));
+    var sheet=centerHrSheet_(request.spreadsheetId);
+    return reply({ok:true,data:request.action==='metadata'?{sheet:sheet}:centerHrWrite_(request,sheet)});
+  } catch(error) {
+    if(!authenticated||!request)return centerHrOutput_({ok:false,code:'INVALID_REQUEST'});
+    return reply({ok:false,code:error.centerCode||'SCRIPT_ERROR',message:error.centerCode?error.message:'Apps Script chưa xử lý xong yêu cầu. Hãy kiểm tra cấu hình và quyền Google.'});
+  } finally {if(locked)lock.releaseLock();}
+}

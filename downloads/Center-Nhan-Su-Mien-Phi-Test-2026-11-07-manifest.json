@@ -1,0 +1,43 @@
+{
+  "version": "2026-11-07-free-apps-script",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "8edf46128f8f2c02c9b762dedf1b64514d44f9b9",
+  "html": "Dashboard-Test-2026-11-07-Center-Nhan-Su-Mien-Phi.html",
+  "sha256": "9b553ea7ca33c1cb64e47dbea7937775d5dda1a43784e7d0f916a5448356278a",
+  "blob": "33b4c215cc8eee1f9fcc6bc736b0cfefad690e27",
+  "feature": "Google Apps Script bằng Gmail; Lưu/Sửa tài khoản Center và kết nối mã hóa; link Google Sheet theo tháng; lịch Test 08:00",
+  "backend": {
+    "name": "center-hr-sync-test",
+    "version": 4,
+    "files_sha256": {
+      "bridge.js": "eeb1021d081fe407fe21b1b3c7d4ff421119c34d4e69f5543d6118a94de1d126",
+      "index.ts": "3d6d4a0687a791ea2c41fd0854d37348616e716fd6343a2185e70ec02ec60066",
+      "xlsx.mjs": "1a0fb062ee9781b13f6687371b202aaefc53b6ce55b530c027e01f9c087b77db",
+      "model.js": "0039fc67f1df70b37392f6137fb116911815344d23737a0b1bf17ffb1685176a",
+      "deno.json": "aeafa4ada44f102663a0d1aef455f014834159077d98db0097be27dfa099892e",
+      "LICENSE-SheetJS.txt": "4d2a38ac35cda06a555c84074a819d413339cd3691b822cae50f8f322fe01f64",
+      "transport.js": "c2558638dc8006e03575f8bf8b993fae0fc695b9c69cfd1d2886d999fb321752",
+      "access.ts": "409f617a97012938d9d34eda8b0990a345872f626bb17cb87442cb1a0c4a3cee"
+    },
+    "jwt_gateway": false,
+    "own_auth": "Fresh Dashboard Admin session or private cron token"
+  },
+  "script_sha256": "bd15656fe7b74969ca126b9c08ef748e9d634215f38cf444fcd239ebd79e90b9",
+  "schedule": {
+    "cron": "0 1 * * *",
+    "timezone": "GMT",
+    "user_timezone": "Asia/Saigon",
+    "time": "08:00",
+    "enabled_months_at_release": 0
+  },
+  "ready_for_live_sync": false,
+  "owner_setup_needed": [
+    "Center username/password via secure form",
+    "Deploy Apps Script and grant own Google consent once",
+    "Save Apps Script URL and shared key via secure form",
+    "Monthly separate Test Google Sheet link",
+    "Successful real Test run before enabling schedule"
+  ],
+  "scope": "Test only. No existing HR/Trainer/Sale/KPI KV writes. Main repository unchanged."
+}
