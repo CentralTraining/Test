@@ -1,0 +1,41 @@
+{
+  "version": "2026-11-07-center-4-tabs",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "19cc8ae55835c382eedd405574dbd1781c39892d",
+  "html": "Dashboard-Test-2026-11-07-Center-4-Tab-Nhan-Su.html",
+  "html_sha256": "0c4b62ccc4ef140af7b8298ab14ec425bffbee02dbd7021e056ceda7c28b681d",
+  "html_bytes": 2702410,
+  "feature": "Replace DS GÁN SHOP PGS, SAO PGS, ON, OFF together; current stars and full-month ON/OFF exports; clear old tails; create missing extra tabs; exact readback",
+  "backend": {
+    "name": "center-hr-sync-test",
+    "version": 16,
+    "files_sha256": {
+      "LICENSE-SheetJS.txt": "4d2a38ac35cda06a555c84074a819d413339cd3691b822cae50f8f322fe01f64",
+      "access.ts": "409f617a97012938d9d34eda8b0990a345872f626bb17cb87442cb1a0c4a3cee",
+      "bridge.js": "23946aca7e18f7d7ea0fdf06884b2ed663a2081e2641191a0e97182fbf67192e",
+      "deno.json": "aeafa4ada44f102663a0d1aef455f014834159077d98db0097be27dfa099892e",
+      "index.ts": "2de4e94a5974cc1ecf492c19622930d0a735b8b450aea1a08ae28c48f128b0db",
+      "model.js": "c82fba168c5022e88f87f24f38dd4d0003ae932d34434c45c69844630354566f",
+      "sources.js": "da34f4285b39c2e5302d2d0d71fa49d90362e08aff5946c1cc2c90e6d9ab3600",
+      "transport.js": "69494cd74d443e2bbce1c585ea8e90d62fcd22163498b8b2557eabee75083c20",
+      "xlsx.mjs": "1a0fb062ee9781b13f6687371b202aaefc53b6ce55b530c027e01f9c087b77db"
+    }
+  },
+  "writer_version": 3,
+  "pipeline_version": 3,
+  "owner_apps_script_update_required": true,
+  "live_center_exports_read_only_verified": true,
+  "live_google_write_performed_by_assistant": false,
+  "schedule_enabled_by_assistant": false,
+  "main_changed": false,
+  "tests": [
+    "Correct export buttons, Working status Choose and monthly date filters",
+    "30/31/leap-February calendar and strict exported date validation",
+    "Four-source preflight, header-only empty ON/OFF",
+    "Single atomic four-tab replace/create/unmerge and clear stale cells",
+    "Signed HMAC, replay, redirect, fresh Admin and Cron token gates",
+    "Old UI and old writer denied before new writes",
+    "Synthetic UI 1440/390/320 and exact Code.gs download"
+  ]
+}
