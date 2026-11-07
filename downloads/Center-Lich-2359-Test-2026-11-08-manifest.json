@@ -1,0 +1,21 @@
+{
+  "version": "2026-11-08-center-2359",
+  "frontend": "Test",
+  "schedule": "23:59 Asia/Saigon",
+  "cronUtc": "59 16 * * *",
+  "edgeVersion": 20,
+  "pipelineVersion": 4,
+  "appsScriptWriterVersion": 3,
+  "files": [
+    {
+      "name": "Dashboard-Test-2026-11-08-Center-Lich-2359.html",
+      "bytes": 2705622,
+      "sha256": "af21f0b710443b356f1cc15e1d4a0d336b9d7f256206cced6dd96ab644df4d54"
+    },
+    {
+      "name": "Center-Lich-2359-Test-2026-11-08-README.txt",
+      "bytes": 1245,
+      "sha256": "0f0ed1ae607b8cd55c5b87140052bf70419fa1ba95feff982a93059e0feeaa13"
+    }
+  ]
+}
