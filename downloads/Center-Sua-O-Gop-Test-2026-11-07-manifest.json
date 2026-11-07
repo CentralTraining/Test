@@ -1,0 +1,37 @@
+{
+  "version": "2026-11-07-center-sheet-unmerge",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "108a902fff3d5692e8cce9c115866cdd834a2eef",
+  "html": "Dashboard-Test-2026-11-07-Center-Sua-O-Gop.html",
+  "sha256": "e6592e4800f769741a13651529289cf76f6de53568e2773c14b54d493e40dc4f",
+  "frontend_changed": true,
+  "feature": "Unmerge fixed receiving tab and replace literal values in one atomic batch; exact readback preserved",
+  "backend": {
+    "name": "center-hr-sync-test",
+    "version": 12,
+    "files_sha256": {
+      "LICENSE-SheetJS.txt": "4d2a38ac35cda06a555c84074a819d413339cd3691b822cae50f8f322fe01f64",
+      "access.ts": "409f617a97012938d9d34eda8b0990a345872f626bb17cb87442cb1a0c4a3cee",
+      "bridge.js": "76a4f5557b7076bbce876de50b0b1a822ff985ad90c4792ad31dca4944aff122",
+      "deno.json": "aeafa4ada44f102663a0d1aef455f014834159077d98db0097be27dfa099892e",
+      "index.ts": "d9abe171f4b5b9c94fdc89e51bd9dabdf454407e7cc62c79148e8194402a02f1",
+      "model.js": "c82fba168c5022e88f87f24f38dd4d0003ae932d34434c45c69844630354566f",
+      "transport.js": "a01a5fe949a5f20f3e57a13f3957ef3b1d5f5ccb1bf784f0332e3d50a0e6779a",
+      "xlsx.mjs": "1a0fb062ee9781b13f6687371b202aaefc53b6ce55b530c027e01f9c087b77db"
+    }
+  },
+  "apps_script_writer_version": 2,
+  "owner_apps_script_update_required": true,
+  "live_google_sheet_write_performed": false,
+  "new_hr_snapshot_created": false,
+  "schedule_enabled": false,
+  "main_changed": false,
+  "tests": [
+    "Merged Channel regression and atomic batch failure",
+    "Signed metadata capability gate blocks old writer before write",
+    "Worker integration with synthetic Center/Google",
+    "UI 1440/390/320 and exact Code.gs download",
+    "Missing/forged Dashboard and Cron auth denied"
+  ]
+}
