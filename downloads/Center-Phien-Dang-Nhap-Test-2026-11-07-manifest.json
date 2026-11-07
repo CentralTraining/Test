@@ -1,0 +1,57 @@
+{
+  "version": "2026-11-07-center-verified-session",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "f74fb56470ae770f551eac2b01dff6d4bc836437",
+  "html": "Dashboard-Test-2026-11-07-Center-Phien-Dang-Nhap.html",
+  "sha256": "b735f7a3af2a4f6d24db912451dd811b9428cb577d1bf6bbee9f8b30b6afbe4b",
+  "blob": "d74f86bf9e3f9c428cc0afdab5d0592f2ad83d55",
+  "feature": "Detect Center CAPTCHA before login; optional encrypted user-verified Center session; explicit session expiry; retain Dashboard session on Center errors",
+  "backend": {
+    "name": "center-hr-sync-test",
+    "version": 5,
+    "verify_jwt": false,
+    "own_auth": "Fresh Dashboard Admin signed session or private Cron token",
+    "files_sha256": {
+      "bridge.js": "eeb1021d081fe407fe21b1b3c7d4ff421119c34d4e69f5543d6118a94de1d126",
+      "index.ts": "68caacebf05f31f86f6df5b2753587bbbe92aa962ab188d5f3f1bf21f21993e3",
+      "xlsx.mjs": "1a0fb062ee9781b13f6687371b202aaefc53b6ce55b530c027e01f9c087b77db",
+      "model.js": "c82fba168c5022e88f87f24f38dd4d0003ae932d34434c45c69844630354566f",
+      "deno.json": "aeafa4ada44f102663a0d1aef455f014834159077d98db0097be27dfa099892e",
+      "LICENSE-SheetJS.txt": "4d2a38ac35cda06a555c84074a819d413339cd3691b822cae50f8f322fe01f64",
+      "transport.js": "58b7fd54fc1341c474c4e92badbad345e1712a490181de36196c9fe9d9652a09",
+      "access.ts": "409f617a97012938d9d34eda8b0990a345872f626bb17cb87442cb1a0c4a3cee"
+    }
+  },
+  "database_verification": {
+    "runs": 0,
+    "status": "passed",
+    "enabled": 0,
+    "sources": 1,
+    "snapshots": 0,
+    "newline_rejected": true,
+    "test_schedule_invalidated": true,
+    "legacy_password_compatible": true,
+    "vault_ciphertext_and_readback": true,
+    "real_source_or_connection_rows_touched": false,
+    "service_role_session_save_edit_and_cas": true,
+    "fixture_function_cloned_from_deployed_source": true,
+    "safeupdate_and_private_permissions_preserved": true,
+    "all_synthetic_tables_function_and_secrets_rolled_back": true
+  },
+  "ui_widths": [
+    1440,
+    390,
+    320
+  ],
+  "live_center_authenticated_export_verified": false,
+  "live_google_sheet_write_performed": false,
+  "schedule_enabled": false,
+  "owner_setup_needed": [
+    "Login directly on Center and complete verification",
+    "Save existing Center session Cookie through encrypted Test form",
+    "Successful real Center/Sheet probes and Test run before enabling08:00"
+  ],
+  "limitation": "Center controls session expiry; owner renews an expired session. Long-term unattended access needs an integration/API supplied by Center.",
+  "main_changed": false
+}
