@@ -2797,6 +2797,29 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
 .mobile-layout #soListFilterMilestone legend,.mobile-layout #soListMilestoneSelection{font-size:11px;}
 .mobile-layout #soListMilestoneHelp{font-size:10px;}
 </style>
+<style>
+#centerHrBox .center-hr-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+#centerHrBox .center-hr-tag{background:var(--amber-bg,#fff5df);color:var(--amber,#865d14);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800;white-space:nowrap;}
+#centerHrBox .center-hr-source{margin:15px 0;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--bg);}
+#centerHrBox label{display:block;font-weight:700;margin-bottom:8px;}
+#centerHrBox input{display:block;width:100%;min-width:0;box-sizing:border-box;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--card,#fff);color:var(--text);}
+#centerHrBox input[readonly]{background:var(--green-bg,#edf5f0);}
+#centerHrBox .center-hr-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px;}
+#centerHrBox .center-hr-connections{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;font-weight:700;margin:12px 0;}
+#centerHrBox .center-hr-connections>span{border:1px solid var(--line);border-radius:7px;padding:7px 9px;}
+#centerHrBox .center-hr-setup{border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.7;}
+#centerHrBox summary{font-weight:800;cursor:pointer;}
+#centerHrBox .center-hr-setup code{overflow-wrap:anywhere;}
+#centerHrBox .center-hr-message{font-size:13px;font-weight:700;line-height:1.6;overflow-wrap:anywhere;}
+#centerHrBox .center-hr-last{font-size:12px;line-height:1.8;padding:12px 0;}
+#centerHrBox .center-hr-preview-scroll{overflow:auto;max-height:390px;border:1px solid var(--line);border-radius:10px;}
+#centerHrBox table{font-size:12px;min-width:850px;width:100%;border-collapse:collapse;}
+#centerHrBox td,#centerHrBox th{padding:9px;border-bottom:1px solid var(--line);text-align:left;}
+#centerHrBox th{background:var(--green-bg,#e8f3ed);color:var(--green-dark);position:sticky;top:0;}
+#centerHrBox .center-hr-footnote{margin:15px 0 0;}
+@media(max-width:600px){#centerHrBox .center-hr-source{padding:12px;}#centerHrBox .center-hr-heading{gap:8px;}#centerHrBox .center-hr-actions button{white-space:normal;max-width:100%;}#centerHrBox .center-hr-setup{padding:10px;}#centerHrBox .center-hr-setup ol{padding-left:18px;}}
+
+</style>
 </head>
 <body>
 
@@ -3596,6 +3619,27 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
             <button class="danger" id="onoffResetAllBtn" type="button">🗑 Xoá sạch, làm lại từ đầu</button>
           </div>
           <span class="save-msg" id="onoffImportMsg" style="display:none;"></span>
+        </div>
+        <div class="cfg-card admin-only-gsheet" id="centerHrBox" hidden>
+          <div class="center-hr-heading"><div><h3>Đồng bộ Center lúc 08:00 — Chạy thử</h3><p class="section-desc">Export gán shop hiện tại → Google Sheet → kết quả nhập thử riêng. Chọn tháng ở đầu Dashboard; mỗi tháng lưu một link.</p></div><span class="center-hr-tag">BẢN TEST</span></div>
+          <div class="center-hr-source">
+            <label for="centerHrUrl">Link Google Sheet — <strong id="centerHrMonth"></strong></label>
+            <input id="centerHrUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://docs.google.com/spreadsheets/d/…/edit" disabled>
+            <p class="section-desc">Dùng <strong>bản sao Google Sheet riêng cho Test</strong>. Tab nhận dữ liệu: <strong>DS GÁN SHOP PGS</strong>. Toàn bộ giá trị trong tab này được thay bằng nội dung Excel; các tab khác được giữ nguyên.</p>
+            <div class="center-hr-actions"><button type="button" class="primary" id="centerHrSave" disabled>Lưu link tháng này</button><button type="button" class="secondary" id="centerHrEdit" hidden>Sửa link</button><button type="button" class="secondary" id="centerHrCancel" hidden>Hủy sửa</button><button type="button" class="secondary" id="centerHrReload">↻ Tải trạng thái</button></div>
+          </div>
+          <div class="center-hr-connections"><span id="centerHrCenterStatus">Center: chưa kiểm tra</span><span id="centerHrGoogleStatus">Google: chưa kiểm tra</span><span id="centerHrScheduleStatus">Lịch chạy thử: chưa kiểm tra</span></div>
+          <p class="section-desc" id="centerHrServiceEmail"></p>
+          <details class="center-hr-setup"><summary>Thiết lập kết nối bảo mật (làm một lần)</summary>
+            <p>Mở <a href="https://supabase.com/dashboard/project/qruxqlsbhyhwiqjdkyyc/integrations/vault/secrets" target="_blank" rel="noopener noreferrer">Supabase Vault của dự án</a>, tạo hai mục dưới đây. Giá trị được mã hóa trong Vault; không gửi mật khẩu hoặc JSON key vào cuộc trò chuyện.</p>
+            <ol><li>Tên <code>center_hr_test_erp_credentials</code>. Giá trị là JSON theo mẫu <code>{"username":"TÀI KHOẢN CENTER","password":"MẬT KHẨU CENTER"}</code>.</li><li>Tên <code>center_hr_test_google_service_account</code>. Giá trị là toàn bộ JSON key của tài khoản dịch vụ Google. Bật Google Sheets API trong dự án Google Cloud, rồi chia sẻ quyền <strong>Chỉnh sửa</strong> file Sheet cho địa chỉ <code>client_email</code> trong JSON.</li></ol>
+            <p>Sau khi lưu trong Vault, bấm <strong>Tải trạng thái</strong>, kiểm tra hai kết nối, rồi chạy thử. Không lưu mật khẩu hoặc private key trong Dashboard, GitHub, link Sheet hay trình duyệt.</p>
+          </details>
+          <div class="center-hr-actions center-hr-run-actions"><button type="button" class="secondary" id="centerHrProbeCenter" disabled>Kiểm tra Center</button><button type="button" class="secondary" id="centerHrProbeGoogle" disabled>Kiểm tra Sheet</button><button type="button" class="primary" id="centerHrRun" disabled>Chạy thử — ghi Sheet &amp; nhập thử</button><button type="button" class="secondary" id="centerHrToggle" disabled>Bật lịch chạy thử 08:00</button></div>
+          <p class="center-hr-message" id="centerHrMessage" role="status" aria-live="polite">Bấm Tải trạng thái để mở cấu hình đã lưu.</p>
+          <div id="centerHrLastRun" class="center-hr-last"></div>
+          <div id="centerHrPreview" hidden></div>
+          <p class="section-desc center-hr-footnote">Nhân sự thử được lưu riêng cho tháng đang chọn. Dữ liệu nhân sự, Trainer, Sale và KPI của Dashboard chính chưa được cập nhật bởi luồng này. Lịch khởi chạy lúc 08:00 giờ Việt Nam; thời gian hoàn tất tùy Center và Google.</p>
         </div>
       </div>
       <div id="panel-data-nhansu-hang" class="panel">
@@ -17198,6 +17242,7 @@ function currentTabId_(){
   return b ? b.dataset.tab : 'home';
 }
 function renderAll(){
+  if(typeof centerHrMount_==='function')centerHrMount_();
   // Tối ưu: CHỈ render tab đang xem (thay vì render mọi tab mỗi lần) -> nhanh hơn nhiều.
   const keepX = window.scrollX || 0;
   const keepY = window.scrollY || 0;
@@ -21579,5 +21624,95 @@ async function exportMediaReportExcel_(){
 <style id="frequency-target-roster-20261103">.frequency-target-control{margin-top:14px;padding:14px 16px;background:var(--bg);border:1px solid var(--line);border-radius:12px;color:var(--text);}
 .frequency-target-choice{display:flex;align-items:center;flex-wrap:wrap;gap:10px;}.frequency-target-choice label{font-weight:700;}.frequency-target-choice select{width:210px;max-width:100%;}.frequency-target-control p{margin:8px 0 0;line-height:1.6;}.frequency-target-overlay{position:fixed;inset:0;z-index:245;background:rgba(8,35,26,.48);display:flex;align-items:center;justify-content:center;padding:16px;}.frequency-target-modal{width:min(850px,100%);max-height:90dvh;overflow:auto;box-sizing:border-box;padding:24px;border-radius:18px;background:#fff;box-shadow:0 18px 70px #10251a33;}.frequency-target-modal h3{margin:0 0 10px;}.frequency-target-modal>label{display:block;font-weight:700;margin:14px 0 6px;}.frequency-target-modal>input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:9px;min-height:40px;font:inherit;background:#fff;color:var(--text);}.frequency-target-modal>input:focus{outline:2px solid #00945c55;border-color:var(--green);}.frequency-target-modal table{font-size:12px;}.frequency-target-modal td{overflow-wrap:anywhere;}.frequency-target-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}.frequency-target-summary{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:#eaf5ef;padding:12px;border-radius:10px;margin:12px 0;}.frequency-target-summary span{font-size:12px;}.frequency-target-modal details{margin-top:12px;}.frequency-target-modal summary{cursor:pointer;font-weight:700;}@media(max-width:600px){.frequency-target-modal{padding:16px;max-height:94dvh;}.frequency-target-overlay{padding:10px;}.frequency-target-choice{align-items:stretch;}.frequency-target-choice label{width:100%;}.frequency-target-choice select,.frequency-target-choice button{width:100%;}.frequency-target-actions button{flex:1 1 100%;}.frequency-target-modal th,.frequency-target-modal td{padding:8px;}.frequency-target-summary{gap:5px;}}
 </style>
+<script>
+/* Center HR Test: admin-only monthly configuration. No password/key storage in browser. */
+const centerHrState_={key:'',loaded:false,busy:false,editing:false,data:null,request:0,page:0,snapshot:null,uncertain:false,timer:null};
+const centerHrOwner_=()=>JSON.stringify([session?.userId,session?.role,session?.trainerId,session?.region]);
+const centerHrKey_=()=>centerHrOwner_()+':'+currentMonth;
+const centerHrEl_=id=>document.getElementById('centerHr'+id);
+const centerHrEscape_=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const centerHrCurrentMonth_=()=>new Date(Date.now()+7*3600000).toISOString().slice(0,7);
+function centerHrMessage_(text,error=false){const el=centerHrEl_('Message');if(el){el.textContent=text;el.style.color=error?'var(--red)':'var(--green-dark)';}}
+function centerHrMount_(){
+ const box=document.getElementById('centerHrBox');if(!box)return;
+ const allowed=!!session&&isAdmin();box.hidden=!allowed;if(!allowed){centerHrState_.key='';clearTimeout(centerHrState_.timer);return;}
+ const key=centerHrKey_();if(centerHrState_.key!==key){clearTimeout(centerHrState_.timer);Object.assign(centerHrState_,{key,loaded:false,busy:false,editing:false,data:null,snapshot:null,page:0,uncertain:false});centerHrState_.request++;centerHrEl_('Url').value='';centerHrEl_('Preview').hidden=true;centerHrEl_('LastRun').textContent='';centerHrMessage_('Bấm Tải trạng thái để mở cấu hình đã lưu.');centerHrPaint_();}
+}
+function centerHrPaint_(){
+ const s=centerHrState_,d=s.data||{},c=d.connections||{},saved=s.loaded&&d.version>0,can=s.loaded&&!s.busy,editing=s.editing||!saved;
+ centerHrEl_('Month').textContent=(currentMonth||'').split('-').reverse().join('/');
+ const input=centerHrEl_('Url');input.disabled=!can;input.readOnly=!editing;
+ centerHrEl_('Save').hidden=!editing;centerHrEl_('Save').disabled=!can;
+ centerHrEl_('Edit').hidden=!saved||editing;centerHrEl_('Edit').disabled=!can;
+ centerHrEl_('Cancel').hidden=!saved||!editing;centerHrEl_('Cancel').disabled=!can;
+ centerHrEl_('Reload').disabled=s.busy;
+ centerHrEl_('ProbeCenter').disabled=!can||!c.center;
+ centerHrEl_('ProbeGoogle').disabled=!can||!saved||editing||!c.google;
+ const running=d.lastRun?.status==='running';
+ centerHrEl_('Run').disabled=!can||!saved||editing||!c.center||!c.google||currentMonth!==centerHrCurrentMonth_()||running||s.uncertain;
+ centerHrEl_('Toggle').disabled=!can||!saved||editing||(!d.enabled&&(!c.center||!c.google||d.lastRun?.status!=='succeeded'));
+ centerHrEl_('Toggle').textContent=d.enabled?'Tắt lịch chạy thử':'Bật lịch chạy thử 08:00';
+ centerHrEl_('CenterStatus').textContent='Center: '+(s.loaded?(c.center?'đã lưu trong Vault':'chưa lưu trong Vault'):'chưa kiểm tra');
+ centerHrEl_('GoogleStatus').textContent='Google: '+(s.loaded?(c.google?'đã lưu trong Vault':'chưa lưu trong Vault'):'chưa kiểm tra');
+ centerHrEl_('ScheduleStatus').textContent='Lịch chạy thử: '+(s.loaded?(d.enabled?'08:00 giờ Việt Nam':'chưa bật'):'chưa kiểm tra');
+ centerHrEl_('ServiceEmail').textContent=c.serviceEmail?'Chia sẻ quyền Chỉnh sửa Google Sheet cho: '+c.serviceEmail:'';
+ if(d.lastRun){
+  const j=d.lastRun,v=j.summary||{},labels={running:'Đang xử lý',succeeded:'Thành công',failed:'Chưa hoàn tất',uncertain:'Cần đối soát kết quả'},when=j.finished_at||j.started_at;
+  centerHrEl_('LastRun').textContent='Lượt gần nhất: '+(labels[j.status]||j.status)+' · '+new Date(when).toLocaleString('vi-VN',{timeZone:'Asia/Saigon'})+(v.stage?' · '+v.stage:'')+(j.status==='succeeded'?` · ${v.rows} dòng Excel · ${v.pgs} PG nhập thử · thêm ${v.added}, cập nhật ${v.updated}`:'')+(v.message?' · '+v.message:'');
+  centerHrEl_('LastRun').style.color=['failed','uncertain'].includes(j.status)?'var(--red)':'var(--text)';
+  if(j.status==='succeeded'&&!document.getElementById('centerHrShowPreview')){const button=document.createElement('button');button.id='centerHrShowPreview';button.className='secondary';button.type='button';button.textContent='Xem nhân sự nhập thử';button.style.marginLeft='10px';button.addEventListener('click',()=>centerHrOperate_('snapshot'));centerHrEl_('LastRun').append(button);}
+ }
+}
+async function centerHrApi_(action,extra={}){
+ const key=centerHrKey_(),month=currentMonth,token=await workshopNoiboToken_();
+ if(key!==centerHrKey_())throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy tải lại.');
+ const res=await fetch(SUPABASE_URL+'/functions/v1/center-hr-sync-test',{method:'POST',headers:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY},body:JSON.stringify({action,month,...extra,dashboardToken:token}),signal:AbortSignal.timeout(['run','probe_center'].includes(action)?150000:30000)});
+ let data;try{data=await res.json();}catch{throw Error('Chưa nhận được phản hồi hợp lệ. Hãy tải lại trạng thái.');}
+ if(key!==centerHrKey_())throw Error('Tháng hoặc tài khoản đã thay đổi. Hãy tải lại.');
+ if(res.status===401)sessionStorage.removeItem('workshop_private_session');
+ if(!res.ok||!data.ok){const error=Error(data.error||'Chưa hoàn tất yêu cầu.');error.code=data.code;throw error;}
+ if(data.month!==month||data.environment!=='test')throw Error('Phản hồi không khớp tháng hoặc môi trường Test.');
+ return data;
+}
+async function centerHrOperate_(action){
+ centerHrMount_();const s=centerHrState_;if(!isAdmin()||s.busy)return;
+ const key=s.key,ticket=++s.request,old=s.data;let extra={};
+ if(action==='save_source')extra={url:centerHrEl_('Url').value,version:old?.version||0};
+ if(action==='toggle')extra={version:old?.version||0,enabled:!old?.enabled};
+ if(action==='run'){
+  const okay=await showConfirm('Chạy thử tháng '+currentMonth+'? Toàn bộ giá trị trong tab DS GÁN SHOP PGS của link đã lưu sẽ được thay bằng Excel mới từ Center. Nhân sự thử được lưu riêng; dữ liệu nhân sự chính chưa đổi.');
+  if(!okay||key!==centerHrKey_())return;
+ }
+ s.busy=true;centerHrPaint_();centerHrMessage_(action==='run'?'Đang lấy Excel → ghi và đọc lại Sheet → nhập thử. Vui lòng đợi...':'Đang xử lý...');
+ try{
+  const data=await centerHrApi_(action,extra);if(ticket!==s.request||key!==centerHrKey_())return;
+  if(['status','save_source','toggle','run'].includes(action)){s.data=data;s.loaded=true;s.editing=false;s.uncertain=false;centerHrEl_('Url').value=data.url||'';}
+  if(action==='snapshot'){s.snapshot=data.snapshot;s.page=0;centerHrPreview_();}
+  const text={status:'Đã đọc cấu hình của tháng đang chọn.',save_source:'Đã lưu và khóa link tháng này. Bấm Sửa link khi cần thay đổi.',toggle:data.enabled?'Đã bật lịch chạy thử 08:00 giờ Việt Nam cho tháng này.':'Đã tắt lịch chạy thử.',run:'Đã ghi Sheet, đọc lại khớp Excel và lưu kết quả nhân sự thử riêng.',snapshot:'Đã mở kết quả nhập thử.'};
+  centerHrMessage_(data.message||text[action]||'Đã hoàn tất.');
+ }catch(error){
+  if(ticket!==s.request||key!==centerHrKey_())return;
+  if(action==='run'){
+   s.uncertain=true;
+   try{const latest=await centerHrApi_('status');if(key===centerHrKey_()){s.data=latest;s.loaded=true;s.uncertain=false;}}catch{}
+  }
+  centerHrMessage_(error.message||'Chưa hoàn tất. Hãy tải lại trạng thái.',true);
+ }finally{
+  if(ticket===s.request&&key===centerHrKey_()){s.busy=false;centerHrPaint_();clearTimeout(s.timer);if(s.data?.lastRun?.status==='running')s.timer=setTimeout(()=>{if(key===centerHrKey_()&&!document.getElementById('centerHrBox').hidden)centerHrOperate_('status');},10000);}
+ }
+}
+function centerHrPreview_(){
+ const s=centerHrState_,box=centerHrEl_('Preview'),data=s.snapshot?.data;if(!data){box.hidden=true;centerHrMessage_('Chưa có kết quả nhân sự nhập thử.',true);return;}
+ const rows=data.affected||[],pageSize=10,total=Math.max(1,Math.ceil(rows.length/pageSize));s.page=Math.max(0,Math.min(s.page,total-1));
+ const e=centerHrEscape_,trainers=new Map((data.trainers||[]).map(t=>[t.id,t.name]));
+ box.hidden=false;box.innerHTML=`<h4>Nhân sự nhập thử — ${e(s.snapshot.month)} (${rows.length} PG)</h4><div class="center-hr-preview-scroll" data-mobile-scroll="center-hr-preview"><table><thead><tr><th>Code</th><th>Họ tên</th><th>Mã shop</th><th>Shop</th><th>Khu vực</th><th>Trainer</th><th>Sale</th><th>Sao</th><th>Trạng thái</th></tr></thead><tbody>${rows.slice(s.page*pageSize,(s.page+1)*pageSize).map(p=>`<tr><td>${e(p.code)}</td><td>${e(p.name)}</td><td>${e(p.shopId)}</td><td>${e(p.shop)}</td><td>${e(p.area)}</td><td>${e(trainers.get(p.trainerId)||'Chưa gán')}</td><td>${e(p.sale)}</td><td>${e(p.star)}</td><td>${e(p.status)}</td></tr>`).join('')}</tbody></table></div><div class="center-hr-actions"><button type="button" class="secondary" data-center-page="-1" ${s.page===0?'disabled':''}>‹</button><span>Trang ${s.page+1}/${total}</span><button type="button" class="secondary" data-center-page="1" ${s.page+1>=total?'disabled':''}>›</button></div>`;
+ box.querySelectorAll('[data-center-page]').forEach(button=>button.addEventListener('click',()=>{s.page+=Number(button.dataset.centerPage);centerHrPreview_();}));
+}
+for(const [id,action] of [['Reload','status'],['Save','save_source'],['ProbeCenter','probe_center'],['ProbeGoogle','probe_google'],['Run','run'],['Toggle','toggle']])centerHrEl_(id)?.addEventListener('click',()=>centerHrOperate_(action));
+centerHrEl_('Edit')?.addEventListener('click',()=>{if(centerHrState_.busy)return;centerHrState_.editing=true;centerHrPaint_();centerHrMessage_('Đang sửa. Link cũ còn hiệu lực đến khi lưu thành công.');centerHrEl_('Url').focus();});
+centerHrEl_('Cancel')?.addEventListener('click',()=>{if(centerHrState_.busy)return;centerHrState_.editing=false;centerHrEl_('Url').value=centerHrState_.data?.url||'';centerHrPaint_();centerHrMessage_('Đã hủy sửa; giữ link đã lưu.');});
+centerHrMount_();
+
+</script>
 </body>
 </html>

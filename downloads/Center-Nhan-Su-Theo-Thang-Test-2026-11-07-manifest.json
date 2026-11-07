@@ -1,0 +1,40 @@
+{
+  "version": "2026-11-07",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "18efd1de660ef2e8c81024b71b53b5977879135f",
+  "html": "Dashboard-Test-2026-11-07-Center-Nhan-Su-Theo-Thang.html",
+  "sha256": "5aefcc35d3c8cad0d6af9d64a83ff6d21b505fe626e0a33afb3c404427d03cb2",
+  "blob": "cd35c5008eb6208e00314b47e966a1faf52d79af",
+  "feature": "Link nhân sự riêng từng tháng, Lưu/Sửa, kết nối Vault và đồng bộ Center 08:00 chạy thử",
+  "backend": {
+    "name": "center-hr-sync-test",
+    "version": 3,
+    "files_sha256": {
+      "index.ts": "3a334a41cbe3001f4e48b23f6724ae9a2cc61014025501628233d81df650dcf7",
+      "xlsx.mjs": "1a0fb062ee9781b13f6687371b202aaefc53b6ce55b530c027e01f9c087b77db",
+      "model.js": "e439126b31f20b438d2ef07a038beff54542107d4e781275341ebc26f7418eac",
+      "deno.json": "aeafa4ada44f102663a0d1aef455f014834159077d98db0097be27dfa099892e",
+      "transport.js": "4205a53006244cbe558916946df7786f9ff2bebeb6dd45a05e32661bf48c833a",
+      "access.ts": "409f617a97012938d9d34eda8b0990a345872f626bb17cb87442cb1a0c4a3cee"
+    },
+    "gateway_jwt": false,
+    "own_auth": "Fresh Dashboard Admin session or private scheduler token"
+  },
+  "schedule": {
+    "cron": "0 1 * * *",
+    "cron_timezone": "GMT",
+    "user_timezone": "Asia/Saigon",
+    "time": "08:00",
+    "current_month_only": true,
+    "enabled_months_at_release": 0
+  },
+  "ready": false,
+  "missing_setup": [
+    "Monthly Test Google Sheet link",
+    "Center credentials in Vault",
+    "Google service account JSON in Vault",
+    "A successful live Test run"
+  ],
+  "scope": "Only new Test integration data and Test HTML. No existing HR/Trainer/Sale/KPI KV writes. Main repository unchanged."
+}
