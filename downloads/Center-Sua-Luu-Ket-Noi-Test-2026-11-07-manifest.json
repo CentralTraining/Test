@@ -1,0 +1,31 @@
+{
+  "version": "2026-11-07-storage-fix",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "html": "Dashboard-Test-2026-11-07-Center-Sua-Luu-Ket-Noi.html",
+  "sha256": "9b553ea7ca33c1cb64e47dbea7937775d5dda1a43784e7d0f916a5448356278a",
+  "blob": "33b4c215cc8eee1f9fcc6bc736b0cfefad690e27",
+  "change": "Private Test RPC: conditional schedule invalidation compatible with Data API safeupdate",
+  "root_error": "21000 UPDATE requires a WHERE clause",
+  "frontend_changed": false,
+  "edge_function_changed": false,
+  "edge_function_version": 4,
+  "database_verification": {
+    "runs": 0,
+    "status": "passed",
+    "enabled": 0,
+    "sources": 1,
+    "snapshots": 0,
+    "connections": 0,
+    "stale_revision_blocked": true,
+    "public_access_stays_denied": true,
+    "schedule_invalidation_tested": true,
+    "encrypted_credentials_verified": true,
+    "service_role_save_and_edit_erp": true,
+    "service_role_save_and_edit_apps_script": true,
+    "all_synthetic_rows_and_credentials_rolled_back": true
+  },
+  "user_source_preserved": true,
+  "main_changed": false,
+  "live_center_or_sheet_tested": false
+}
