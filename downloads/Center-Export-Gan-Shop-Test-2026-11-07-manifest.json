@@ -1,0 +1,39 @@
+{
+  "version": "2026-11-07-center-export-form",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "parent_commit": "6149648c38276661f72a18ab0a214cd39488ae30",
+  "html": "Dashboard-Test-2026-11-07-Center-Export-Gan-Shop.html",
+  "sha256": "b735f7a3af2a4f6d24db912451dd811b9428cb577d1bf6bbee9f8b30b6afbe4b",
+  "blob": "d74f86bf9e3f9c428cc0afdab5d0592f2ad83d55",
+  "frontend_changed": false,
+  "feature": "Center trainer source and successful-control GET export submission; exact clicked export only",
+  "backend": {
+    "name": "center-hr-sync-test",
+    "version": 6,
+    "own_auth": "Fresh signed Dashboard Admin session or private Cron token",
+    "files_sha256": {
+      "bridge.js": "eeb1021d081fe407fe21b1b3c7d4ff421119c34d4e69f5543d6118a94de1d126",
+      "index.ts": "aa086de84df03afa85875ff297a65e5200af3146c841672ce234b2bbbad55888",
+      "xlsx.mjs": "1a0fb062ee9781b13f6687371b202aaefc53b6ce55b530c027e01f9c087b77db",
+      "model.js": "c82fba168c5022e88f87f24f38dd4d0003ae932d34434c45c69844630354566f",
+      "deno.json": "aeafa4ada44f102663a0d1aef455f014834159077d98db0097be27dfa099892e",
+      "LICENSE-SheetJS.txt": "4d2a38ac35cda06a555c84074a819d413339cd3691b822cae50f8f322fe01f64",
+      "transport.js": "a01a5fe949a5f20f3e57a13f3957ef3b1d5f5ccb1bf784f0332e3d50a0e6779a",
+      "access.ts": "409f617a97012938d9d34eda8b0990a345872f626bb17cb87442cb1a0c4a3cee"
+    }
+  },
+  "live_center_authenticated_export_verified": true,
+  "required_excel_schema_verified": true,
+  "live_google_sheet_write_performed": false,
+  "personnel_or_kpi_modified": false,
+  "schedule_enabled": false,
+  "main_changed": false,
+  "test_suites": [
+    "Export GET form/correct button/filters",
+    "Session and header/domain safety",
+    "Worker end-to-end mocked Sheet",
+    "Read-only protected service probe",
+    "Actual Center Excel parsing"
+  ]
+}
