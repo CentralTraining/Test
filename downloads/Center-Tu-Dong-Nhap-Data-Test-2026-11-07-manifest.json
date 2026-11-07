@@ -1,0 +1,26 @@
+{
+  "version": "2026-11-07-center-auto-import",
+  "frontend": "Test",
+  "hr_data_scope": "shared_with_main_explicitly_authorized",
+  "pipelineVersion": 4,
+  "edgeFunction": "center-hr-sync-test",
+  "edgeVersion": 19,
+  "appsScriptWriterVersion": 3,
+  "files": [
+    {
+      "name": "Dashboard-Test-2026-11-07-Center-Tu-Dong-Nhap-Data.html",
+      "bytes": 2705622,
+      "sha256": "93796ec404125060562354dd02552524e61331a3ad7df1ee98d1faa8582db2b9"
+    },
+    {
+      "name": "Center-HR-4-Tab-Test-2026-11-07-Code.gs.txt",
+      "bytes": 13046,
+      "sha256": "88cf5ec34f29274fcdb1f6b2b41fbf0692af3bbfb6a124c4e60be3b9a028cc3e"
+    },
+    {
+      "name": "Center-Tu-Dong-Nhap-Data-Test-2026-11-07-README.txt",
+      "bytes": 3033,
+      "sha256": "e70ba450ce56e5073ad084f2c216bfaa6689345afea7bc70e51cb5f7f0ba836c"
+    }
+  ]
+}
