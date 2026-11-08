@@ -1,0 +1,13 @@
+{
+  "version": "2026-11-08",
+  "environment": "test",
+  "html": "Dashboard-Test-2026-11-08-Sua-Luu-Trang-Thai-HR.html",
+  "bytes": 2710186,
+  "sha256": "10d308f28daaa850b668a1f52a03066054c56edbccd2ed264065d7313a32bd3c",
+  "edge_function": "hr-status-write-test",
+  "edge_version": 1,
+  "gateway_jwt": true,
+  "private_rpc": "service_role only",
+  "main_promoted": false,
+  "real_personnel_repair_run": false
+}

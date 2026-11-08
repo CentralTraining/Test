@@ -1,0 +1,79 @@
+{
+  "environment": "test",
+  "version": "2026-11-08",
+  "source": {
+    "base_sha256": "af21f0b710443b356f1cc15e1d4a0d336b9d7f256206cced6dd96ab644df4d54",
+    "sha256": "10d308f28daaa850b668a1f52a03066054c56edbccd2ed264065d7313a32bd3c",
+    "bytes": 2710186,
+    "script_count": 17,
+    "changed_scripts": [
+      1
+    ]
+  },
+  "sql_model": [
+    {
+      "verification": {
+        "passed": true,
+        "idempotent": true,
+        "month_scope": true,
+        "synthetic_only": true,
+        "real_data_writes": 0,
+        "approved_mismatch": true,
+        "stale_browser_import": true,
+        "newer_active_approval": true,
+        "unapproved_off_preserved": true,
+        "ambiguous_identity_skipped": true
+      }
+    }
+  ],
+  "sql_transaction": [
+    {
+      "verification": {
+        "passed": true,
+        "synthetic_only": true,
+        "atomic_approval": true,
+        "real_data_writes": 0,
+        "allowed_keys_only": true,
+        "locked_month_blocked": true,
+        "stale_expected_conflict": true,
+        "failure_rolls_back_all_keys": true,
+        "new_non_status_fields_saved": true,
+        "stale_payload_status_preserved": true
+      }
+    }
+  ],
+  "legacy_main_guard_synthetic_only": [
+    {
+      "verification": {
+        "passed": true,
+        "real_data_writes": 0,
+        "locked_history_unchanged": true,
+        "legacy_direct_write_guard": true
+      }
+    }
+  ],
+  "edge": {
+    "version": 1,
+    "verify_jwt": true,
+    "files": [
+      {
+        "name": "index.ts",
+        "exact": true
+      },
+      {
+        "name": "access.ts",
+        "exact": true
+      },
+      {
+        "name": "model.js",
+        "exact": true
+      },
+      {
+        "name": "deno.json",
+        "exact": true
+      }
+    ]
+  },
+  "main_promoted": false,
+  "real_data_repair": false
+}
