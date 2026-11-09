@@ -1,0 +1,64 @@
+{
+  "base_blob": "484f25342d205227b91e178e4a738512a1e9f21b",
+  "html_blob": "4e257b23ebdea38fcd10cd380e70c65adb22d3cf",
+  "html_sha256": "4d76893ad3691d975dc3aa36dcc9901b44b0e284cdf2eda768152692d63008ed",
+  "bytes": 2711713,
+  "patches": 17,
+  "changed_inline_scripts": [
+    1
+  ],
+  "other_inline_scripts_unchanged": true,
+  "browser_checks": [
+    {
+      "width": 1440,
+      "passed": true,
+      "canonical_size_only_for_oppo_and_competitors": true,
+      "id_priority_and_unique_name_only": true,
+      "missing_blank_and_ambiguous_sizes_grouped_unknown": true,
+      "excel_size_mutations_ignored": true,
+      "map_changes_refresh_without_reload": true,
+      "official_active_status_rule_preserved": true,
+      "region_and_trainer_scope_preserved": true,
+      "other_chart_modes_preserved": true,
+      "table_filters_and_downloaded_excel_agree": true,
+      "unchanged_hr_and_rival_source_objects": true,
+      "real_data_writes": 0,
+      "no_overflow": true
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "canonical_size_only_for_oppo_and_competitors": true,
+      "id_priority_and_unique_name_only": true,
+      "missing_blank_and_ambiguous_sizes_grouped_unknown": true,
+      "excel_size_mutations_ignored": true,
+      "map_changes_refresh_without_reload": true,
+      "official_active_status_rule_preserved": true,
+      "region_and_trainer_scope_preserved": true,
+      "other_chart_modes_preserved": true,
+      "table_filters_and_downloaded_excel_agree": true,
+      "unchanged_hr_and_rival_source_objects": true,
+      "real_data_writes": 0,
+      "no_overflow": true
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "canonical_size_only_for_oppo_and_competitors": true,
+      "id_priority_and_unique_name_only": true,
+      "missing_blank_and_ambiguous_sizes_grouped_unknown": true,
+      "excel_size_mutations_ignored": true,
+      "map_changes_refresh_without_reload": true,
+      "official_active_status_rule_preserved": true,
+      "region_and_trainer_scope_preserved": true,
+      "other_chart_modes_preserved": true,
+      "table_filters_and_downloaded_excel_agree": true,
+      "unchanged_hr_and_rival_source_objects": true,
+      "real_data_writes": 0,
+      "no_overflow": true
+    }
+  ],
+  "environment": "test",
+  "date_vietnam": "2026-11-09",
+  "real_business_writes": 0
+}

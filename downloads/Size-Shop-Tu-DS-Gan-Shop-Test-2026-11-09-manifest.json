@@ -1,0 +1,23 @@
+{
+  "environment": "test",
+  "date_vietnam": "2026-11-09",
+  "base_commit": "35515a70a781cb363483473f330f4eca5b951a3b",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-09-Size-Shop-Tu-DS-Gan-Shop.html",
+      "bytes": 2711713,
+      "sha256": "4d76893ad3691d975dc3aa36dcc9901b44b0e284cdf2eda768152692d63008ed"
+    },
+    {
+      "path": "downloads/README-Size-Shop-Tu-DS-Gan-Shop-Test-2026-11-09.txt",
+      "bytes": 915,
+      "sha256": "9e33c20a4d09bbcfb422947bf225be755bc922cc3ffdf890e6561a4b8dd6e4b5"
+    },
+    {
+      "path": "downloads/Size-Shop-Tu-DS-Gan-Shop-Test-2026-11-09-verification.json",
+      "bytes": 2335,
+      "sha256": "54a710b7ed3e79ba79eac02144b5826fedb8fcb4760a496d7eab07334ab27093"
+    }
+  ],
+  "html_blob": "4e257b23ebdea38fcd10cd380e70c65adb22d3cf"
+}
