@@ -1,0 +1,76 @@
+{
+  "build": {
+    "base_test_commit": "56bca8924c17865a3e697ee4600a3d5337a4c937",
+    "base_test_blob": "b20264b40606f7b11e3a112a199c227d0192d0a0",
+    "html_blob": "64d7c9109121688245ae2688733db080e4412226",
+    "sha256": "8138743c2900279db2d3684aba593934d00d00f6b8a9996253e844e8825086de",
+    "bytes": 2722821,
+    "changed_inline_scripts": [
+      1
+    ],
+    "other_scripts_unchanged": true,
+    "existing_training_calculation_and_import_functions_unchanged": true,
+    "patches": 4
+  },
+  "browser_tests": [
+    {
+      "width": 1440,
+      "passed": true,
+      "merged_workshop_hub_navigation": true,
+      "legacy_hub_renderer_retained": true,
+      "downloaded_real_xlsx": true,
+      "all_requested_columns_and_class_metadata": true,
+      "leading_zero_ids_text": true,
+      "zero_and_missing_values_preserved": true,
+      "coverage_ratio_and_percent_format": true,
+      "current_filters_and_all_pages": true,
+      "trainer_region_scope_only": true,
+      "viewer_export_hidden": true,
+      "stale_filter_export_blocked": true,
+      "no_hr_campaign_or_source_writes": true,
+      "no_overflow": true,
+      "real_data_writes": 0
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "merged_workshop_hub_navigation": true,
+      "legacy_hub_renderer_retained": true,
+      "downloaded_real_xlsx": true,
+      "all_requested_columns_and_class_metadata": true,
+      "leading_zero_ids_text": true,
+      "zero_and_missing_values_preserved": true,
+      "coverage_ratio_and_percent_format": true,
+      "current_filters_and_all_pages": true,
+      "trainer_region_scope_only": true,
+      "viewer_export_hidden": true,
+      "stale_filter_export_blocked": true,
+      "no_hr_campaign_or_source_writes": true,
+      "no_overflow": true,
+      "real_data_writes": 0
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "merged_workshop_hub_navigation": true,
+      "legacy_hub_renderer_retained": true,
+      "downloaded_real_xlsx": true,
+      "all_requested_columns_and_class_metadata": true,
+      "leading_zero_ids_text": true,
+      "zero_and_missing_values_preserved": true,
+      "coverage_ratio_and_percent_format": true,
+      "current_filters_and_all_pages": true,
+      "trainer_region_scope_only": true,
+      "viewer_export_hidden": true,
+      "stale_filter_export_blocked": true,
+      "no_hr_campaign_or_source_writes": true,
+      "no_overflow": true,
+      "real_data_writes": 0
+    }
+  ],
+  "data_source": "Existing campaign class summary and participant data; no new import or automatic refresh.",
+  "scope": "Admin permitted regions; Trainer own region. Current participant filters; all matching pages.",
+  "missing_metrics": "Blank if unavailable. Coverage = check-in / planned HR; blank for missing/zero denominator.",
+  "legacy_hub_note": "Visible navigation remains Workshop/Hub. Retained hidden legacy Hub renderer tested directly, not claimed as a separate visible tab.",
+  "real_business_writes": 0
+}

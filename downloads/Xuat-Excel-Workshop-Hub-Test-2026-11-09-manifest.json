@@ -1,0 +1,24 @@
+{
+  "version": "2026-11-09",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "base_commit": "56bca8924c17865a3e697ee4600a3d5337a4c937",
+  "html_blob": "64d7c9109121688245ae2688733db080e4412226",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-09-Xuat-Excel-Workshop-Hub.html",
+      "bytes": 2722821,
+      "sha256": "8138743c2900279db2d3684aba593934d00d00f6b8a9996253e844e8825086de"
+    },
+    {
+      "path": "downloads/README-Xuat-Excel-Workshop-Hub-Test-2026-11-09.txt",
+      "bytes": 1102,
+      "sha256": "40e710527277ef9c888962f032337eb40ec564835f50dd864c59392969416ce7"
+    },
+    {
+      "path": "downloads/Xuat-Excel-Workshop-Hub-Test-2026-11-09-verification.json",
+      "bytes": 2958,
+      "sha256": "25bc1ef9e6480d94716d27b8366192d51194ccb2ad60366ebdc80183607a4cfc"
+    }
+  ]
+}
