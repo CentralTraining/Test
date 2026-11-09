@@ -1,0 +1,191 @@
+{
+  "base_blob": "4e257b23ebdea38fcd10cd380e70c65adb22d3cf",
+  "html_blob": "b20264b40606f7b11e3a112a199c227d0192d0a0",
+  "html_sha256": "13b5e5f74745748fe7ccc2343553ad1a24e2a7f16a4cd11aa5e9d3db91b7ca43",
+  "bytes": 2711713,
+  "only_two_color_values_changed": true,
+  "Xiaomi": "#FF6900",
+  "Realme": "#FFD200",
+  "browser_observations": [
+    {
+      "width": 1440,
+      "modes": [
+        {
+          "mode": "region",
+          "colors": {
+            "OPPO": "#016C38",
+            "Samsung": "#2F6FB0",
+            "Xiaomi": "#FF6900",
+            "Vivo": "#2F9BD6",
+            "Realme": "#FFD200",
+            "Honor": "#9098A0"
+          },
+          "counts": {
+            "OPPO": 24,
+            "Samsung": 6,
+            "Xiaomi": 18,
+            "Vivo": 6,
+            "Realme": 12,
+            "Honor": 6
+          }
+        },
+        {
+          "mode": "trainer",
+          "colors": {
+            "OPPO": "#016C38",
+            "Samsung": "#2F6FB0",
+            "Xiaomi": "#FF6900",
+            "Vivo": "#2F9BD6",
+            "Realme": "#FFD200",
+            "Honor": "#9098A0"
+          },
+          "counts": {
+            "OPPO": 24,
+            "Samsung": 6,
+            "Xiaomi": 18,
+            "Vivo": 6,
+            "Realme": 12,
+            "Honor": 6
+          }
+        },
+        {
+          "mode": "channel",
+          "colors": {
+            "OPPO": "#016C38",
+            "Samsung": "#2F6FB0",
+            "Xiaomi": "#FF6900",
+            "Vivo": "#2F9BD6",
+            "Realme": "#FFD200",
+            "Honor": "#9098A0"
+          },
+          "counts": {
+            "OPPO": 24,
+            "Samsung": 6,
+            "Xiaomi": 18,
+            "Vivo": 6,
+            "Realme": 12,
+            "Honor": 6
+          }
+        },
+        {
+          "mode": "shopsize",
+          "colors": {
+            "OPPO": "#016C38",
+            "Samsung": "#2F6FB0",
+            "Xiaomi": "#FF6900",
+            "Vivo": "#2F9BD6",
+            "Realme": "#FFD200",
+            "Honor": "#9098A0"
+          },
+          "counts": {
+            "OPPO": 24,
+            "Samsung": 6,
+            "Xiaomi": 18,
+            "Vivo": 6,
+            "Realme": 12,
+            "Honor": 6
+          }
+        }
+      ],
+      "layout": {
+        "name": "brand-colors",
+        "width": 1440,
+        "documentWidth": 1425,
+        "overflow": []
+      },
+      "errors": [],
+      "real_data_writes": 0,
+      "mocked_writes": 0
+    },
+    {
+      "width": 390,
+      "modes": [
+        {
+          "mode": "region",
+          "colors": {
+            "OPPO": "#016C38",
+            "Samsung": "#2F6FB0",
+            "Xiaomi": "#FF6900",
+            "Vivo": "#2F9BD6",
+            "Realme": "#FFD200",
+            "Honor": "#9098A0"
+          },
+          "counts": {
+            "OPPO": 24,
+            "Samsung": 6,
+            "Xiaomi": 18,
+            "Vivo": 6,
+            "Realme": 12,
+            "Honor": 6
+          }
+        },
+        {
+          "mode": "trainer",
+          "colors": {
+            "OPPO": "#016C38",
+            "Samsung": "#2F6FB0",
+            "Xiaomi": "#FF6900",
+            "Vivo": "#2F9BD6",
+            "Realme": "#FFD200",
+            "Honor": "#9098A0"
+          },
+          "counts": {
+            "OPPO": 24,
+            "Samsung": 6,
+            "Xiaomi": 18,
+            "Vivo": 6,
+            "Realme": 12,
+            "Honor": 6
+          }
+        },
+        {
+          "mode": "channel",
+          "colors": {
+            "OPPO": "#016C38",
+            "Samsung": "#2F6FB0",
+            "Xiaomi": "#FF6900",
+            "Vivo": "#2F9BD6",
+            "Realme": "#FFD200",
+            "Honor": "#9098A0"
+          },
+          "counts": {
+            "OPPO": 24,
+            "Samsung": 6,
+            "Xiaomi": 18,
+            "Vivo": 6,
+            "Realme": 12,
+            "Honor": 6
+          }
+        },
+        {
+          "mode": "shopsize",
+          "colors": {
+            "OPPO": "#016C38",
+            "Samsung": "#2F6FB0",
+            "Xiaomi": "#FF6900",
+            "Vivo": "#2F9BD6",
+            "Realme": "#FFD200",
+            "Honor": "#9098A0"
+          },
+          "counts": {
+            "OPPO": 24,
+            "Samsung": 6,
+            "Xiaomi": 18,
+            "Vivo": 6,
+            "Realme": 12,
+            "Honor": 6
+          }
+        }
+      ],
+      "layout": {
+        "name": "brand-colors",
+        "width": 390,
+        "documentWidth": 390,
+        "overflow": []
+      },
+      "errors": [],
+      "real_data_writes": 0,
+      "mocked_writes": 0
+    }
+  ]
+}

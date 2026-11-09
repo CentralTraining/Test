@@ -1,0 +1,23 @@
+{
+  "environment": "test",
+  "date_vietnam": "2026-11-09",
+  "base_commit": "ab3dc8f9a505fc8eb047cb626a9566620a57aead",
+  "html_blob": "b20264b40606f7b11e3a112a199c227d0192d0a0",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-09-Mau-Bieu-Do-Xiaomi-Realme.html",
+      "bytes": 2711713,
+      "sha256": "13b5e5f74745748fe7ccc2343553ad1a24e2a7f16a4cd11aa5e9d3db91b7ca43"
+    },
+    {
+      "path": "downloads/Mau-Bieu-Do-Xiaomi-Realme-Test-2026-11-09-verification.json",
+      "bytes": 4560,
+      "sha256": "2da67f52a8e73d501e581a0b68f6d005b3078770892264e422ee753360c7711c"
+    },
+    {
+      "path": "downloads/README-Mau-Bieu-Do-Xiaomi-Realme-Test-2026-11-09.txt",
+      "bytes": 486,
+      "sha256": "87a66643e9132184593804acf9c4052d39dc17caed317160f11df568628447f1"
+    }
+  ]
+}
