@@ -1,0 +1,24 @@
+{
+  "version": "2026-11-10",
+  "environment": "TEST",
+  "repository": "CentralTraining/Test",
+  "base_commit": "f632d888e6e9a90eb03f7333497e880b496ee393",
+  "html_blob": "54d2520824e8b0265f462002ec414404121b3eef",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-10-FTF-HR-Pass-Demo-Excel.html",
+      "bytes": 2763940,
+      "sha256": "d1879ee02180b276934ec34e2dad66afa820adcbe3987ff720e9d17c13af6af5"
+    },
+    {
+      "path": "downloads/README-FTF-HR-Pass-Demo-Excel-Test-2026-11-10.txt",
+      "bytes": 1889,
+      "sha256": "d163231161a8a046b79fca7f70d4f1cecf0d514c7f26687bf42796e15a0dcf38"
+    },
+    {
+      "path": "downloads/FTF-HR-Pass-Demo-Excel-Test-2026-11-10-verification.json",
+      "bytes": 3521,
+      "sha256": "9499ae10610fb077a2dc1135a09fa5c38d470e6251e77118f50437d0627cdc01"
+    }
+  ]
+}
