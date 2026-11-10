@@ -1,0 +1,24 @@
+{
+  "version": "2026-11-10",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "base_commit": "07379117b2e7936257ff4534acd364b601f6bd73",
+  "html_blob": "5a5f98c30d56a117440cacc8e3bea1e192ee0935",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-10-FTF-Demo-Thanh-Tien-Do-Nguon-Target.html",
+      "bytes": 2760025,
+      "sha256": "41cdb4e6bb22e8fcb1f70b8defd0a6a929485a20006e16de06a701d368c395e8"
+    },
+    {
+      "path": "downloads/FTF-Demo-Thanh-Tien-Do-Test-2026-11-10-verification.json",
+      "bytes": 5887,
+      "sha256": "cbec7c36b9fceee4c8a83c23e5e2dd5be006b2b2da121e779c7285e36c73c78c"
+    },
+    {
+      "path": "downloads/README-FTF-Demo-Thanh-Tien-Do-Test-2026-11-10.txt",
+      "bytes": 1430,
+      "sha256": "cd7b71072a121162d4a473459050866d358c8cb2b60f66784324b8c478e9957e"
+    }
+  ]
+}

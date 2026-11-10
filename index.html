@@ -7811,7 +7811,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=FtfDemoModel;
 
 /* Campaign-scoped FTF configuration and Demo results. Existing FTF result imports stay intact. */
 const FTF_DEMO_ENV_=location.pathname.startsWith('/Test/')?'test':'main';
-const FTF_DEMO_METRICS_=[{key:'ftfShop',label:'SL Shop'},{key:'ftfHr',label:'SL HR'},{key:'ftfBaiTest',label:'SL Bài Test'},{key:'ftfTuVanAI',label:'Tư vấn AI'},{key:'ftfKhaoSat',label:'SL Khảo sát'},{key:'ftfHrPassDemo',label:'SL HR Pass Demo'}];
+const FTF_DEMO_METRICS_=[{key:'ftfShop',label:'SL Shop'},{key:'ftfHr',label:'SL HR'},{key:'ftfBaiTest',label:'SL Bài Test'},{key:'ftfTuVanAI',label:'Tư vấn AI'},{key:'ftfHrPassDemo',label:'SL HR Pass Demo'},{key:'ftfKhaoSat',label:'SL Khảo sát'}];
 const FTF_DEMO_SOURCE_={url:'https://docs.google.com/spreadsheets/d/1QVJk58fupSDv9ev22VoZo3Z-wSF8fQmYJjmY4T5mURA/edit?gid=649233839#gid=649233839',sheetName:'Tiến độ thi demo'};
 const ftfDemoStates_=new Map(),ftfDemoSettingDrafts_=new Map(),ftfDemoTargetDrafts_=new Map();
 const ftfDemoOperations_=new Set();
@@ -7899,7 +7899,7 @@ function ftfDemoSettingDraft_(camp){
 function renderFtfDemoSettings_(camp,container){
  const draft=ftfDemoSettingDraft_(camp),value=draft.value,editable=isAdmin()&&!monthLocked&&draft.editing;
  const box=document.createElement('div');box.className='form-card ftf-demo-settings';box.style.cssText='max-width:none;margin:14px 0;';
- box.innerHTML=`<h3 style="margin:0 0 10px;">Cột hiển thị và HR Pass Demo</h3><p class="section-desc">Lưu riêng cho chiến dịch này. Bỏ chọn chỉ ẩn cột, vẫn giữ Target và dữ liệu đã nhập.</p><div class="ftf-demo-metric-options" style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0;">${FTF_DEMO_METRICS_.map(m=>`<label style="display:inline-flex;gap:6px;align-items:center;"><input type="checkbox" data-ftf-column="${m.key}" ${value.metrics.includes(m.key)?'checked':''} ${editable?'':'disabled'}>${m.label}</label>`).join('')}</div><label style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0;"><strong>X — số lần pass Demo tối thiểu/HR:</strong><input id="ftfDemoX" type="number" min="1" step="1" placeholder="Nhập X" value="${escapeHtml(String(value.demoMinPass))}" style="width:90px;" ${editable?'':'disabled'}><span class="section-desc">Ví dụ 2/10, X = 2 ⇒ tính 1 HR pass.</span></label><label style="display:block;margin-top:10px;">Link Google Sheet<input id="ftfDemoSourceUrl" type="url" value="${escapeHtml(value.source.url)}" style="width:100%;margin-top:5px;" ${editable?'':'readonly'}></label><label style="display:block;margin-top:10px;">Tên sheet (tab)<input id="ftfDemoSourceTab" type="text" value="${escapeHtml(value.source.sheetName)}" style="width:100%;margin-top:5px;" ${editable?'':'readonly'}></label><p class="section-desc" style="margin:8px 0;">Cột “Bài thi demo hoàn thành / Tổng” · chỉ MIEN TRUNG: BINH DINH, DA NANG, HUE, NHA TRANG, VUNG TAU, TAY NGUYEN. Ghép Shop theo Target FTF; mỗi Mã NV chỉ tính một lần.</p><div style="display:flex;flex-wrap:wrap;gap:8px;">${isAdmin()?`<button id="ftfDemoSettingsSave" type="button" class="primary" ${editable?'':'style="display:none;"'}>Lưu cấu hình</button><button id="ftfDemoSettingsEdit" type="button" class="secondary" ${draft.editing?'style="display:none;"':''} ${monthLocked?'disabled':''}>✎ Sửa cấu hình</button><button id="ftfDemoSourceUpdate" type="button" class="secondary" ${!draft.editing&&ftfDemoConfig_(camp).settingsSaved&&!monthLocked?'':'disabled'}>↻ Cập nhật HR Pass Demo từ Google Sheet</button>`:''}</div><p id="ftfDemoSettingsMsg" role="status" style="margin-bottom:0;">${escapeHtml(ftfDemoStatus_(camp).text)}</p>`;
+ box.innerHTML=`<h3 style="margin:0 0 10px;">Cột hiển thị và HR Pass Demo</h3><p class="section-desc">Lưu riêng cho chiến dịch này. Bỏ chọn chỉ ẩn cột, vẫn giữ Target và dữ liệu đã nhập.</p><div class="ftf-demo-metric-options" style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0;">${FTF_DEMO_METRICS_.map(m=>`<label style="display:inline-flex;gap:6px;align-items:center;"><input type="checkbox" data-ftf-column="${m.key}" ${value.metrics.includes(m.key)?'checked':''} ${editable?'':'disabled'}>${m.label}</label>`).join('')}</div><label style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0;"><strong>X — số lần pass Demo tối thiểu/HR:</strong><input id="ftfDemoX" type="number" min="1" step="1" placeholder="Nhập X" value="${escapeHtml(String(value.demoMinPass))}" style="width:90px;" ${editable?'':'disabled'}><span class="section-desc">Ví dụ 2/10, X = 2 ⇒ tính 1 HR pass.</span></label><label style="display:block;margin-top:10px;">Link Google Sheet<input id="ftfDemoSourceUrl" type="url" value="${escapeHtml(value.source.url)}" style="width:100%;margin-top:5px;" ${editable?'':'readonly'}></label><label style="display:block;margin-top:10px;">Tên sheet (tab)<input id="ftfDemoSourceTab" type="text" value="${escapeHtml(value.source.sheetName)}" style="width:100%;margin-top:5px;" ${editable?'':'readonly'}></label><p class="section-desc" style="margin:8px 0;">Cột “Bài thi demo hoàn thành / Tổng” · chỉ MIEN TRUNG: BINH DINH, DA NANG, HUE, NHA TRANG, VUNG TAU, TAY NGUYEN. Ghép Shop theo Target FTF; mỗi Mã NV chỉ tính một lần.</p><div style="display:flex;flex-wrap:wrap;gap:8px;">${isAdmin()?`<button id="ftfDemoSettingsSave" type="button" class="primary" ${editable?'':'style="display:none;"'}>Lưu cấu hình</button><button id="ftfDemoSettingsEdit" type="button" class="secondary" ${draft.editing?'style="display:none;"':''} ${monthLocked?'disabled':''}>✎ Sửa cấu hình</button><button id="ftfDemoSourceUpdate" type="button" class="secondary" ${!draft.editing&&ftfDemoConfig_(camp).settingsSaved&&!monthLocked?'':'disabled'}>↻ Cập nhật riêng HR Pass Demo từ Google Sheet</button>`:''}</div><p id="ftfDemoSettingsMsg" role="status" style="margin-bottom:0;">${escapeHtml(ftfDemoStatus_(camp).text)}</p>`;
  container.appendChild(box);
  const current=()=>box.isConnected&&document.getElementById('targetCampaignSelect')?.value===camp.id&&currentMonth===camp.month;
  box.querySelectorAll('[data-ftf-column]').forEach(input=>input.onchange=()=>{
@@ -7972,36 +7972,58 @@ async function saveFtfDemoTarget_(camp){
 }
 async function updateFtfDemoFromSheet_(camp,button,message){
  if(!isAdmin()||monthLocked||button.disabled)return;
- const owner=ftfDemoOwner_(),month=currentMonth,source=ftfDemoSource_(camp),cfgKey=JSON.stringify(ftfDemoConfig_(camp)),state=ftfDemoStates_.get(camp.id),expectedMapping=state?.index?.fingerprint;
- const same=()=>button.isConnected&&owner===ftfDemoOwner_()&&month===currentMonth&&camp.month===month;
- const finish=ftfDemoOperation_(camp);if(!finish)return;const oldText=button.textContent;button.disabled=true;button.textContent='Đang cập nhật…';
+ const owner=ftfDemoOwner_(),month=currentMonth,messageId=message?.id;
+ const contextCurrent=()=>owner===ftfDemoOwner_()&&month===currentMonth&&camp.month===month;
+ const same=()=>button.isConnected&&contextCurrent();
+ const feedback=()=>document.getElementById(messageId)||document.getElementById('ftfDemoProgressMsg')||document.getElementById('ftfDemoSettingsMsg')||message;
+ const refresh=async(text,error=false)=>{
+  if(!same())return;
+  if(!ftfDemoSettingDrafts_.get(camp.id)?.editing){
+   ftfDemoSettingDrafts_.delete(camp.id);
+   if(document.getElementById('targetCampaignSelect')?.value===camp.id&&document.getElementById('ftfDemoSettingsMsg'))await renderTargetTable();
+  }
+  if(!contextCurrent())return;
+  await renderKpiCategory('doitac');
+  if(contextCurrent())ftfDemoMessage_(text,error,feedback());
+ };
+ const finish=ftfDemoOperation_(camp);if(!finish)return;const oldText=button.textContent;button.disabled=true;button.textContent='Đang cập nhật Demo…';
  try{
-  if(!ftfDemoConfig_(camp).settingsSaved||FtfDemoModel.minimum(ftfDemoConfig_(camp).demoMinPass)===null)throw Error('Hãy Lưu cấu hình X và link/tên sheet trước.');
-  if(!expectedMapping)throw Error(state?.indexError||'Chưa có Target FTF hợp lệ.');
-  ftfDemoMessage_('Đang đọc đúng tab Google Sheet và đối soát Shop/Mã NV…',false,message);
-  const rows=await fetchGoogleSheetRows_(parseGoogleSheetId_(source.url),source.sheetName,{allowFallback:false});if(!same())throw Error('Tháng hoặc tài khoản đã thay đổi. Chưa nhập Demo.');
-  const keys=['ftfTargetRows:'+camp.id,'ftfShopList:'+month,'shopTrainerMap'],fresh=await ftfDemoFresh_(camp,keys);
+  ftfDemoMessage_('Đang đọc nguồn Google Sheet đã lưu trong Target của chiến dịch…',false,message);
+  const keys=['ftfTargetRows:'+camp.id,'ftfShopList:'+month,'shopTrainerMap'];
+  const start=await ftfDemoFresh_(camp,keys);if(!same())throw Error('Tháng hoặc tài khoản đã thay đổi. Chưa nhập Demo.');
+  const cfg=ftfDemoConfig_(start.camp);
+  if(!cfg.settingsSaved||FtfDemoModel.minimum(cfg.demoMinPass)===null)throw Error('Hãy Lưu cấu hình X và nguồn Google Sheet trong Cài đặt → Target trước.');
+  if(!cfg.source?.url||!String(cfg.source?.sheetName||'').trim())throw Error('Chưa có link và tên sheet Demo đã lưu trong Target.');
+  const checked=validatedGoogleSheetConfig_({url:cfg.source.url,sheetNames:[cfg.source.sheetName],exactTab:true});
+  if(checked.sheetNames.length!==1)throw Error('Target cần lưu đúng một tên tab nguồn Demo.');
+  const source={url:checked.url,sheetName:checked.sheetNames[0]},cfgKey=JSON.stringify(cfg);
+  const beforeIndex=ftfDemoIndex_(start.values[keys[0]]||[],start.values[keys[1]]||[],start.values[keys[2]]||[]);
+  const rows=await fetchGoogleSheetRows_(parseGoogleSheetId_(source.url),source.sheetName,{allowFallback:false});
   if(!same())throw Error('Tháng hoặc tài khoản đã thay đổi. Chưa nhập Demo.');
-  if(cfgKey!==JSON.stringify(ftfDemoConfig_(fresh.camp)))throw Error('Cấu hình Demo đã đổi trong lúc đọc Sheet. Hãy cập nhật lại.');
+  const fresh=await ftfDemoFresh_(camp,keys);
+  if(!same())throw Error('Tháng hoặc tài khoản đã thay đổi. Chưa nhập Demo.');
+  if(cfgKey!==JSON.stringify(ftfDemoConfig_(fresh.camp)))throw Error('Nguồn hoặc cấu hình Demo đã đổi trong lúc đọc Sheet. Hãy bấm cập nhật lại.');
   const index=ftfDemoIndex_(fresh.values[keys[0]]||[],fresh.values[keys[1]]||[],fresh.values[keys[2]]||[]);
-  if(expectedMapping!==index.fingerprint)throw Error('Danh sách hoặc phân công Shop Target đã đổi. Hãy tải lại rồi cập nhật Demo.');
+  if(beforeIndex.fingerprint!==index.fingerprint)throw Error('Danh sách hoặc phân công Shop Target đã đổi. Hãy bấm cập nhật lại.');
   const parsed=FtfDemoModel.read(rows,index);
   if(parsed.errors.length)throw Error('Có '+parsed.errors.length+' dòng lỗi trong Shop Target. Dòng '+parsed.errors.slice(0,5).map(e=>e.row).join(', ')+': '+parsed.errors[0].reason+' Chưa thay đổi kết quả Demo.');
   const snapshot={version:1,environment:FTF_DEMO_ENV_,campaignId:camp.id,month,sourceKey:ftfDemoSourceKey_(source),mappingKey:index.fingerprint,updatedAt:new Date().toISOString(),rows:parsed.rows,stats:parsed.stats};
   if(!same())throw Error('Màn hình đã thay đổi. Chưa nhập Demo.');
   await saveCampaignData_([[ftfDemoDataKey_(camp),snapshot]]);
-  if(!same())return;ftfDemoStates_.set(camp.id,{targets:fresh.values[keys[0]],index,indexError:'',snapshot,peopleByShop:new Map()});
-  const saved=ftfDemoStates_.get(camp.id);for(const p of snapshot.rows){if(!saved.peopleByShop.has(p.shopId))saved.peopleByShop.set(p.shopId,[]);saved.peopleByShop.get(p.shopId).push(p);}
-  const passed=FtfDemoModel.passed(snapshot.rows,ftfDemoConfig_(camp).demoMinPass).length;
-  const text=`Đã đối soát ${parsed.rows.length} HR thuộc Shop Target · ${passed} HR pass Demo · gộp ${parsed.stats.duplicateRows} dòng trùng · bỏ qua ${parsed.stats.outsideScope} dòng ngoài 6 khu vực và ${parsed.stats.unmatchedShopRows} dòng ngoài Shop Target.`;
-  if(document.getElementById('targetCampaignSelect')?.value===camp.id&&document.getElementById('ftfDemoSettingsMsg'))await renderTargetTable();
-  await renderKpiCategory('doitac');ftfDemoMessage_(text,false,document.getElementById('ftfDemoSettingsMsg')||document.getElementById('ftfDemoProgressMsg')||message);
- }catch(e){if(same())ftfDemoMessage_(e.message||'Chưa xác nhận cập nhật Demo. Hãy tải lại để kiểm tra.',true,message);}finally{finish();if(button.isConnected){button.disabled=false;button.textContent=oldText;}}
+  if(!same())return;
+  camp.ftfConfig=structuredClone(cfg);const current=campaigns.find(c=>c.id===camp.id&&c.month===month);if(current)current.ftfConfig=structuredClone(cfg);
+  const state={targets:fresh.values[keys[0]],index,indexError:'',snapshot,peopleByShop:new Map()};
+  for(const p of snapshot.rows){if(!state.peopleByShop.has(p.shopId))state.peopleByShop.set(p.shopId,[]);state.peopleByShop.get(p.shopId).push(p);}
+  ftfDemoStates_.set(camp.id,state);
+  const passed=FtfDemoModel.passed(snapshot.rows,cfg.demoMinPass).length;
+  await refresh(`Đã cập nhật riêng Demo từ sheet “${source.sheetName}” đã lưu trong Target · ${parsed.rows.length} HR khớp Shop · ${passed} HR pass · gộp ${parsed.stats.duplicateRows} dòng trùng.`,false);
+ }catch(e){if(same())await refresh(e.message||'Chưa xác nhận cập nhật Demo. Hãy tải lại để kiểm tra.',true);}
+ finally{finish();if(button.isConnected){button.disabled=false;button.textContent=oldText;}}
 }
 function renderFtfDemoUpdateControl_(){
  const box=document.getElementById('ftfImportBox'),camp=ftfDemoCampaign_();if(!box||!camp||!ftfDemoMetricDefs_(camp).some(m=>m.key==='ftfHrPassDemo')||(!isAdmin()&&!isTrainer()))return;
  const status=ftfDemoStatus_(camp),wrap=document.createElement('div');wrap.className='form-card';wrap.style.cssText='max-width:none;margin:12px 0;';
- wrap.innerHTML=`<h3 style="margin:0 0 8px;">HR Pass Demo — Google Sheet</h3><p class="section-desc">${FtfDemoModel.minimum(ftfDemoConfig_(camp).demoMinPass)!==null?'Mỗi HR cần ≥ '+Number(ftfDemoConfig_(camp).demoMinPass)+' lần pass Demo. ':''}${escapeHtml(status.text)}</p>${isAdmin()?`<button type="button" class="secondary" id="ftfDemoProgressUpdate" ${monthLocked||!ftfDemoConfig_(camp).settingsSaved?'disabled':''}>↻ Cập nhật HR Pass Demo</button><button type="button" class="secondary" id="ftfDemoOpenSettings" style="margin-left:8px;">Cài đặt X, cột và nguồn</button>`:''}<p id="ftfDemoProgressMsg" role="status" style="margin-bottom:0;"></p>`;box.appendChild(wrap);
+ wrap.innerHTML=`<h3 style="margin:0 0 8px;">HR Pass Demo — Google Sheet</h3><p class="section-desc">Dùng link và tên sheet đã lưu tại Cài đặt → Target của chiến dịch.</p><p class="section-desc">${FtfDemoModel.minimum(ftfDemoConfig_(camp).demoMinPass)!==null?'Mỗi HR cần ≥ '+Number(ftfDemoConfig_(camp).demoMinPass)+' lần pass Demo. ':''}${escapeHtml(status.text)}</p>${isAdmin()?`<button type="button" class="secondary" id="ftfDemoProgressUpdate" ${monthLocked||!ftfDemoConfig_(camp).settingsSaved?'disabled':''}>↻ Cập nhật riêng HR Pass Demo</button><button type="button" class="secondary" id="ftfDemoOpenSettings" style="margin-left:8px;">Cài đặt X, cột và nguồn</button>`:''}<p id="ftfDemoProgressMsg" role="status" style="margin-bottom:0;"></p>`;box.appendChild(wrap);
  wrap.querySelector('#ftfDemoProgressUpdate')?.addEventListener('click',e=>updateFtfDemoFromSheet_(camp,e.currentTarget,wrap.querySelector('#ftfDemoProgressMsg')));
  wrap.querySelector('#ftfDemoOpenSettings')?.addEventListener('click',()=>{document.querySelector('nav.tabs [data-tab="settings"]')?.click();document.querySelector('#tab-settings [data-set="set-target"]')?.click();populateTargetCampaignSelect();const select=document.getElementById('targetCampaignSelect');select.value=camp.id;onTargetCampaignChange();});
 }
@@ -8104,10 +8126,10 @@ function renderDoitacProgressTable(){
     const trList = activeChannels.map((ch, idx)=>{
       const cells = metricDefs.map(m=>{
         const v = stats[m.key][ch];
-        if(v.a===null)return `<td style="padding:4px 6px;" title="${escapeHtml(ftfDemoStatus_().text)}">— / ${v.t}</td>`;
+        if(v.a===null)return `<td data-ftf-metric="${m.key}" data-ftf-state="unavailable" style="padding:4px 6px;" title="${escapeHtml(ftfDemoStatus_().text)}">${progressBarChannelHtml_(`—/${v.t}·—%`,0,channelColor(ch))}</td>`;
         const pRaw = pct(v.a, v.t); const p = pRaw===null?0:pRaw;
         sumPct += p; cnt += 1;
-        return `<td style="padding:4px 6px;">${progressBarChannelHtml_(`${v.a}/${v.t}·${p}%`, p, channelColor(ch))}</td>`;
+        return `<td data-ftf-metric="${m.key}" data-ftf-state="ready" style="padding:4px 6px;">${progressBarChannelHtml_(`${v.a}/${v.t}·${p}%`, p, channelColor(ch))}</td>`;
       }).join('');
       const firstColHtml = idx===0 ? `<td rowspan="${activeChannels.length}" style="vertical-align:middle;"><strong>${label}</strong></td>${extraColHtml?`<td rowspan="${activeChannels.length}" style="vertical-align:middle;">${extraColHtml}</td>`:''}` : '';
       return `<tr>${firstColHtml}<td style="font-weight:700;color:${channelColor(ch)};white-space:nowrap;">${channelLabel(ch)}</td>${cells}</tr>`;
