@@ -1,0 +1,24 @@
+{
+  "version": "2026-11-10",
+  "environment": "Test",
+  "repository": "CentralTraining/Test",
+  "base_commit": "2b701c52f9a59f7e4f08c9d20f2dc138aea21b30",
+  "html_blob": "3bb2b3036c6e38cba708aadefacd50d0a0ff0423",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-10-FTF-HR-Pass-Demo-Cot-Hien-Thi.html",
+      "bytes": 2758776,
+      "sha256": "9f9115568752c89165e8f1efdade078937d12a2cc007d7a4b47000beaa81eb7c"
+    },
+    {
+      "path": "downloads/FTF-HR-Pass-Demo-Test-2026-11-10-verification.json",
+      "bytes": 5584,
+      "sha256": "aaa0c19de12d75e70eed7b814051cac96acf2a5d1e0758e3a36885f67b0f3a8b"
+    },
+    {
+      "path": "downloads/README-FTF-HR-Pass-Demo-Test-2026-11-10.txt",
+      "bytes": 2343,
+      "sha256": "2fa5025c77d2f7f052f6053fc61c51e1a9ed2893726e96e1d4af003ea84e32a5"
+    }
+  ]
+}

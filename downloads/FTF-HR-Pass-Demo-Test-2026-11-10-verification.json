@@ -1,0 +1,175 @@
+{
+  "environment": "Test",
+  "version": "2026-11-10",
+  "build": {
+    "base_test_commit": "2b701c52f9a59f7e4f08c9d20f2dc138aea21b30",
+    "base_test_blob": "64d7c9109121688245ae2688733db080e4412226",
+    "bytes": 2758776,
+    "html_blob": "3bb2b3036c6e38cba708aadefacd50d0a0ff0423",
+    "sha256": "9f9115568752c89165e8f1efdade078937d12a2cc007d7a4b47000beaa81eb7c",
+    "patches": 18,
+    "changed_inline_scripts": [
+      1,
+      12
+    ],
+    "ftf_export_filter_only_in_script_12": true,
+    "other_scripts_unchanged": true,
+    "reverse_patch_exact": true,
+    "main_unchanged": true
+  },
+  "model_checks": [
+    {
+      "name": "displayed_ratio_not_a_date",
+      "passed": true
+    },
+    {
+      "name": "unique_code_max_completed_not_sum_and_independent_denominator",
+      "passed": true
+    },
+    {
+      "name": "central_and_six_areas_only",
+      "passed": true
+    },
+    {
+      "name": "outside_target_rows_skipped_without_blocking",
+      "passed": true
+    },
+    {
+      "name": "malformed_matching_progress_blocks_instead_of_fake_zero",
+      "passed": true
+    },
+    {
+      "name": "one_code_cannot_count_for_two_shops",
+      "passed": true
+    },
+    {
+      "name": "ambiguous_names_block_instead_of_guessing",
+      "passed": true
+    },
+    {
+      "name": "explicit_wrong_id_does_not_fall_back_to_name",
+      "passed": true
+    },
+    {
+      "name": "aliases_only_from_current_target_ids_and_same_area",
+      "passed": true
+    },
+    {
+      "name": "unmatched_source_and_missing_headers_are_not_saved_as_empty_results",
+      "passed": true
+    },
+    {
+      "name": "conflicting_target_ownership_is_rejected",
+      "passed": true
+    },
+    {
+      "name": "header_unicode_case_and_target_fingerprint_order",
+      "passed": true
+    }
+  ],
+  "browser_checks": [
+    {
+      "width": 1440,
+      "passed": true,
+      "prefilled_exact_tab": true,
+      "six_metrics_with_ka_mwg_targets": true,
+      "region_target_totals": true,
+      "selected_four_columns_target_progress_shops": true,
+      "hidden_target_values_preserved": true,
+      "persists_after_reload": true,
+      "source_save_does_not_import": true,
+      "source_read_and_unique_matching": true,
+      "ratio_minimum_and_recount": true,
+      "passing_partner_details": true,
+      "escaped_sheet_names": true,
+      "source_failure_retains_snapshot": true,
+      "failed_settings_save_preserves_config": true,
+      "locked_month_blocks_import": true,
+      "stale_account_blocks_import": true,
+      "trainer_scope": true,
+      "no_main_demo_key_written": true,
+      "no_hr_or_other_ftf_results_changed": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "prefilled_exact_tab": true,
+      "six_metrics_with_ka_mwg_targets": true,
+      "region_target_totals": true,
+      "selected_four_columns_target_progress_shops": true,
+      "hidden_target_values_preserved": true,
+      "persists_after_reload": true,
+      "source_save_does_not_import": true,
+      "source_read_and_unique_matching": true,
+      "ratio_minimum_and_recount": true,
+      "passing_partner_details": true,
+      "escaped_sheet_names": true,
+      "source_failure_retains_snapshot": true,
+      "failed_settings_save_preserves_config": true,
+      "locked_month_blocks_import": true,
+      "stale_account_blocks_import": true,
+      "trainer_scope": true,
+      "no_main_demo_key_written": true,
+      "no_hr_or_other_ftf_results_changed": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "prefilled_exact_tab": true,
+      "six_metrics_with_ka_mwg_targets": true,
+      "region_target_totals": true,
+      "selected_four_columns_target_progress_shops": true,
+      "hidden_target_values_preserved": true,
+      "persists_after_reload": true,
+      "source_save_does_not_import": true,
+      "source_read_and_unique_matching": true,
+      "ratio_minimum_and_recount": true,
+      "passing_partner_details": true,
+      "escaped_sheet_names": true,
+      "source_failure_retains_snapshot": true,
+      "failed_settings_save_preserves_config": true,
+      "locked_month_blocks_import": true,
+      "stale_account_blocks_import": true,
+      "trainer_scope": true,
+      "no_main_demo_key_written": true,
+      "no_hr_or_other_ftf_results_changed": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    }
+  ],
+  "existing_ftf_ai_survey_regression": {
+    "passed": true,
+    "widths": [
+      1440,
+      390,
+      320
+    ],
+    "strict_ai_pass": true,
+    "survey_matches_campaign_attendees": true,
+    "existing_targets_and_other_regions_preserved": true,
+    "manual_file_and_error_protection": true
+  },
+  "google_sheet": {
+    "tab": "Tiến độ thi demo",
+    "headers": [
+      "Vùng",
+      "Khu vực",
+      "Mã NV",
+      "Tên nhân viên",
+      "Shop",
+      "Bài thi demo hoàn thành / Tổng"
+    ],
+    "read_exact_tab_no_fallback": true,
+    "displayed_csv_fraction_preserved": true
+  },
+  "scope": "MIEN TRUNG: BINH DINH, DA NANG, HUE, NHA TRANG, VUNG TAU, TAY NGUYEN; current campaign Target shops only.",
+  "demo_rule": "Unique Mã NV with completed numerator >= saved X. Duplicate records use maximum numerator, never sum.",
+  "configuration": "Campaign-scoped selected columns, saved/editable source and X, KA/MWG manual Demo Targets. Raw Demo snapshots isolated to Test.",
+  "data_changes_by_validation": 0,
+  "edge_schema_secrets_schedules_bot_changes": false,
+  "private_source_rows_in_artifacts": false
+}
