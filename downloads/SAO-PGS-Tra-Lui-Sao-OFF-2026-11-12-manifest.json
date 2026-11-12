@@ -1,0 +1,32 @@
+{
+  "version": "2026-11-12-v3-lookback",
+  "scope": "standalone_design_preview",
+  "repository": "CentralTraining/Test",
+  "base_commit": "795c6b3ee15e1d9937e672f11ad05e5b92e12362",
+  "actual_dashboard_changed": false,
+  "real_archiving_active": false,
+  "files": [
+    {
+      "path": "previews/2026-11-12-sao-pgs/index.html",
+      "bytes": 60847,
+      "sha256": "5f392299067be5299b0f110d979f727cf5fbdabc0a56f6c743a425fc0e72e20e",
+      "blob": "a544ee4381e5c7b5427d5ec964a4ce0a38db7095"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Xem-Truoc-Tra-Lui-Sao-OFF.html",
+      "bytes": 60847,
+      "sha256": "5f392299067be5299b0f110d979f727cf5fbdabc0a56f6c743a425fc0e72e20e",
+      "blob": "a544ee4381e5c7b5427d5ec964a4ce0a38db7095"
+    },
+    {
+      "path": "downloads/README-SAO-PGS-Tra-Lui-Sao-OFF-2026-11-12.txt",
+      "bytes": 1357,
+      "sha256": "e0b5791250ebe785941e8c2baa394618520db32c32a7668f339d4c6a31de447f"
+    },
+    {
+      "path": "downloads/SAO-PGS-Tra-Lui-Sao-OFF-2026-11-12-verification.json",
+      "bytes": 3307,
+      "sha256": "eb15b4711077cac2ef3ca68eead29cc45cef9c7916d80747ee7f635da4b674bb"
+    }
+  ]
+}
