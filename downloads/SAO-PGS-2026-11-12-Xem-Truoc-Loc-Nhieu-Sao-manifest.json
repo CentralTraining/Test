@@ -1,0 +1,44 @@
+{
+  "version": "2026-11-12-multi-filter-five-tabs",
+  "repository": "CentralTraining/Test",
+  "frontend_scope": "standalone synthetic preview only",
+  "shared_worker": "center-hr-sync-test v21, compatible with current writer3",
+  "fifth_tab_pending_owner_apps_script_update": true,
+  "files": [
+    {
+      "path": "downloads/Center-HR-5-Tab-Test-2026-11-12-Code.gs.txt",
+      "bytes": 14088,
+      "sha256": "2dd88bffba6a9d98931fc36a6651ebd45ec7e9f6cc833381370f0d1972bef526"
+    },
+    {
+      "path": "downloads/Center-HR-5-Tab-Test-2026-11-12-README.txt",
+      "bytes": 3399,
+      "sha256": "f66eeca54b51878243dea81284923e933722f19ba42bc85fc00832dbb7b0869b"
+    },
+    {
+      "path": "downloads/Center-HR-5-Tab-Test-2026-11-12-verification.json",
+      "bytes": 5929,
+      "sha256": "bf99ed56eed0793863a0ddad39a339bed4b6b9895b2059945b4b2a1fc9ce3100"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Xem-Truoc-Loc-Nhieu-Sao-README.txt",
+      "bytes": 2345,
+      "sha256": "bd1dcb7952abe1bcd3dc3e4a947cab3b64311e56fd4c328effe967e1b755eb6a"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Xem-Truoc-Loc-Nhieu-Sao-verification.json",
+      "bytes": 2224,
+      "sha256": "a4e260da55b5bd2edf5be0ed12b41e6bcfc3bc62214f6544d79b6e3a7b9025ce"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Xem-Truoc-Loc-Nhieu-Sao.html",
+      "bytes": 56772,
+      "sha256": "eb61960361191e46383107c1a3a315df13a5b191f488516d2f203d94af05934c"
+    },
+    {
+      "path": "previews/2026-11-12-sao-pgs/index.html",
+      "bytes": 56772,
+      "sha256": "eb61960361191e46383107c1a3a315df13a5b191f488516d2f203d94af05934c"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+/* CENTER HR TEST — Google Apps Script writer. No account password or JSON key here. */
+var CENTER_HR_PROTOCOL = 1;
+var CENTER_HR_WRITER_VERSION = 4;
+var CENTER_HR_ENVIRONMENT = 'test';
+var CENTER_HR_SECRET_PROPERTY = 'CENTER_HR_BRIDGE_SECRET';
+var CENTER_HR_TAB = 'DS GÁN SHOP PGS';
+var CENTER_HR_TABS = [{key:'assign',title:CENTER_HR_TAB},{key:'stars',title:'SAO PGS'},{key:'on',title:'ON'},{key:'off',title:'OFF'}];
+
+var CENTER_HR_EXTRA_TABS=[{key:'promotions',title:'LÊN SAO'}];
+function centerHrTargets_(request){return request.extensions&&request.extensions.indexOf('starHistory')>=0?CENTER_HR_TABS.concat(CENTER_HR_EXTRA_TABS):CENTER_HR_TABS;}
+function centerHrVersion_(request){return CENTER_HR_WRITER_VERSION<4?CENTER_HR_WRITER_VERSION:centerHrTargets_(request).length===5?4:3;}
+function kiemTraCauHinh() {
+  var key = PropertiesService.getScriptProperties().getProperty(CENTER_HR_SECRET_PROPERTY);
+  if (!/^[a-f0-9]{64}$/.test(key || '')) throw new Error('Thêm CENTER_HR_BRIDGE_SECRET trong Cài đặt dự án → Thuộc tính tập lệnh.');
+  if (typeof Sheets === 'undefined') throw new Error('Bấm dấu + ở Dịch vụ, thêm Google Sheets API v4.');
+  SpreadsheetApp.getActiveSpreadsheet();
+  return 'Cấu hình hợp lệ. Triển khai dưới dạng Ứng dụng web, thực thi bằng tài khoản của bạn, quyền truy cập Bất kỳ ai.';
+}
+function doGet() { return centerHrOutput_({ok:false,code:'POST_REQUIRED',message:'Chỉ nhận yêu cầu đã xác thực từ Dashboard.'}); }
+function centerHrOutput_(data) { return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON); }
+function centerHrMac_(text,key) {
+  return Utilities.computeHmacSha256Signature(text,key,Utilities.Charset.UTF_8).map(function(b){return ('0'+((b+256)%256).toString(16)).slice(-2);}).join('');
+}
+function centerHrEqual_(a,b) {
+  if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;
+  var difference=0;for(var i=0;i<a.length;i++)difference|=a.charCodeAt(i)^b.charCodeAt(i);return difference===0;
+}
+function centerHrProblem_(code,message) { var e=new Error(message);e.centerCode=code;throw e; }
+function centerHrMonth_() { return Utilities.formatDate(new Date(),'Asia/Ho_Chi_Minh','yyyy-MM'); }
+function centerHrMatrix_(input,kind) {
+  if(!Array.isArray(input)||input.length<(['assign','promotions'].includes(kind)?2:1)||input.length>60000||!Array.isArray(input[0])||input[0].length<1||input[0].length>100||input.length*input[0].length>250000)centerHrProblem_('MATRIX_SIZE','Dữ liệu Excel không hợp lệ hoặc quá lớn.');
+  var width=input[0].length;
+  input.forEach(function(row){if(!Array.isArray(row)||row.length!==width||row.some(function(v){return typeof v!=='string';}))centerHrProblem_('MATRIX_FORMAT','Dữ liệu cần là bảng chuỗi đồng nhất.');});
+  var norm=function(v){return String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[Đđ]/g,'d').toLowerCase().replace(/[^a-z0-9]/g,'');};
+  if(kind!=='assign'){
+    var code=['code','staffcode','manv','manhanvien','mapg','mapgs','employeecode'];
+    var names=['staffname','name','fullname','hoten','hovaten','tennhanvien','tenpg','tenpgs','tennv'];
+    var stars=['star','stars','rank','hangsao','hangsaohientai','saohientai','sao','xephang','currentstar','currentrank','starcurrent','starscurrent','rankcurrent','hanghientai'];
+    var dates=kind==='on'?['joinedat','joineddate','ngayvaolam','ngaybatdau','ngaynhanviec']:['offdate','releasedat','releaseddate','ngaynghi','ngaynghiviec','ngayoff'];
+    for(var h=0;h<Math.min(input.length,20);h++){
+      var labels=input[h].map(norm),has=function(a){return a.some(function(v){return labels.indexOf(v)>=0;});};
+      if(kind==='promotions'){if(has(code)&&has(['ngaylensao','promotiondate','promotedat'])&&has(['sao','promotionstar','newstar'])&&has(['hangsaohientai','currentstar','saohientai']))return input;}
+      else if(has(code)&&(kind==='stars'?has(stars):has(names)&&has(dates)))return input;
+    }
+    centerHrProblem_('EXPORT_HEADERS','File '+kind+' chưa đúng mẫu cột; chưa ghi dữ liệu.');
+  }
+  var found=false;
+  for(var r=0;r<Math.min(20,input.length);r++){
+    var headers=input[r].map(norm),required=[['staffid','idnhanvien','maidnhanvien'],['staffname','nhanvien','hovaten','tennhanvien'],['code','manv','manhanvien','staffcode'],['area','khuvuc','region'],['shopid','idshop','mashop'],['shop','tenshop','shopname'],['loaiganshop','loaigan','assignmenttype','type']];
+    if(required.every(function(a){return a.some(function(v){return headers.indexOf(v)>=0;});})){
+      var typeIndex=headers.findIndex(function(v){return required[6].indexOf(v)>=0;}),codeIndex=headers.findIndex(function(v){return required[2].indexOf(v)>=0;});
+      found=input.slice(r+1).some(function(row){return norm(row[typeIndex])==='pg'&&row[codeIndex].trim()!=='';});break;
+    }
+  }
+  if(!found)centerHrProblem_('EXPORT_HEADERS','File không có đúng mẫu DS gán Shop PG và dòng PG hợp lệ.');
+  return input;
+}
+function centerHrSheets_(id,targets) {
+  targets=targets||CENTER_HR_TABS;
+  if(typeof Sheets==='undefined')centerHrProblem_('SHEETS_SERVICE','Chưa thêm Google Sheets API v4.');
+  var book;try{book=Sheets.Spreadsheets.get(id,{fields:'spreadsheetId,sheets(properties(sheetId,title,gridProperties))'});}catch(e){centerHrProblem_('SHEET_ACCESS','Tài khoản Apps Script chưa đọc được Google Sheet đã chọn.');}
+  if(book.spreadsheetId!==id)centerHrProblem_('SHEET_ID','Google trả về sai mã file.');
+  var sheets=(book.sheets||[]).map(function(s){return s.properties;}),ids=sheets.map(function(s){return s.sheetId;});
+  return targets.map(function(target){
+    var matches=sheets.filter(function(s){return s.title===target.title;});
+    if(!matches.length)matches=sheets.filter(function(s){return s.title.trim()===target.title;});
+    if(matches.length>1)centerHrProblem_('SHEET_TAB','Có nhiều tab trùng tên '+target.title+'.');
+    if(matches.length)return Object.assign({key:target.key,exists:true},matches[0]);
+    if(target.key==='assign')centerHrProblem_('SHEET_TAB','File cần có tab DS GÁN SHOP PGS trước khi chạy thử.');
+    var next=1;while(ids.indexOf(next)>=0)next++;ids.push(next);
+    return {key:target.key,sheetId:next,title:target.title,exists:false,gridProperties:{rowCount:1,columnCount:1}};
+  });
+}
+function centerHrWrite_(request,sheets) {
+  if(request.month!==centerHrMonth_())centerHrProblem_('CURRENT_MONTH_ONLY','Chỉ ghi dữ liệu cho tháng hiện tại theo giờ Việt Nam.');
+  var targets=centerHrTargets_(request);
+  if(!Array.isArray(request.tabs)||request.tabs.length!==targets.length)centerHrProblem_('FOUR_TABS_REQUIRED','Cần đủ các nguồn đã xác nhận trước khi ghi.');
+  var validated=[],used=[],total=0;
+  targets.forEach(function(target){
+    var matches=request.tabs.filter(function(t){return t.key===target.key;});
+    if(matches.length!==1)centerHrProblem_('FOUR_TABS_REQUIRED','Thiếu hoặc trùng nguồn '+target.title+'.');
+    var input=matches[0],current=sheets.find(function(s){return s.key===target.key;});
+    if(!Number.isSafeInteger(input.sheetId)||input.sheetId<0||used.indexOf(input.sheetId)>=0||input.sheetId!==current.sheetId||input.sheetTitle!==current.title)centerHrProblem_('SHEET_CHANGED','Danh sách tab vừa thay đổi; hãy Kiểm tra Sheet lại.');
+    used.push(input.sheetId);var matrix=centerHrMatrix_(input.matrix,target.key);total+=matrix.length*matrix[0].length;
+    validated.push({key:target.key,sheet:current,matrix:matrix});
+  });
+  if(total>500000)centerHrProblem_('MATRIX_SIZE','Các nguồn vượt giới hạn 500.000 ô; chưa ghi dữ liệu.');
+  var batch=[];
+  validated.forEach(function(v){
+    var sheet=v.sheet,matrix=v.matrix,width=matrix[0].length;
+    if(!sheet.exists)batch.push({addSheet:{properties:{sheetId:sheet.sheetId,title:sheet.title,gridProperties:{rowCount:Math.max(1,matrix.length),columnCount:Math.max(1,width)}}}});
+    else if(matrix.length>sheet.gridProperties.rowCount||width>sheet.gridProperties.columnCount)batch.push({updateSheetProperties:{properties:{sheetId:sheet.sheetId,gridProperties:{rowCount:Math.max(matrix.length,sheet.gridProperties.rowCount),columnCount:Math.max(width,sheet.gridProperties.columnCount)}},fields:'gridProperties.rowCount,gridProperties.columnCount'}});
+    batch.push({unmergeCells:{range:{sheetId:sheet.sheetId}}});
+    batch.push({updateCells:{range:{sheetId:sheet.sheetId},rows:matrix.map(function(row){return {values:row.map(function(value){return {userEnteredValue:{stringValue:value}};})};}),fields:'userEnteredValue'}});
+  });
+  try{Sheets.Spreadsheets.batchUpdate({requests:batch},request.spreadsheetId);}catch(e){centerHrProblem_('SHEET_WRITE','Google chưa xác nhận lần ghi các tab; cần đối soát trước khi chạy lại.');}
+  var ranges=validated.map(function(v){var letters='',n=v.matrix[0].length;while(n>0){n--;letters=String.fromCharCode(65+n%26)+letters;n=Math.floor(n/26);}return "'"+v.sheet.title.replace(/'/g,"''")+"'!A1:"+letters+v.matrix.length;});
+  var read;try{read=Sheets.Spreadsheets.Values.batchGet(request.spreadsheetId,{ranges:ranges,valueRenderOption:'UNFORMATTED_VALUE'});}catch(e){centerHrProblem_('SHEET_READBACK','Chưa đọc lại đủ các tab sau khi ghi.');}
+  if(!Array.isArray(read.valueRanges)||read.valueRanges.length!==targets.length)centerHrProblem_('SHEET_READBACK','Google chưa trả đủ các tab để đối chiếu.');
+  var result=validated.map(function(v,i){
+    var actual=read.valueRanges[i].values||[],matrix=v.matrix,width=matrix[0].length,verified=[],different=0,first='';
+    for(var r=0;r<matrix.length;r++){
+      var row=[];for(var c=0;c<width;c++){var value=String((actual[r]||[])[c]===undefined?'':actual[r][c]);row.push(value);if(value!==matrix[r][c]){different++;if(!first){var col='',k=c+1;while(k>0){k--;col=String.fromCharCode(65+k%26)+col;k=Math.floor(k/26);}first=col+(r+1);}}}verified.push(row);
+    }
+    if(actual.length!==matrix.length||different)centerHrProblem_('SHEET_READBACK','Tab '+v.sheet.title+' đọc lại chưa khớp Excel'+(first?' (ô '+first+'; '+different+' ô lệch)':' (số dòng chưa khớp)')+'. Chưa nhập nhân sự thử.');
+    return {key:v.key,sheetId:v.sheet.sheetId,sheetTitle:v.sheet.title,matrix:verified,rows:matrix.length,columns:width};
+  });
+  return {tabs:result,sheetVerified:true,writerVersion:centerHrVersion_(request)};
+}
+function doPost(e) {
+  var key=PropertiesService.getScriptProperties().getProperty(CENTER_HR_SECRET_PROPERTY),request=null,authenticated=false,lock=null,locked=false;
+  var reply=function(data){var payload=JSON.stringify(Object.assign({version:CENTER_HR_PROTOCOL,environment:CENTER_HR_ENVIRONMENT,nonce:request.nonce,month:request.month,spreadsheetId:request.spreadsheetId,action:request.action,deploymentUrl:request.deploymentUrl},data));return centerHrOutput_({payload:payload,signature:centerHrMac_('CENTER_HR_RESPONSE_V1\n'+payload,key)});};
+  try {
+    if(!/^[a-f0-9]{64}$/.test(key||''))return centerHrOutput_({ok:false,code:'UNCONFIGURED'});
+    var raw=e&&e.postData&&e.postData.contents;if(typeof raw!=='string'||raw.length>16000000)return centerHrOutput_({ok:false,code:'INVALID_REQUEST'});
+    var envelope=JSON.parse(raw);
+    if(typeof envelope.payload!=='string'||typeof envelope.signature!=='string'||!centerHrEqual_(envelope.signature,centerHrMac_('CENTER_HR_REQUEST_V1\n'+envelope.payload,key)))return centerHrOutput_({ok:false,code:'UNAUTHORIZED'});
+    request=JSON.parse(envelope.payload);
+    if(request.version!==CENTER_HR_PROTOCOL||request.environment!==CENTER_HR_ENVIRONMENT||!['metadata','write'].includes(request.action)||typeof request.nonce!=='string'||!/^[a-f0-9-]{36}$/.test(request.nonce)||typeof request.timestamp!=='number'||Math.abs(Date.now()-request.timestamp)>180000||typeof request.month!=='string'||!/^20\d{2}-(0[1-9]|1[0-2])$/.test(request.month)||typeof request.spreadsheetId!=='string'||!/^[A-Za-z0-9_-]{20,160}$/.test(request.spreadsheetId))return centerHrOutput_({ok:false,code:'INVALID_REQUEST'});
+    authenticated=true;
+    if(request.deploymentUrl!==ScriptApp.getService().getUrl())centerHrProblem_('DEPLOYMENT_URL','Link triển khai chưa khớp. Dùng URL /exec của đúng bản triển khai này.');
+    lock=LockService.getScriptLock();if(!lock.tryLock(10000))centerHrProblem_('BRIDGE_BUSY','Một lượt ghi đang xử lý. Hãy chờ rồi kiểm tra trạng thái.');
+    locked=true;
+    var props=PropertiesService.getScriptProperties(),seen={};try{seen=JSON.parse(props.getProperty('CENTER_HR_NONCES')||'{}');}catch(ignore){}
+    Object.keys(seen).forEach(function(nonce){if(typeof seen[nonce]!=='number'||seen[nonce]<Date.now()-600000)delete seen[nonce];});
+    if(seen[request.nonce])centerHrProblem_('REPLAY','Yêu cầu này đã được xử lý.');
+    if(Object.keys(seen).length>=100)centerHrProblem_('BRIDGE_BUSY','Đã đạt hạn mức yêu cầu tạm thời.');
+    seen[request.nonce]=Date.now();props.setProperty('CENTER_HR_NONCES',JSON.stringify(seen));
+    if(request.extensions!==undefined&&(!Array.isArray(request.extensions)||request.extensions.length!==1||request.extensions[0]!=='starHistory'))centerHrProblem_('EXTENSION','Phần mở rộng không hợp lệ.');
+    var targets=centerHrTargets_(request),sheets=centerHrSheets_(request.spreadsheetId,targets);
+    return reply({ok:true,data:request.action==='metadata'?{sheets:sheets,writerVersion:centerHrVersion_(request),features:targets.length===5?['unmergeBeforeWrite','fourTabReplace','fiveTabReplace']:['unmergeBeforeWrite','fourTabReplace']}:centerHrWrite_(request,sheets)});
+  } catch(error) {
+    if(!authenticated||!request)return centerHrOutput_({ok:false,code:'INVALID_REQUEST'});
+    return reply({ok:false,code:error.centerCode||'SCRIPT_ERROR',message:error.centerCode?error.message:'Apps Script chưa xử lý xong yêu cầu. Hãy kiểm tra cấu hình và quyền Google.'});
+  } finally {if(locked)lock.releaseLock();}
+}
