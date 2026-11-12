@@ -1,0 +1,29 @@
+{
+  "version": "2026-11-12-compact-previous-month",
+  "mode": "synthetic standalone preview",
+  "real_dashboard_changed": false,
+  "backend_changed": false,
+  "comparison": "immediately preceding month only",
+  "files": [
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Tinh-Gon-So-Thang-Truoc-README.txt",
+      "bytes": 1882,
+      "sha256": "b70f985c01ccd7257dbab60041e09808d831b24edbe8c6488af1e8c2db945b51"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Tinh-Gon-So-Thang-Truoc-verification.json",
+      "bytes": 2155,
+      "sha256": "3abf0a78f313ca79a161cb64b98589978780fa5507139db543c1695cd2765fe9"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Tinh-Gon-So-Thang-Truoc.html",
+      "bytes": 37468,
+      "sha256": "b4aa90540a22caa6ad84866b3d01641ac268ea31d99556573dc196be05509cf2"
+    },
+    {
+      "path": "previews/2026-11-12-sao-pgs/index.html",
+      "bytes": 37468,
+      "sha256": "b4aa90540a22caa6ad84866b3d01641ac268ea31d99556573dc196be05509cf2"
+    }
+  ]
+}
