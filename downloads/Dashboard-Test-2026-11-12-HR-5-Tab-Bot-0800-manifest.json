@@ -1,0 +1,31 @@
+{
+  "version": "2026-11-12-data-personnel-test",
+  "repository": "CentralTraining/Test",
+  "frontend": "Test only",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-HR-5-Tab-Bot-0800-README.txt",
+      "bytes": 540,
+      "sha256": "5d0a1895de998d393257dbbd45c73d7e43ec7234b57669487dc13380a42b5b2e",
+      "git_blob_sha": "26cf0d21a77e1849f540900e985c1f331ffce2a2"
+    },
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-HR-5-Tab-Bot-0800-verification.json",
+      "bytes": 329,
+      "sha256": "86263453bdfa3e8e4343c304465fc1844de3d69410a42a3b0fef1d7fd772cf4d",
+      "git_blob_sha": "26cb3f71eda627b6ebe6f7feefccf26f716570dc"
+    },
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-HR-5-Tab-Bot-0800.html",
+      "bytes": 2821864,
+      "sha256": "819be87dd856d85ed58c21e1c3c59f7904747c8e6d637cdbea3f7314046f4b8d",
+      "git_blob_sha": "94c44bd6f3e15adbbd2c7110f1b03c0738e6e141"
+    },
+    {
+      "path": "index.html",
+      "bytes": 2821864,
+      "sha256": "819be87dd856d85ed58c21e1c3c59f7904747c8e6d637cdbea3f7314046f4b8d",
+      "git_blob_sha": "94c44bd6f3e15adbbd2c7110f1b03c0738e6e141"
+    }
+  ]
+}
