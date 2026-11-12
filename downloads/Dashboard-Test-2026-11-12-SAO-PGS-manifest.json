@@ -1,0 +1,34 @@
+{
+  "version": "2026-11-12-sao-pgs-test-real-app",
+  "repository": "CentralTraining/Test",
+  "main_ui_changed": false,
+  "backend": "new read-only hr-stars-test v1; JWT and signed Dashboard authorization",
+  "comparison": "immediately preceding month; independent active populations",
+  "history_source_readiness": "LÊN SAO tab pending; unknown displayed explicitly",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-SAO-PGS-README.txt",
+      "bytes": 2820,
+      "sha256": "4e0b99498d3d424ce4605e37adfc21df8e33b47b0b3ade6ee9f77853ce29ebfc",
+      "git_blob_sha": "af0543b555b6f5a41928d47d57a597460be81808"
+    },
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-SAO-PGS-verification.json",
+      "bytes": 8441,
+      "sha256": "bf512ae4095fbf90658a28a07eeb24f0e02b77b793525c225f0bb5b3547f6941",
+      "git_blob_sha": "f59c0feedb865fb2477d642b04796ec0adda29a0"
+    },
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-SAO-PGS.html",
+      "bytes": 2817997,
+      "sha256": "0f3f860a071a66ea4dff850cffa97583b1a0bedb7c3c1707115d8b94110eb065",
+      "git_blob_sha": "d6dcd6e92244ae1b6124418fb6c332614184a1e1"
+    },
+    {
+      "path": "index.html",
+      "bytes": 2817997,
+      "sha256": "0f3f860a071a66ea4dff850cffa97583b1a0bedb7c3c1707115d8b94110eb065",
+      "git_blob_sha": "d6dcd6e92244ae1b6124418fb6c332614184a1e1"
+    }
+  ]
+}

@@ -1,0 +1,297 @@
+{
+  "build": {
+    "passed": true,
+    "base_test_commit": "0d662a754c0b7d32c78c290e897e01fa63dc2053",
+    "patches": 7,
+    "reverse_restores_test_byte_exact": true,
+    "synthetic_generator_absent": true,
+    "html_bytes": 2817997,
+    "html_sha256": "0f3f860a071a66ea4dff850cffa97583b1a0bedb7c3c1707115d8b94110eb065",
+    "main_not_modified": true
+  },
+  "function": {
+    "passed": true,
+    "signed_fresh_admin_and_trainer_auth": true,
+    "trainer_raw_data_region_scoped": true,
+    "client_role_spoof_ignored": true,
+    "whole_region_aggregate_without_outside_people": true,
+    "late_revocation_denied": true,
+    "only_read_operations": true,
+    "strict_signed_tab_metadata_and_gid": true,
+    "legacy_writer_and_missing_tab_explicit": true,
+    "wrong_headers_no_fallback": true,
+    "source_change_discards_history": true,
+    "active_monthly_hr_and_off_exclusion": true,
+    "exact_codes_and_leading_zero_display": true,
+    "distinct_events_and_unknown_baseline": true,
+    "zero_star_not_missing": true,
+    "duplicate_status_conflict_not_guessed": true,
+    "service_probe_aggregate_only": true,
+    "no_credentials_in_responses": true,
+    "real_network_requests": 0,
+    "real_business_writes": 0
+  },
+  "feature": [
+    {
+      "width": 1440,
+      "role": "admin",
+      "passed": true,
+      "real_app_tab": true,
+      "five_cards": true,
+      "eight_quality_columns": true,
+      "both_bar_labels_from_data": true,
+      "monthly_independent_active_cohorts": true,
+      "flow_from_people": true,
+      "multi_star_filters": true,
+      "paging_history_xlsx": true,
+      "source_missing_not_zero": true,
+      "read_only_no_hr_change": true,
+      "no_overflow_or_script_errors": true
+    },
+    {
+      "width": 1440,
+      "role": "trainer",
+      "passed": true,
+      "real_app_tab": true,
+      "five_cards": true,
+      "eight_quality_columns": true,
+      "both_bar_labels_from_data": true,
+      "monthly_independent_active_cohorts": true,
+      "flow_from_people": true,
+      "multi_star_filters": true,
+      "paging_history_xlsx": true,
+      "source_missing_not_zero": true,
+      "read_only_no_hr_change": true,
+      "no_overflow_or_script_errors": true
+    },
+    {
+      "width": 390,
+      "role": "admin",
+      "passed": true,
+      "real_app_tab": true,
+      "five_cards": true,
+      "eight_quality_columns": true,
+      "both_bar_labels_from_data": true,
+      "monthly_independent_active_cohorts": true,
+      "flow_from_people": true,
+      "multi_star_filters": true,
+      "paging_history_xlsx": true,
+      "source_missing_not_zero": true,
+      "read_only_no_hr_change": true,
+      "no_overflow_or_script_errors": true
+    },
+    {
+      "width": 390,
+      "role": "trainer",
+      "passed": true,
+      "real_app_tab": true,
+      "five_cards": true,
+      "eight_quality_columns": true,
+      "both_bar_labels_from_data": true,
+      "monthly_independent_active_cohorts": true,
+      "flow_from_people": true,
+      "multi_star_filters": true,
+      "paging_history_xlsx": true,
+      "source_missing_not_zero": true,
+      "read_only_no_hr_change": true,
+      "no_overflow_or_script_errors": true
+    },
+    {
+      "width": 320,
+      "role": "admin",
+      "passed": true,
+      "real_app_tab": true,
+      "five_cards": true,
+      "eight_quality_columns": true,
+      "both_bar_labels_from_data": true,
+      "monthly_independent_active_cohorts": true,
+      "flow_from_people": true,
+      "multi_star_filters": true,
+      "paging_history_xlsx": true,
+      "source_missing_not_zero": true,
+      "read_only_no_hr_change": true,
+      "no_overflow_or_script_errors": true
+    },
+    {
+      "width": 320,
+      "role": "trainer",
+      "passed": true,
+      "real_app_tab": true,
+      "five_cards": true,
+      "eight_quality_columns": true,
+      "both_bar_labels_from_data": true,
+      "monthly_independent_active_cohorts": true,
+      "flow_from_people": true,
+      "multi_star_filters": true,
+      "paging_history_xlsx": true,
+      "source_missing_not_zero": true,
+      "read_only_no_hr_change": true,
+      "no_overflow_or_script_errors": true
+    }
+  ],
+  "navigation": [
+    {
+      "width": 1440,
+      "role": "admin",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 1440,
+      "role": "trainer",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 390,
+      "role": "admin",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 390,
+      "role": "trainer",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 320,
+      "role": "admin",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 320,
+      "role": "trainer",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    }
+  ],
+  "states": {
+    "passed": true,
+    "month_switch_discards_late_response": true,
+    "missing_hr_not_zero": true,
+    "missing_history_not_zero": true,
+    "partial_history_explicit": true,
+    "source_error_clears_stale_display": true,
+    "logout_discards_late_response": true,
+    "changed_user_cannot_reuse_admin_cache": true,
+    "cancel_and_logout_remove_auth_prompt": true,
+    "no_business_writes": true
+  },
+  "xlsx": {
+    "passed": true,
+    "cases": [
+      {
+        "file": "synthetic-export-1440-admin.xlsx",
+        "rows": 8,
+        "exact_filtered_events": true,
+        "leading_zero_text": true,
+        "no_formula": true
+      },
+      {
+        "file": "synthetic-export-1440-trainer.xlsx",
+        "rows": 1,
+        "exact_filtered_events": true,
+        "leading_zero_text": true,
+        "no_formula": true
+      },
+      {
+        "file": "synthetic-export-320-admin.xlsx",
+        "rows": 8,
+        "exact_filtered_events": true,
+        "leading_zero_text": true,
+        "no_formula": true
+      },
+      {
+        "file": "synthetic-export-320-trainer.xlsx",
+        "rows": 1,
+        "exact_filtered_events": true,
+        "leading_zero_text": true,
+        "no_formula": true
+      },
+      {
+        "file": "synthetic-export-390-admin.xlsx",
+        "rows": 8,
+        "exact_filtered_events": true,
+        "leading_zero_text": true,
+        "no_formula": true
+      },
+      {
+        "file": "synthetic-export-390-trainer.xlsx",
+        "rows": 1,
+        "exact_filtered_events": true,
+        "leading_zero_text": true,
+        "no_formula": true
+      }
+    ]
+  },
+  "live-auth": {
+    "passed": true,
+    "verify_jwt": true,
+    "cases": [
+      {
+        "case": "cors_preflight",
+        "status": 204
+      },
+      {
+        "case": "missing",
+        "status": 401
+      },
+      {
+        "case": "forged",
+        "status": 401
+      },
+      {
+        "case": "probe_no_credential",
+        "status": 401
+      }
+    ],
+    "real_business_writes": 0
+  },
+  "scope": {
+    "real_test_app": true,
+    "main_ui_unchanged": true,
+    "new_read_only_edge": true,
+    "verify_jwt": true,
+    "real_hr_or_sheet_writes": 0,
+    "source_history_ready": false,
+    "source_history_code": "SOURCE_TAB_MISSING"
+  }
+}
