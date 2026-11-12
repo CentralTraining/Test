@@ -1,0 +1,14 @@
+{
+  "version": "2026-11-12",
+  "passed": true,
+  "viewport_widths": [
+    1440,
+    390
+  ],
+  "numeric_display_verified": true,
+  "unknown_data_display_verified": true,
+  "existing_grouping_preserved": true,
+  "no_page_overflow_or_javascript_errors": true,
+  "automated_tests_use_synthetic_data": true,
+  "no_business_data_written_for_testing": true
+}

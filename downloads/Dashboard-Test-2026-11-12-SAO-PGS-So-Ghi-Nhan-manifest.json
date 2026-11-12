@@ -1,0 +1,31 @@
+{
+  "version": "2026-11-12-sao-pgs-recorded-counts",
+  "repository": "CentralTraining/Test",
+  "frontend": "Test only",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-SAO-PGS-So-Ghi-Nhan-README.txt",
+      "bytes": 439,
+      "sha256": "92dab9d5afdb959f3378081f930a4826dcb131288711e3f838fca798708a3035",
+      "git_blob_sha": "37108cb3e7dff4eeea95a942c696a32898031e6b"
+    },
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-SAO-PGS-So-Ghi-Nhan-verification.json",
+      "bytes": 353,
+      "sha256": "f4e9c728970ea037d6ba1796bf053d7adb035aa4fe15e125772d1e71b88779ba",
+      "git_blob_sha": "b40d4180d1dab846da8d98fb219084e577c79f1f"
+    },
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-SAO-PGS-So-Ghi-Nhan.html",
+      "bytes": 2822140,
+      "sha256": "bb81cdf85d2b99fdc1f1586d4444c1d6202bedcd5194f5c5463bae1055fd3343",
+      "git_blob_sha": "8a72489ded416a38f3020acde9a02b34c145c1b0"
+    },
+    {
+      "path": "index.html",
+      "bytes": 2822140,
+      "sha256": "bb81cdf85d2b99fdc1f1586d4444c1d6202bedcd5194f5c5463bae1055fd3343",
+      "git_blob_sha": "8a72489ded416a38f3020acde9a02b34c145c1b0"
+    }
+  ]
+}
