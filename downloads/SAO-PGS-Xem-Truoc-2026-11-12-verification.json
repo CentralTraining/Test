@@ -1,0 +1,41 @@
+[
+  {
+    "width": 1440,
+    "passed": true,
+    "synthetic_only": true,
+    "star_levels_0_to_5": true,
+    "thresholds_match_user_reference": true,
+    "distinct_people_and_event_counts": true,
+    "filters_and_history_work": true,
+    "monthly_comparison": true,
+    "real_data_requests": 0,
+    "no_overflow": true,
+    "script_errors": 0
+  },
+  {
+    "width": 390,
+    "passed": true,
+    "synthetic_only": true,
+    "star_levels_0_to_5": true,
+    "thresholds_match_user_reference": true,
+    "distinct_people_and_event_counts": true,
+    "filters_and_history_work": true,
+    "monthly_comparison": true,
+    "real_data_requests": 0,
+    "no_overflow": true,
+    "script_errors": 0
+  },
+  {
+    "width": 320,
+    "passed": true,
+    "synthetic_only": true,
+    "star_levels_0_to_5": true,
+    "thresholds_match_user_reference": true,
+    "distinct_people_and_event_counts": true,
+    "filters_and_history_work": true,
+    "monthly_comparison": true,
+    "real_data_requests": 0,
+    "no_overflow": true,
+    "script_errors": 0
+  }
+]

@@ -1,0 +1,40 @@
+{
+  "version": "2026-11-12",
+  "scope": "standalone_design_preview",
+  "repository": "CentralTraining/Test",
+  "base_commit": "11f72f81a91510f8fa6c79deba86c5435e46ef98",
+  "actual_dashboard_html_changed": false,
+  "actual_personnel_data_published": false,
+  "files": [
+    {
+      "path": "previews/2026-11-12-sao-pgs/index.html",
+      "bytes": 40116,
+      "sha256": "6c74cff8c093aa9490ffe82db01c64fa138789f43771f7d54ebdd0863c8c24c4",
+      "blob": "6290fef966ae3aac5616103e47180c454a7fcafd"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Xem-Truoc.html",
+      "bytes": 40116,
+      "sha256": "6c74cff8c093aa9490ffe82db01c64fa138789f43771f7d54ebdd0863c8c24c4",
+      "blob": "6290fef966ae3aac5616103e47180c454a7fcafd"
+    },
+    {
+      "path": "downloads/SAO-PGS-Giao-Dien-2026-11-12.png",
+      "bytes": 290391,
+      "sha256": "d2fd58bf88433c990e511cdaa699991eb9ec8d3fd94049c4ebe685a290cbc300",
+      "blob": "5e3532b0168de20421670bdda784890428c0a466"
+    },
+    {
+      "path": "downloads/README-SAO-PGS-Xem-Truoc-2026-11-12.txt",
+      "bytes": 1541,
+      "sha256": "a35268fb2e70dd9ecee924b473c06e02ead6494ea89aacc1be11adf5bc3fe176",
+      "blob": "c24fc4a5a31dd77f799be350d094744e9f9046b9"
+    },
+    {
+      "path": "downloads/SAO-PGS-Xem-Truoc-2026-11-12-verification.json",
+      "bytes": 1039,
+      "sha256": "027d169f1c85ce05f885c23db9419f3709881ef970d0389f201a9f2fa5744737",
+      "blob": "29ac03554aa659e5a2e568b810c37090d6de90ee"
+    }
+  ]
+}
