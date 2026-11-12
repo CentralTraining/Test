@@ -1,0 +1,35 @@
+{
+  "version": "2026-11-12-active-month-comparison",
+  "mode": "synthetic-standalone-design-preview",
+  "target_repository": "CentralTraining/Test",
+  "actual_dashboard_index_changed": false,
+  "main_dashboard_changed": false,
+  "business_data_changed": false,
+  "cohort_rule": "Active status in each respective month; historical cohort is independent of current-month status",
+  "files": [
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Xem-Truoc-Dang-Lam-So-Sanh-Thang-README.txt",
+      "bytes": 2094,
+      "sha256": "3ba998a484cf05a02e554ce70ee4e3a9f4f71e3156d8278867b20712821067d5",
+      "git_blob_sha": "eba3395311d2ca3aedb2785a66963d2e4e8f14b8"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Xem-Truoc-Dang-Lam-So-Sanh-Thang-verification.json",
+      "bytes": 1867,
+      "sha256": "a9cd359d3f6fb70aa72f1528538761f8b88cdf92b47805ffe29fa89a37c56ee4",
+      "git_blob_sha": "73a674f370ed7a6b1c83a69155f00c398fbeb726"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Xem-Truoc-Dang-Lam-So-Sanh-Thang.html",
+      "bytes": 54025,
+      "sha256": "c5d74131383eab1399a535617b7aa1ef524b1da6a19701d79c1351bf4ffe921e",
+      "git_blob_sha": "a63de61dfd1bb5bec51ca842f52402c5ff4bafd7"
+    },
+    {
+      "path": "previews/2026-11-12-sao-pgs/index.html",
+      "bytes": 54025,
+      "sha256": "c5d74131383eab1399a535617b7aa1ef524b1da6a19701d79c1351bf4ffe921e",
+      "git_blob_sha": "a63de61dfd1bb5bec51ca842f52402c5ff4bafd7"
+    }
+  ]
+}
