@@ -1,0 +1,31 @@
+{
+  "version": "2026-11-13-sao-pgs-fast-load",
+  "repository": "CentralTraining/Test",
+  "frontend": "Test only",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-13-SAO-PGS-Tai-Nhanh-README.txt",
+      "bytes": 461,
+      "sha256": "72d40cba71863ce39ab067bdaa563d436f8ea357b5582e4a4c87cc29f718a7f5",
+      "git_blob_sha": "b7a3cbf2d9c1448af0688dc6f8f96d9baa236f52"
+    },
+    {
+      "path": "downloads/Dashboard-Test-2026-11-13-SAO-PGS-Tai-Nhanh-verification.json",
+      "bytes": 448,
+      "sha256": "88dda46b55b9144959bbf4b9d67e2ee7b01be103b0f7bcceadfd620d4e9aa01d",
+      "git_blob_sha": "a582b77083c4d01fa01166721e7fd5f621e8a829"
+    },
+    {
+      "path": "downloads/Dashboard-Test-2026-11-13-SAO-PGS-Tai-Nhanh.html",
+      "bytes": 2827744,
+      "sha256": "4d2d5814ac09f97709a03838335628fd735ed0bbd04d0603b8cc21910c81c729",
+      "git_blob_sha": "b3df01e69fd57dca0f9c0357c29ce262322a13fa"
+    },
+    {
+      "path": "index.html",
+      "bytes": 2827744,
+      "sha256": "4d2d5814ac09f97709a03838335628fd735ed0bbd04d0603b8cc21910c81c729",
+      "git_blob_sha": "b3df01e69fd57dca0f9c0357c29ce262322a13fa"
+    }
+  ]
+}
