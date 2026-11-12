@@ -1,0 +1,30 @@
+{
+  "version": "2026-11-12-reference-five-cards-two-bar-labels",
+  "mode": "synthetic standalone design preview",
+  "real_dashboard_changed": false,
+  "backend_changed": false,
+  "reference_layout_restored": true,
+  "comparison": "immediately preceding month",
+  "files": [
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Bo-Cuc-5-The-Hai-Cot-README.txt",
+      "bytes": 2269,
+      "sha256": "7d23bdff789ee107a80e3b57f5343be6dbc19a558b2816be3a4c363f9b349035"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Bo-Cuc-5-The-Hai-Cot-verification.json",
+      "bytes": 2695,
+      "sha256": "33c94dc26dd249dd53bb12ff1fea2a21fb0dab2bb9885640452c449d09eda27b"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Bo-Cuc-5-The-Hai-Cot.html",
+      "bytes": 45135,
+      "sha256": "067da7498809414d2eb8ccde3932041fa42d912e9b37bad1bfc1ccf58f986b4a"
+    },
+    {
+      "path": "previews/2026-11-12-sao-pgs/index.html",
+      "bytes": 45135,
+      "sha256": "067da7498809414d2eb8ccde3932041fa42d912e9b37bad1bfc1ccf58f986b4a"
+    }
+  ]
+}
