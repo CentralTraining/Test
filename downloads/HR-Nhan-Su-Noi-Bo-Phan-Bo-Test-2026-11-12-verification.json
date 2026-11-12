@@ -1,0 +1,93 @@
+{
+  "build": {
+    "repository": "CentralTraining/Test",
+    "base_commit": "158b074a4a8a925d71eea79f5db968428074e74d",
+    "base_blob": "54d2520824e8b0265f462002ec414404121b3eef",
+    "html_blob": "f7625b9b13a67d2948ceef662f874bfeb5209b23",
+    "sha256": "4ea17b74c41b33838dfae63d7eac9b02f0c510fbb3c6ae09d757e227d9f3ea69",
+    "bytes": 2765998,
+    "patches": 8,
+    "changed_inline_scripts": [
+      1
+    ],
+    "other_scripts_unchanged": true,
+    "reverse_patch_exact": true,
+    "business_rules_changed": false,
+    "backend_changes": false,
+    "business_data_writes": 0
+  },
+  "browser": [
+    {
+      "width": 1440,
+      "role": "admin",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 1440,
+      "role": "trainer",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 390,
+      "role": "admin",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 390,
+      "role": "trainer",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 320,
+      "role": "admin",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    },
+    {
+      "width": 320,
+      "role": "trainer",
+      "passed": true,
+      "nested_navigation": true,
+      "existing_charts_and_data_unchanged": true,
+      "shared_filters_retained": true,
+      "onoff_and_brand_views_work": true,
+      "keyboard_navigation": true,
+      "no_overflow": true,
+      "real_business_writes": 0
+    }
+  ]
+}

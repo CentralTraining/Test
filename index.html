@@ -1957,7 +1957,7 @@ html body .main-content :is(.subnav:not(.kpi-primary-nav):not(.kpi-subtype-nav),
 html body .main-content :is(.subnav:not(.kpi-primary-nav):not(.kpi-subtype-nav),.so-stats-pages)>button:hover:not(.active){background:#f4f7f5;color:#25523a;}
 html body .main-content :is(.subnav:not(.kpi-primary-nav):not(.kpi-subtype-nav),.so-stats-pages)>button.active{border-bottom-color:#158054;background:#edf6f0;color:#075e38;font-weight:750;box-shadow:none;}
 html body :is(#tab-overview,#tab-so,#tab-settings,#tab-data)>.subnav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;max-width:580px;margin:10px 0 12px;padding:4px;gap:4px;border-color:#d9e5dd;border-radius:9px;background:#edf3ef;overflow:visible;}
-html body #tab-so>.subnav{grid-template-columns:repeat(2,minmax(0,1fr));}
+html body :is(#tab-overview,#tab-so)>.subnav{grid-template-columns:repeat(2,minmax(0,1fr));}
 html body #tab-data>.subnav{grid-template-columns:repeat(4,minmax(0,1fr));}
 html body :is(#tab-overview,#tab-so,#tab-settings,#tab-data)>.subnav>button{display:flex;align-items:center;justify-content:center;min-height:37px;padding:8px 10px;border:1px solid transparent;border-radius:6px!important;background:transparent;color:#53695c;font-size:12px;font-weight:700;line-height:1.2;}
 html body :is(#tab-overview,#tab-so,#tab-settings,#tab-data)>.subnav>button.active{border-color:#0b5e36;background:#0b5e36;color:#fff;box-shadow:0 2px 4px #0b5e361a;}
@@ -2988,8 +2988,7 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
     </div>
 
     <div class="subnav">
-      <button data-sub="ov-nhansu" class="active">Nhân sự</button>
-      <button data-sub="ov-onoff">Tỉ lệ On/Off</button>
+      <button data-sub="ov-noibo" class="active">Nhân Sự Nội Bộ</button>
       <button data-sub="ov-hang">Nhân sự các hãng</button>
     </div>
 
@@ -3000,8 +2999,14 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
       <select id="ovFilterSale"><option value="">Tất cả Sale</option></select>
     </div>
 
-    <!-- Nhân sự -->
-    <div id="panel-ov-nhansu" class="panel active">
+    <!-- Nhân Sự Nội Bộ -->
+    <div id="panel-ov-noibo" class="panel active">
+      <div class="subnav hr-personnel-tabs" role="tablist" aria-label="Nhân Sự Nội Bộ">
+        <button type="button" id="ovHrDistributionTab" data-hrsub="ov-nhansu" class="active" role="tab" aria-controls="panel-ov-nhansu" aria-selected="true" tabindex="0">Phân Bổ Hr</button>
+        <button type="button" id="ovHrOnOffTab" data-hrsub="ov-onoff" role="tab" aria-controls="panel-ov-onoff" aria-selected="false" tabindex="-1">Tỉ lệ On/Off</button>
+      </div>
+    <!-- Phân Bổ Hr -->
+    <div id="panel-ov-nhansu" class="panel active" role="tabpanel" aria-labelledby="ovHrDistributionTab">
       <div class="kpi-row cols-4" id="nhanSuKpiRow"></div>
 
       <div class="region-card">
@@ -3100,7 +3105,7 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
     </div>
 
     <!-- Tỉ lệ On/Off -->
-    <div id="panel-ov-onoff" class="panel">
+    <div id="panel-ov-onoff" class="panel" role="tabpanel" aria-labelledby="ovHrOnOffTab" hidden>
       <div class="kpi-row cols-2" style="margin-bottom:16px;">
         <div class="kpi-card"><div class="label">On (tuyển mới) — <span id="onoffSummaryMonthLabel1"></span></div><div class="value" style="color:#016C38;" id="onoffSummaryOnCount">0</div><div class="frac" id="onoffSummaryOnFrac"></div></div>
         <div class="kpi-card"><div class="label">Off (nghỉ việc) — <span id="onoffSummaryMonthLabel2"></span><span id="onoffSummaryOffTenureLabel"></span></div><div class="value" style="color:#B23A32;" id="onoffSummaryOffCount">0</div><div class="frac" id="onoffSummaryOffFrac"></div></div>
@@ -3153,6 +3158,8 @@ nav.tabs .nav-ic svg{display:block;width:100%;height:100%;flex-shrink:0;}
         <div class="pagination-bar" id="onoffDetailPagination"></div>
       </div>
     </div>
+
+    </div><!-- /Nhân Sự Nội Bộ -->
 
     <!-- Nhân sự các hãng -->
     <div id="panel-ov-hang" class="panel">
@@ -10313,7 +10320,7 @@ function ensureOnOffMonthlyPgs_(months){
   }).finally(()=>{
     if(onoffMonthlyPgTask_===task) onoffMonthlyPgTask_=null;
     const panel=document.getElementById('panel-ov-onoff'), overview=document.getElementById('tab-overview');
-    if(onoffChartView_==='tenure' && panel?.classList.contains('active') && (!overview || overview.classList.contains('active'))){
+    if(onoffChartView_==='tenure' && panel?.classList.contains('active') && document.getElementById('panel-ov-noibo')?.classList.contains('active') && (!overview || overview.classList.contains('active'))){
       renderRecruitAttritionChart();
     }
   });
@@ -11640,7 +11647,8 @@ document.getElementById('exportBrandShopBtn').addEventListener('click', ()=>{
 });
 
 function renderOverviewAll(){
-  const panel=document.querySelector('#tab-overview > .panel.active')?.id || 'panel-ov-nhansu';
+  const section=document.querySelector('#tab-overview > .panel.active')?.id || 'panel-ov-noibo';
+  const panel=section==='panel-ov-noibo' ? document.querySelector('#panel-ov-noibo > .panel.active')?.id || 'panel-ov-nhansu' : section;
   if(panel==='panel-ov-onoff'){ renderOnOff(); return; }
   if(panel==='panel-ov-hang'){ renderBrandStats(); return; }
   populatePgTrainerSelect();
@@ -17017,6 +17025,26 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     // Render nội dung tab vừa chuyển đến (lazy render để tối ưu tốc độ).
     try{ renderTabContent_(btn.dataset.tab); }catch(e){ console.error(e); }
     updateOlieQrWidgetVisibility_();
+  });
+});
+function showOverviewHrPanel_(selected){
+  const group=document.getElementById('panel-ov-noibo');
+  if(!group||!['ov-nhansu','ov-onoff'].includes(selected))return;
+  group.querySelectorAll(':scope > .hr-personnel-tabs > [data-hrsub]').forEach(btn=>{
+    const active=btn.dataset.hrsub===selected;
+    btn.classList.toggle('active',active);btn.setAttribute('aria-selected',String(active));btn.tabIndex=active?0:-1;
+  });
+  group.querySelectorAll(':scope > .panel').forEach(panel=>{
+    const active=panel.id==='panel-'+selected;panel.classList.toggle('active',active);panel.hidden=!active;
+  });
+  renderOverviewAll();
+}
+document.querySelectorAll('#panel-ov-noibo > .hr-personnel-tabs > [data-hrsub]').forEach((btn,index,tabs)=>{
+  btn.addEventListener('click',()=>showOverviewHrPanel_(btn.dataset.hrsub));
+  btn.addEventListener('keydown',event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+    tabs[next].focus();showOverviewHrPanel_(tabs[next].dataset.hrsub);
   });
 });
 document.querySelectorAll('[data-sub]').forEach(btn=>{

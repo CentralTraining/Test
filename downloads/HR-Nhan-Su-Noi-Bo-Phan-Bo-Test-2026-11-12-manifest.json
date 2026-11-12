@@ -1,0 +1,24 @@
+{
+  "version": "2026-11-12",
+  "repository": "CentralTraining/Test",
+  "environment": "Test",
+  "base_commit": "158b074a4a8a925d71eea79f5db968428074e74d",
+  "html_blob": "f7625b9b13a67d2948ceef662f874bfeb5209b23",
+  "files": [
+    {
+      "path": "downloads/Dashboard-Test-2026-11-12-HR-Nhan-Su-Noi-Bo-Phan-Bo.html",
+      "bytes": 2765998,
+      "sha256": "4ea17b74c41b33838dfae63d7eac9b02f0c510fbb3c6ae09d757e227d9f3ea69"
+    },
+    {
+      "path": "downloads/README-HR-Nhan-Su-Noi-Bo-Phan-Bo-Test-2026-11-12.txt",
+      "bytes": 1157,
+      "sha256": "21d6a975764b00b1e53e33047e1036f18a15d9cb0ac65883c4dff1f41caa9b24"
+    },
+    {
+      "path": "downloads/HR-Nhan-Su-Noi-Bo-Phan-Bo-Test-2026-11-12-verification.json",
+      "bytes": 2627,
+      "sha256": "a398ba37dd72e5fb72e17df98158269d0743890c4981dff21b12e426098adede"
+    }
+  ]
+}
