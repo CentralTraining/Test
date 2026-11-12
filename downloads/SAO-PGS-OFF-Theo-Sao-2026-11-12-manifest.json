@@ -1,0 +1,41 @@
+{
+  "version": "2026-11-12-v2-off",
+  "scope": "standalone_design_preview",
+  "repository": "CentralTraining/Test",
+  "base_commit": "c7cdba70a7bff51c06da3142e8cbf245936ca322",
+  "actual_dashboard_html_changed": false,
+  "actual_personnel_data_published": false,
+  "real_archive_activated": false,
+  "files": [
+    {
+      "path": "previews/2026-11-12-sao-pgs/index.html",
+      "bytes": 57768,
+      "sha256": "5f52a2ec789dfe4f17c644a5d7ebc93bea9e728707e2c0a0cbf99f4c56ed2f6b",
+      "blob": "c4a452a93ef85665b1c6d7b6ef44f032fe30d6bd"
+    },
+    {
+      "path": "downloads/SAO-PGS-2026-11-12-Xem-Truoc-OFF-Theo-Sao.html",
+      "bytes": 57768,
+      "sha256": "5f52a2ec789dfe4f17c644a5d7ebc93bea9e728707e2c0a0cbf99f4c56ed2f6b",
+      "blob": "c4a452a93ef85665b1c6d7b6ef44f032fe30d6bd"
+    },
+    {
+      "path": "downloads/SAO-PGS-OFF-Theo-Sao-Giao-Dien-2026-11-12.png",
+      "bytes": 136793,
+      "sha256": "d90d939744246218d1e3ea77bb1b91d40b664ee1f4f9d033dc8fbd81ed62af70",
+      "blob": "48c3bdb54803edf9dd621091a86db6767e9dfb20"
+    },
+    {
+      "path": "downloads/README-SAO-PGS-OFF-Theo-Sao-Xem-Truoc-2026-11-12.txt",
+      "bytes": 1630,
+      "sha256": "8c6a1913fc80e2e08c61b31190a55e57883777da97d46bad01223da21a71e727",
+      "blob": "0ef2b55ec3391bc8da44d9e5d6a95777ade8e165"
+    },
+    {
+      "path": "downloads/SAO-PGS-OFF-Theo-Sao-2026-11-12-verification.json",
+      "bytes": 3155,
+      "sha256": "7af510f6401277fe5c38ef627b49140d1020fed507573aa4027ee3348e168f1d",
+      "blob": "47528cd13e0a080af412c58b772bbbdbde8af111"
+    }
+  ]
+}

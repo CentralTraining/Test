@@ -1,0 +1,104 @@
+{
+  "build": {
+    "base_preview_blob": "6290fef966ae3aac5616103e47180c454a7fcafd",
+    "html_blob": "c4a452a93ef85665b1c6d7b6ef44f032fe30d6bd",
+    "sha256": "5f52a2ec789dfe4f17c644a5d7ebc93bea9e728707e2c0a0cbf99f4c56ed2f6b",
+    "bytes": 57768,
+    "patches": 7,
+    "reverse_patch_exact": true,
+    "synthetic_only": true,
+    "dashboard_html_changed": false,
+    "real_personnel_writes": 0,
+    "september_reference_explicit": true,
+    "unknown_not_zero": true,
+    "december_archive_is_design_only": true
+  },
+  "off_browser": [
+    {
+      "width": 1440,
+      "passed": true,
+      "previous_month_off_separate_from_current_month": true,
+      "september_reference_explicit": true,
+      "unknown_not_zero": true,
+      "all_counts_and_percentage_denominators": true,
+      "filters_region_trainer": true,
+      "off_csv_preserves_unknown": true,
+      "archive_from_december_design_only": true,
+      "pagination": true,
+      "no_overflow": true,
+      "real_data_requests": 0,
+      "real_data_writes": 0
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "previous_month_off_separate_from_current_month": true,
+      "september_reference_explicit": true,
+      "unknown_not_zero": true,
+      "all_counts_and_percentage_denominators": true,
+      "filters_region_trainer": true,
+      "off_csv_preserves_unknown": true,
+      "archive_from_december_design_only": true,
+      "pagination": true,
+      "no_overflow": true,
+      "real_data_requests": 0,
+      "real_data_writes": 0
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "previous_month_off_separate_from_current_month": true,
+      "september_reference_explicit": true,
+      "unknown_not_zero": true,
+      "all_counts_and_percentage_denominators": true,
+      "filters_region_trainer": true,
+      "off_csv_preserves_unknown": true,
+      "archive_from_december_design_only": true,
+      "pagination": true,
+      "no_overflow": true,
+      "real_data_requests": 0,
+      "real_data_writes": 0
+    }
+  ],
+  "existing_preview_regression": [
+    {
+      "width": 1440,
+      "passed": true,
+      "synthetic_only": true,
+      "star_levels_0_to_5": true,
+      "thresholds_match_user_reference": true,
+      "distinct_people_and_event_counts": true,
+      "filters_and_history_work": true,
+      "monthly_comparison": true,
+      "real_data_requests": 0,
+      "no_overflow": true,
+      "script_errors": 0
+    },
+    {
+      "width": 390,
+      "passed": true,
+      "synthetic_only": true,
+      "star_levels_0_to_5": true,
+      "thresholds_match_user_reference": true,
+      "distinct_people_and_event_counts": true,
+      "filters_and_history_work": true,
+      "monthly_comparison": true,
+      "real_data_requests": 0,
+      "no_overflow": true,
+      "script_errors": 0
+    },
+    {
+      "width": 320,
+      "passed": true,
+      "synthetic_only": true,
+      "star_levels_0_to_5": true,
+      "thresholds_match_user_reference": true,
+      "distinct_people_and_event_counts": true,
+      "filters_and_history_work": true,
+      "monthly_comparison": true,
+      "real_data_requests": 0,
+      "no_overflow": true,
+      "script_errors": 0
+    }
+  ]
+}
